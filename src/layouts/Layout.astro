@@ -1,22 +1,87 @@
+---
+import "../styles/global.css";
+import "aos/dist/aos.css";
+---
+
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+  <head>
+    <!-- Fuente Strait -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Strait&display=swap"
+      rel="stylesheet"
+    />
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+    <!-- Fuente Kaisei HarunoUmi -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kaisei+HarunoUmi&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Kaisei+HarunoUmi:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Fuente Aboreto y Sanchez -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Aboreto&family=Sanchez:ital@0;1&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Fuente Rye -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rye&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Fuente Krub -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Krub:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;1,200;1,300;1,400;1,500;1,600;1,700&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        import("aos").then((AOS) => AOS.init());
+      });
+    </script>
+
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ATB</title>
+  </head>
+  <body class="snap-y snap-mandatory scroll-smooth">
+    <svg
+      class="fixed top-4 left-4 w-12 h-auto z-50 mix-blend-difference pointer-events-none opacity-100 transition-opacity duration-500"
+      width="112"
+      height="54"
+      viewBox="0 0 112 54"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M67.9053 9.27039C70.4649 9.27058 72.5398 11.3455 72.54 13.9052V44.7294H41.7158C39.1562 44.7292 37.0812 42.6542 37.0811 40.0946V9.27039H67.9053ZM49.4414 18.5409V19.5594H54.873V34.7225H56.0615V19.5594H61.6064V18.5409H49.4414Z"
+        fill="#D6B85A"
+        fill-opacity="0.8"></path>
+      <path
+        d="M106.33 18.5406C109.001 18.5407 111.167 20.6157 111.167 23.1754V49.3649C111.167 51.9246 109.001 53.9996 106.33 53.9996H79C76.3287 53.9995 74.1633 51.9246 74.1631 49.3649V18.5406H106.33ZM87.0625 27.8112V43.9938H94.0176C97.5367 43.9938 99.2968 42.4356 99.2969 39.3199C99.2969 37.1925 98.0608 35.9288 95.5889 35.5289C97.919 34.7368 99.0839 33.4203 99.084 31.5797C99.084 29.0675 97.4778 27.8112 94.2656 27.8112H87.0625ZM94.1836 28.8297C96.6083 28.8298 97.8203 29.7728 97.8203 31.6588C97.8202 33.7786 95.8523 35.0088 91.916 35.3483V36.151H92.8604C96.2693 36.151 97.9746 37.2191 97.9746 39.3541C97.9745 41.768 96.6116 42.9752 93.8877 42.9752H88.3018V28.8297H94.1836Z"
+        fill="#D6B85A"
+        fill-opacity="0.8"></path>
+      <path
+        d="M32.5361 0C34.193 0 35.5361 1.34315 35.5361 3V35.5361H3C1.34315 35.5361 0 34.193 0 32.5361V3C7.17672e-07 1.34315 1.34315 2.20962e-09 3 0H32.5361ZM16.5918 9.27051L9.27051 25.4531H10.5381L17.2256 10.1982L21.1074 19.002H14.6455L14.2949 20.0205H21.5488L23.9473 25.4531H25.3623L18.0068 9.27051H16.5918Z"
+        fill="#D6B85A"
+        fill-opacity="0.8"></path>
+    </svg>
+    <slot />
+  </body>
+</html>

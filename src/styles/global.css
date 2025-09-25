@@ -1,0 +1,730 @@
+/* src/styles/global.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes slowZoom {
+  0% {
+    transform: scale(1);
+  }
+
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-slowZoom {
+  animation: slowZoom 20s ease-in-out infinite alternate;
+}
+
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+
+  100% {
+    transform: translateY(-50%);
+  }
+
+  /* recorre la mitad del contenedor (200%) */
+}
+
+@keyframes scroll-down {
+  0% {
+    transform: translateY(-50%);
+  }
+
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.animate-scroll-up {
+  animation: scroll-up 40s linear infinite;
+}
+
+.animate-scroll-down {
+  animation: scroll-down 40s linear infinite;
+}
+
+.btn-luna {
+  position: relative;
+  display: inline-block;
+  padding: 12px 24px;
+  border: 2px solid white;
+  border-radius: 9999px;
+  color: white;
+  background: transparent;
+  transition: all 0.5s ease;
+  overflow: hidden;
+}
+
+.btn-luna:hover {
+  border-radius: 50%;
+  /* círculo */
+  width: 80px;
+  height: 80px;
+  padding: 0;
+  background: radial-gradient(circle at 30% 30%, #f5f5f5, #ccc);
+  color: transparent;
+}
+
+/* cráteres */
+.btn-luna:hover::before,
+.btn-luna:hover::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(100, 100, 100, 0.4);
+}
+
+.btn-luna:hover::before {
+  width: 14px;
+  height: 14px;
+  top: 25%;
+  left: 35%;
+}
+
+.btn-luna:hover::after {
+  width: 10px;
+  height: 10px;
+  bottom: 25%;
+  right: 35%;
+}
+
+.btn-monolito {
+  position: relative;
+  display: inline-block;
+  padding: 12px 24px;
+  border: 2px solid white;
+  color: white;
+  transition: all 0.5s ease;
+  overflow: hidden;
+}
+
+.btn-monolito:hover {
+  width: 40px;
+  height: 120px;
+  background: #000;
+  border: none;
+  color: transparent;
+}
+
+.btn-ovni {
+  position: relative;
+  display: inline-block;
+  padding: 12px 24px;
+  border: 2px solid white;
+  color: white;
+  border-radius: 9999px;
+  transition: all 0.6s ease;
+  overflow: hidden;
+}
+
+.btn-ovni:hover {
+  border-radius: 50% / 30%;
+  /* óvalo */
+  width: 100px;
+  height: 50px;
+  background: linear-gradient(145deg, #aaa, #444);
+  color: transparent;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.6),
+    inset 0 0 15px rgba(255, 255, 255, 0.6);
+}
+
+/* luz inferior */
+.btn-ovni:hover::after {
+  content: "";
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 20px;
+  background: radial-gradient(ellipse, rgba(0, 255, 0, 0.6), transparent 70%);
+  border-radius: 50%;
+  filter: blur(4px);
+}
+
+
+@font-face {
+  font-family: 'WesternBangBang';
+  src: url('/fonts/WesternBangBang-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+.strait-regular {
+  font-family: "Strait", sans-serif;
+}
+
+.kaisei-harunoumi-regular {
+  font-family: "Kaisei HarunoUmi", serif;
+}
+
+.western-bangbang {
+  font-family: 'WesternBangBang', serif;
+}
+
+.kaisei-harunoumi-regular {
+  font-family: "Kaisei HarunoUmi", serif;
+  font-weight: 400;
+}
+
+.kaisei-harunoumi-medium {
+  font-family: "Kaisei HarunoUmi", serif;
+  font-weight: 500;
+  /* medium */
+}
+
+.kaisei-harunoumi-bold {
+  font-family: "Kaisei HarunoUmi", serif;
+  font-weight: 700;
+}
+
+.rye-regular {
+  font-family: "Rye", serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.aboreto-regular {
+  font-family: "Aboreto", system-ui;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.krub-extralight {
+  font-family: "Krub", sans-serif;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.krub-light {
+  font-family: "Krub", sans-serif;
+  font-weight: 300;
+  font-style: normal;
+}
+
+.krub-regular {
+  font-family: "Krub", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
+.krub-medium {
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+}
+
+.krub-semibold {
+  font-family: "Krub", sans-serif;
+  font-weight: 600;
+  font-style: normal;
+}
+
+.krub-bold {
+  font-family: "Krub", sans-serif;
+  font-weight: 700;
+  font-style: normal;
+}
+
+.krub-extralight-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 200;
+  font-style: italic;
+}
+
+.krub-light-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+}
+
+.krub-regular-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 400;
+  font-style: italic;
+}
+
+.krub-medium-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 500;
+  font-style: italic;
+}
+
+.krub-semibold-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 600;
+  font-style: italic;
+}
+
+.krub-bold-italic {
+  font-family: "Krub", sans-serif;
+  font-weight: 700;
+  font-style: italic;
+}
+
+/* Botón retro-tecnológico */
+.btn-retro {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  border: 2px solid #e5e7eb;
+  /* blanco/gris claro */
+  border-radius: 9999px;
+  /* pill */
+  color: #fff;
+  font-family: "Strait", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  overflow: hidden;
+  transition: color 0.4s ease;
+}
+
+.btn-retro::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+      rgba(255, 255, 255, 0.1) 0%,
+      rgba(255, 255, 255, 0.4) 50%,
+      rgba(255, 255, 255, 0.1) 100%);
+  transition: all 0.6s ease;
+}
+
+.btn-retro:hover {
+  color: #000;
+  background-color: #fff;
+  font-weight: 600;
+}
+
+.btn-retro:hover::before {
+  left: 100%;
+}
+
+/* Botón estilo western minimalista con hover */
+/* Botón estilo Western */
+.btn-western {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  border: 2px solid #fff;
+  border-radius: 8px;
+  background: transparent;
+  color: #fff;
+  font-family: "Aboreto", system-ui;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  overflow: hidden;
+  transition: transform 0.2s ease;
+}
+
+.btn-western .btn-text {
+  position: relative;
+  z-index: 2;
+  transition: color 0.3s ease, font-weight 0.3s ease;
+}
+
+/* Barrido rojo */
+.btn-western::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 0;
+  background-color: #381615;
+  transition: width 0.5s ease;
+  z-index: 1;
+}
+
+.btn-western:hover {
+  transform: scale(1.05);
+  border-color: #381615;
+  /* el borde acompaña el barrido */
+}
+
+.btn-western:hover::before {
+  width: 100%;
+}
+
+.btn-western:hover .btn-text {
+  color: #fff;
+  font-weight: 600;
+}
+
+section:has(.btn-western:hover) .absolute.inset-0 {
+  background-color: rgba(56, 22, 21, 1);
+  /* fondo rojo oscuro translúcido */
+  transition: background-color 5s ease;
+}
+
+/* ==== Base botón 90s ==== */
+.btn-90s {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  border-radius: 6px;
+  background: #222;
+  color: #fff;
+  font-family: "Helvetica", "Arial", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  overflow: hidden;
+  transition: background 0.3s ease, transform 0.2s ease;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.btn-90s .btn-text {
+  position: relative;
+  z-index: 3;
+  transition: opacity 0.3s ease;
+}
+
+.btn-90s:hover {
+  background: transparent;
+  transform: scale(1.05);
+  border: 2px solid #fff;
+}
+
+/* ==== Figuras base ==== */
+.btn-90s .shape {
+  position: absolute;
+  opacity: 0;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Al hacer hover aparecen */
+.btn-90s:hover .shape {
+  opacity: 0.8;
+}
+
+/* ==== Figuras principales ==== */
+.btn-90s .circle {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: cyan;
+  top: 15%;
+  left: 10%;
+  animation: float1 2s infinite alternate ease-in-out;
+}
+
+.btn-90s .triangle {
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-bottom: 20px solid magenta;
+  top: 60%;
+  right: 15%;
+  animation: float2 2.5s infinite alternate ease-in-out;
+}
+
+.btn-90s .zigzag {
+  width: 40px;
+  height: 6px;
+  background: repeating-linear-gradient(-45deg, yellow, yellow 4px, transparent 4px, transparent 8px);
+  top: 30%;
+  right: 25%;
+  animation: float3 1.8s infinite alternate ease-in-out;
+}
+
+.btn-90s .square {
+  width: 16px;
+  height: 16px;
+  background: white;
+  bottom: 15%;
+  left: 20%;
+  animation: float4 3s infinite alternate ease-in-out;
+}
+
+/* ==== Figuras secundarias ==== */
+.btn-90s .circle2 {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: lime;
+  top: 40%;
+  left: 50%;
+  animation: float2 2.2s infinite alternate ease-in-out;
+}
+
+.btn-90s .triangle2 {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 14px solid orange;
+  bottom: 25%;
+  right: 40%;
+  animation: float3 1.6s infinite alternate ease-in-out;
+}
+
+.btn-90s .rect {
+  width: 16px;
+  height: 6px;
+  background: pink;
+  top: 20%;
+  right: 35%;
+  animation: float1 2.8s infinite alternate ease-in-out;
+}
+
+.btn-90s .cross {
+  width: 16px;
+  height: 3px;
+  background: red;
+  top: 50%;
+  left: 30%;
+  animation: float4 1.4s infinite alternate ease-in-out;
+}
+
+.btn-90s .cross::after {
+  content: "";
+  position: absolute;
+  width: 3px;
+  height: 16px;
+  background: red;
+  top: -6px;
+  left: 6px;
+}
+
+/* ==== Etéreas ==== */
+.btn-90s .dot1 {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #0ff;
+  top: 10%;
+  right: 45%;
+  animation: float1 2s infinite alternate ease-in-out;
+}
+
+.btn-90s .dot2 {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #f0f;
+  bottom: 20%;
+  left: 40%;
+  animation: float2 2.5s infinite alternate ease-in-out;
+}
+
+.btn-90s .dot3 {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  top: 70%;
+  right: 20%;
+  animation: float3 1.7s infinite alternate ease-in-out;
+}
+
+.btn-90s .mini-triangle {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid #0ff;
+  top: 25%;
+  left: 70%;
+  animation: float4 2s infinite alternate ease-in-out;
+}
+
+.btn-90s .mini-rect {
+  width: 8px;
+  height: 4px;
+  background: #ff0;
+  bottom: 30%;
+  right: 30%;
+  animation: float2 1.8s infinite alternate ease-in-out;
+}
+
+/* ==================== */
+/* Sección TikTok estilo Western */
+/* ==================== */
+
+#tiktok {
+  font-family: "Rye", serif;
+}
+
+/* título western */
+#tiktok h2 {
+  text-shadow: 2px 2px 0 #381615, -2px -2px 0 #000;
+  letter-spacing: 2px;
+  color: #fdfaf5;
+}
+
+/* subtítulo */
+#tiktok p {
+  font-family: "Aboreto", serif;
+  color: #e8d9c4;
+  line-height: 1.6;
+  text-shadow: 1px 1px 0 #000;
+}
+
+/* botones western */
+#tiktok .btn-western {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  border: 3px solid #d4a373;
+  /* tono cuero */
+  border-radius: 6px;
+  background: rgba(56, 22, 21, 0.7);
+  color: #fff;
+  font-family: "Aboreto", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.6),
+    0 4px 6px rgba(0, 0, 0, 0.5);
+}
+
+/* hover western */
+#tiktok .btn-western:hover {
+  background: linear-gradient(145deg, #5a2c28, #381615);
+  border-color: #b35c3d;
+  /* rojo tierra */
+  transform: scale(1.05);
+  box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.8),
+    0 6px 10px rgba(0, 0, 0, 0.6);
+}
+
+/* estilo especial al texto */
+#tiktok .btn-western span {
+  position: relative;
+  z-index: 2;
+}
+
+/* opcional: detalle decorativo (tachuelas) */
+#tiktok .btn-western::before,
+#tiktok .btn-western::after {
+  content: "✦";
+  position: absolute;
+  color: #d4a373;
+  font-size: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#tiktok .btn-western::before {
+  left: 8px;
+}
+
+#tiktok .btn-western::after {
+  right: 8px;
+}
+
+
+/* ==== Animaciones ==== */
+@keyframes float1 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(8px, -6px);
+  }
+}
+
+@keyframes float2 {
+  0% {
+    transform: translate(0, 0) rotate(0);
+  }
+
+  100% {
+    transform: translate(-6px, 6px) rotate(20deg);
+  }
+}
+
+@keyframes float3 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(10px, 0);
+  }
+}
+
+@keyframes float4 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(0, -10px);
+  }
+}
+
+.btn-90s:hover .btn-text {
+  opacity: 0;
+  transform: translateY(-5px);
+  /* opcional: se mueve un poquito hacia arriba */
+}
+
+#first-electronic:has(video.opacity-100)~svg.fixed {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#tiktok .btn-tiktok {
+  position: relative;
+  display: inline-block;
+  padding: 0.75rem 2rem;
+  border: 2px solid #d4a373;
+  /* tono cuero */
+  border-radius: 6px;
+  background: transparent;
+  color: #fff;
+  font-family: "Aboreto", serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.3s ease-out;
+  overflow: hidden;
+}
+
+#tiktok .btn-tiktok::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #5a2c28;
+  /* fondo hover */
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s ease-out;
+  z-index: 0;
+}
+
+#tiktok .btn-tiktok span {
+  position: relative;
+  z-index: 1;
+  transition: color 0.3s ease-out;
+}
+
+#tiktok .btn-tiktok:hover {
+  border-color: #b35c3d;
+  /* rojo tierra */
+  transform: scale(1.05);
+}
+
+#tiktok .btn-tiktok:hover::before {
+  transform: scaleX(1);
+}
+
+#tiktok .btn-tiktok:hover span {
+  color: #fff;
+}

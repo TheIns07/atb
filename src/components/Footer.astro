@@ -1,0 +1,43 @@
+---
+// Componente Footer.astro
+const year = new Date().getFullYear();
+---
+
+<footer class="bg-black text-white px-6 py-12 border-t border-white/10">
+  <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+    <!-- Branding -->
+    <div class="space-y-3">
+      <h3 class="text-lg font-semibold text-[#D6B85A]">L'Associazione Trasmissione e Radiodiffusione</h3>
+      <p class="text-white/70">
+        Explorando el ritmo, la imagen y la ficción a través de la estética y la historia.
+      </p>
+    </div>
+
+    <!-- Navegación -->
+    <div class="space-y-2">
+      <h4 class="font-semibold text-[#D6B85A]">Secciones</h4>
+      <ul class="space-y-1">
+        <li><a href="/" class="hover:underline">Inicio</a></li>
+        <li>
+          <a href="https://www.youtube.com/@Inscreup" class="hover:underline"
+            >YouTube</a>
+        </li>
+        <li>
+          <a href="#https://www.tiktok.com/@inscreup" class="hover:underline"
+            >TikTok</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Contacto o redes -->
+    <div class="space-y-2">
+      <h4 class="font-semibold text-[#D6B85A]">Contacto</h4>
+      <a class="text-white/70" href="mailto:inscreup@gmail.com">inscreup@gmail.com</a>
+    </div>
+  </div>
+
+  <!-- Copyright -->
+  <div class="mt-12 text-center text-white/40 text-xs">
+    &copy; {year} ATB. Todos los derechos reservados.
+  </div>
+</footer>

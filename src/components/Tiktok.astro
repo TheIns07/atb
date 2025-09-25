@@ -1,0 +1,99 @@
+---
+const images = Array.from(
+  { length: 31 },
+  (_, i) => `/images/tiktok/${i + 1}.png`,
+);
+
+const title = "American Frontier";
+const subtitle =
+  "Aprende de la historia de México y Estados Unidos de una manera cómoda e intuitiva por medio de videos cortos y referencias a la cultura popular.";
+const videoTitle = "";
+
+// 8 columnas de 4 imágenes
+const columns = [];
+for (let i = 0; i < 8; i++) {
+  columns.push(images.filter((_, idx) => idx % 8 === i));
+}
+
+// array de videos aleatorios
+const randomVideos = [
+  "https://www.tiktok.com/@inscreup/video/7508162710362672389",
+  "https://www.tiktok.com/@inscreup/video/7505985430387461381",
+  "https://www.tiktok.com/@inscreup/video/7502696110687866117",
+  "https://www.tiktok.com/@inscreup/video/7338940661426638085",
+  "https://www.tiktok.com/@inscreup/video/7314933106450926854",
+  "https://www.tiktok.com/@inscreup/video/7138934111904730373"
+];
+---
+
+<section id="tiktok" class="relative h-screen w-full bg-black overflow-hidden">
+  <!-- grid de imágenes -->
+  <div class="absolute inset-0 grid grid-cols-8 gap-[2px] z-0">
+    {
+      columns.map((colImages, colIndex) => (
+        <div class="relative w-full h-[200%] overflow-hidden">
+          <div
+            class={`flex flex-col ${
+              colIndex % 2 === 0 ? "animate-scroll-up" : "animate-scroll-down"
+            }`}
+          >
+            {[...colImages, ...colImages].map((src, idx) => (
+              <div class="h-screen/4 w-full">
+                <img
+                  src={src}
+                  alt={`TikTok ${colIndex}-${idx}`}
+                  loading="lazy"
+                  class="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ))
+    }
+  </div>
+
+  <!-- capa oscura -->
+  <div class="absolute inset-0 bg-black/70 z-10"></div>
+
+  <!-- contenido -->
+  <div
+    class="relative z-20 flex flex-col items-center justify-center text-center text-white px-6 h-full"
+  >
+    <h2 class="text-5xl md:text-7xl font-normal leading-tight mb-6 rye-regular">
+      {title}
+    </h2>
+
+    <!-- subtítulo limitado -->
+    <p class="text-lg md:text-xl mb-6 max-w-xl leading-relaxed mx-auto">
+      {subtitle}
+    </p>
+
+    <!-- botones -->
+    <div class="flex space-x-4">
+      <!-- botón tiktok principal -->
+      <a
+        href="https://www.tiktok.com/@inscreup"
+        target="_blank"
+        class="btn-tiktok"
+      >
+        <span>Ver más</span>
+      </a>
+
+      <!-- botón ver aleatorio -->
+      <button
+        class="btn-tiktok"
+        type="button"
+        onclick={`const videos = ${JSON.stringify(
+          randomVideos,
+        )}; window.open(videos[Math.floor(Math.random() * videos.length)], '_blank');`}
+      >
+        <span>Ver aleatorio</span>
+      </button>
+    </div>
+
+    <div class="absolute bottom-6 right-6 text-sm text-white opacity-80">
+      {videoTitle}
+    </div>
+  </div>
+</section>

@@ -1,0 +1,143 @@
+---
+const works = [
+  {
+    title: "Signalwave: La Idolatría Nostálgica del Siglo XXI",
+    description:
+      "Documental acerca del estilo de estética degradada inspirada en el vaporwave",
+    image: "public/images/Signalwave.jpg",
+    link: "https://youtu.be/lH1kehduaes",
+  },
+  {
+    title: "Kraftwerk | Inicios de la Electrónica Moderna ",
+    description:
+      "Película donde se comenta la carrera de Kraftwerk canción por canción",
+    image: "/images/kraftwerk.jpg",
+    link: "https://youtu.be/mJOw439YJNI",
+  },
+  {
+    title: "Una Breve Historia del Álbum Conceptual",
+    description:
+      "Entendimiento del concepto en la música a lo largo de la historia",
+    image: "/images/concept.png",
+    link: "https://youtu.be/4i0i8vqY6RQ",
+  },
+];
+
+// 👇 Otros 3 works extra
+const moreWorks = [
+  {
+    title: "La Estética Espacial",
+    description: "Cómo el ser humano imaginó el espacio antes de llegar a él",
+    image: "/images/space.png",
+    link: "https://youtu.be/example1",
+  },
+  {
+    title: "Vaporwave y Cultura Digital",
+    description: "Una exploración del internet estético de los 2010s",
+    image: "/images/vaporwave.png",
+    link: "https://youtu.be/example2",
+  },
+  {
+    title: "Historia del Ambient",
+    description: "Desde Brian Eno hasta la era digital",
+    image: "/images/ambient.png",
+    link: "https://youtu.be/example3",
+  },
+];
+---
+
+<!-- ========= SECCIÓN PROYECTOS ANTERIORES ========= -->
+<section class="min-h-screen bg-white text-black py-16 px-6">
+  <div class="max-w-6xl mx-auto text-center mb-12">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">Proyectos anteriores</h2>
+    <p class="text-lg opacity-80">
+      Un espacio para proyectos paralelos que complementan nuestra visión
+      estética.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    {works.map((work) => (
+      <a
+        href={work.link}
+        class="relative group overflow-hidden rounded-xl shadow-lg"
+        target="_blank"
+      >
+        <img
+          src={work.image}
+          alt={work.title}
+          class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/90 to-transparent p-4">
+          <h3 class="text-lg font-semibold">{work.title}</h3>
+        </div>
+        <div class="absolute inset-0 bg-white/90 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center text-center p-4">
+          <p class="text-sm text-black opacity-90">{work.description}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<!-- ========= SECCIÓN MÁS PROYECTOS ========= -->
+<section class="min-h-screen bg-white text-black py-16 px-6">
+  <div class="max-w-6xl mx-auto text-center mb-12">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">Más proyectos</h2>
+    <p class="text-lg opacity-80">
+      Otras investigaciones y documentales que expanden nuestro recorrido estético.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    {moreWorks.map((work) => (
+      <a
+        href={work.link}
+        class="relative group overflow-hidden rounded-xl shadow-lg"
+        target="_blank"
+      >
+        <img
+          src={work.image}
+          alt={work.title}
+          class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
+        />
+        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/90 to-transparent p-4">
+          <h3 class="text-lg font-semibold">{work.title}</h3>
+        </div>
+        <div class="absolute inset-0 bg-white/90 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center text-center p-4">
+          <p class="text-sm text-black opacity-90">{work.description}</p>
+        </div>
+      </a>
+    ))}
+  </div>
+</section>
+
+<!-- ========= SECCIÓN FUTUROS PROYECTOS ========= -->
+<section class="min-h-screen bg-white text-black py-16 px-6">
+  <div class="max-w-6xl mx-auto text-center mb-12">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">Futuros proyectos</h2>
+    <p class="text-lg opacity-80">
+      Ideas en desarrollo que pronto formarán parte de nuestra narrativa estética.
+    </p>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto text-center">
+    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+      <h3 class="text-xl font-semibold mb-2">Proyecto 1</h3>
+      <p class="text-sm text-gray-700">
+        Investigación sobre música experimental y paisajes sonoros.
+      </p>
+    </div>
+    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+      <h3 class="text-xl font-semibold mb-2">Proyecto 2</h3>
+      <p class="text-sm text-gray-700">
+        Estudio sobre la relación entre videojuegos y estética cultural.
+      </p>
+    </div>
+    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
+      <h3 class="text-xl font-semibold mb-2">Proyecto 3</h3>
+      <p class="text-sm text-gray-700">
+        Una exploración del futuro de la música digital y la IA.
+      </p>
+    </div>
+  </div>
+</section>
