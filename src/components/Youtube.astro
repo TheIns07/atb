@@ -1,105 +1,113 @@
 ---
 const contents = [
   {
-    title: "¿De donde vino la música electrónica?",
+    title: "¿De dónde vino la música electrónica?",
     subtitle:
-      "La primera canción electrónica de la historia no fue solo una curiosidad técnica: fue el inicio de una estética que transformó nuestra relación con la realidad.",
+      "La primera canción electrónica de la historia no fue solo una curiosidad técnica. Fue el inicio de una estética que transformó nuestra relación con la realidad",
     videoTitle:
-      "¿Cuál es la primera canción electrónica de la historia? | Estética: Serie de ilusiones (Pt. 1)",
+      "¿Cuál es la primera canción electrónica de la historia? | Estética: Una serie de ilusiones (Parte 1)",
     background: "/images/Ele.png",
     youtubeUrl: "https://www.youtube.com/watch?v=pq_y3V0qdCI",
   },
   {
     title: "ARTE, HISTORIA Y WESTERN",
     subtitle:
-      "La concepción del viejo oeste como tropo no surge del vacío: es el resultado de un proceso estético donde la historia, los mitos y las imágenes se entrelazaron para crear un relato compartido.",
+      "La concepción del viejo oeste como tropo no surge del vacío. Es el resultado de un proceso estético donde la historia, los mitos y las imágenes se entrelazaron para crear un relato compartido",
     videoTitle: "Película | La Historia No Contada del Viejo Oeste",
     background: "/images/BookCover.png",
-    youtubeUrl: "https://www.youtube.com/watch?v=yLFnB-mXSjI", 
+    youtubeUrl: "https://www.youtube.com/watch?v=yLFnB-mXSjI",
   },
   {
-    title: "El mundo de los años 90's",
+    title: "El mundo de los años 90",
     subtitle:
-      "Entre las luces de neón, la era digital de 32 bits y la explosión del internet, los 90’s definieron una estética que mezclaba futurismo, cultura pop y un optimismo tecnológico sin precedentes.",
-    videoTitle:
-      "La Psicodelia Estética de los Años 90's | Estética: Serie de ilusiones (Pt. 3)",
+      "Entre las luces de neón, la era digital de 32 bits y la explosión del internet, los 90 definieron una estética que mezclaba futurismo, cultura pop y un optimismo tecnológico sin precedentes",
+    videoTitle: "Documental | La Psicodelia Estética de los Años 90",
     background: "/images/90s.png",
-    youtubeUrl: "https://www.youtube.com/watch?v=u_warG6uzKE", 
+    youtubeUrl: "https://www.youtube.com/watch?v=u_warG6uzKE",
   },
 ];
 ---
 
 <section class="relative snap-y snap-mandatory scroll-smooth" id="youtube">
-  {contents.map((item, index) => {
-    let fontClass = "";
-    if (index === 0) fontClass = "strait-regular";
-    if (index === 1) fontClass = "western-bangbang";
-    if (index === 2) fontClass = "kaisei-harunoumi-medium ";
+  {
+    contents.map((item, index) => {
+      let fontClass = "";
+      if (index === 0) fontClass = "strait-regular";
+      if (index === 1) fontClass = "western-bangbang";
+      if (index === 2) fontClass = "kaisei-harunoumi-medium ";
 
-    return (
-      <section
-        class="snap-start h-screen w-full bg-cover bg-center relative flex flex-col items-center justify-center text-white scroll-smooth"
-        style={`background-image: url('${item.background}')`}
-        id={index === contents.length - 1 ? "youtube" : undefined}
-      >
-        {/* capa oscura */}
-        <div class="absolute inset-0 bg-black/60 z-0"></div>
-
-        {/* contenido */}
-        <div
-          class="relative z-10 text-center max-w-3xl px-6"
-          data-aos="fade-up"
-          data-aos-duration="800"
-          data-aos-delay={index * 100}
+      return (
+        <section
+          class="snap-start h-screen w-full bg-cover bg-center relative flex flex-col items-center justify-center text-white scroll-smooth"
+          style={`background-image: url('${item.background}')`}
+          id={index === contents.length - 1 ? "youtube" : undefined}
         >
-          <h2
-            class={`text-5xl md:text-7xl font-normal leading-tight mb-6 ${fontClass}`}
-          >
-            {item.title}
-          </h2>
-          <p class="text-lg md:text-lg mb-6 krub-extralight">{item.subtitle}</p>
-          <a
-            href={item.youtubeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class={`${
-              index === 0
-                ? "btn-retro"
-                : index === 1
-                ? "btn-western"
-                : index === 2
-                ? "btn-90s"
-                : "inline-block bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-300"
-            }`}
-          >
-            <span class="btn-text">Ver en YouTube</span>
+          {/* capa oscura */}
+          <div class="absolute inset-0 bg-black/60 z-0" />
 
-            {index === 2 && (
-              <>
-                <span class="shape circle"></span>
-                <span class="shape triangle"></span>
-                <span class="shape zigzag"></span>
-                <span class="shape square"></span>
-                <span class="shape circle2"></span>
-                <span class="shape triangle2"></span>
-                <span class="shape rect"></span>
-                <span class="shape cross"></span>
-                {/* más figuras etéreas */}
-                <span class="shape dot1"></span>
-                <span class="shape dot2"></span>
-                <span class="shape dot3"></span>
-                <span class="shape mini-triangle"></span>
-                <span class="shape mini-rect"></span>
-              </>
-            )}
-          </a>
-        </div>
+          {/* contenido */}
+          <div
+            class="relative z-10 text-center max-w-3xl px-6"
+            data-aos="fade-up"
+            data-aos-duration="800"
+            data-aos-delay={index * 100}
+          >
+            <h2
+              class={`text-5xl md:text-7xl font-normal leading-tight mb-6 ${fontClass}`}
+            >
+              {item.title}
+            </h2>
+            <p class="text-base md:text-lg mb-6 krub-extralight mx-auto max-w-md md:max-w-3xl leading-relaxed text-center">
+              {item.subtitle}
+            </p>
 
-        {/* título del video */}
-        <div class="absolute bottom-6 right-6 text-sm text-white z-10 opacity-80">
-          {item.videoTitle}
-        </div>
-      </section>
-    );
-  })}
+            <a
+              href={item.youtubeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class={`${
+                index === 0
+                  ? "btn-retro"
+                  : index === 1
+                    ? "btn-western"
+                    : index === 2
+                      ? "btn-90s"
+                      : "inline-block bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-300"
+              }`}
+            >
+              <span class="btn-text">Ver en YouTube</span>
+
+              {index === 2 && (
+                <>
+                  <span class="shape circle" />
+                  <span class="shape triangle" />
+                  <span class="shape zigzag" />
+                  <span class="shape square" />
+                  <span class="shape circle2" />
+                  <span class="shape triangle2" />
+                  <span class="shape rect" />
+                  <span class="shape cross" />
+                  {/* más figuras etéreas */}
+                  <span class="shape dot1" />
+                  <span class="shape dot2" />
+                  <span class="shape dot3" />
+                  <span class="shape mini-triangle" />
+                  <span class="shape mini-rect" />
+                </>
+              )}
+            </a>
+          </div>
+
+          {/* título del video */}
+          <div
+            class="absolute bottom-6 text-xs md:text-sm text-white z-10 opacity-80 
+            w-full text-center px-4 leading-snug
+            md:w-auto md:text-right md:right-6 md:px-0"
+          >
+            {item.videoTitle}
+          </div>
+        </section>
+      );
+    })
+  }
 </section>

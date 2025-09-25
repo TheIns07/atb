@@ -1,38 +1,89 @@
 ---
-// Componente Footer.astro
 const year = new Date().getFullYear();
 ---
 
-<footer class="bg-black text-white px-6 py-12 border-t border-white/10">
+<footer class="bg-black text-white px-6 py-16 border-t border-white/10">
   <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
     <!-- Branding -->
     <div class="space-y-3">
-      <h3 class="text-lg font-semibold text-[#D6B85A]">L'Associazione Trasmissione e Radiodiffusione</h3>
+      <h3 class="text-lg font-semibold text-[#D6B85A]">
+        L'Associazione Atlantica di Trasmissione e Radiodiffusione
+      </h3>
       <p class="text-white/70">
-        Explorando el ritmo, la imagen y la ficción a través de la estética y la historia.
+        ATB ATL es una empresa dedicada a crear experiencias cinematográficas
+        que ayuden al consumidor a entender temas complejos por medio de apoyos
+        visuales contextuales, comúnmente temas históricos y filosóficos a la
+        medida del solicitante.
       </p>
     </div>
 
     <!-- Navegación -->
     <div class="space-y-2">
-      <h4 class="font-semibold text-[#D6B85A]">Secciones</h4>
+      <h4 class="font-semibold text-[#D6B85A]">Redes</h4>
       <ul class="space-y-1">
         <li><a href="/" class="hover:underline">Inicio</a></li>
         <li>
           <a href="https://www.youtube.com/@Inscreup" class="hover:underline"
-            >YouTube</a>
+            >YouTube</a
+          >
         </li>
         <li>
-          <a href="#https://www.tiktok.com/@inscreup" class="hover:underline"
-            >TikTok</a>
+          <a href="https://www.tiktok.com/@inscreup" class="hover:underline"
+            >TikTok</a
+          >
+        </li>
+        <li>
+          <a
+            href="https://www.linkedin.com/company/atb-gb"
+            class="hover:underline">LinkedIn</a
+          >
         </li>
       </ul>
     </div>
 
-    <!-- Contacto o redes -->
-    <div class="space-y-2">
-      <h4 class="font-semibold text-[#D6B85A]">Contacto</h4>
-      <a class="text-white/70" href="mailto:inscreup@gmail.com">inscreup@gmail.com</a>
+    <!-- Contacto + Locaciones -->
+    <div class="space-y-6">
+      <!-- Contacto -->
+      <div class="space-y-2">
+        <h4 class="font-semibold text-[#D6B85A]">Contacto</h4>
+        <a class="text-white/70" href="mailto:inscreup@gmail.com"
+          >inscreup@gmail.com</a
+        >
+      </div>
+
+      <!-- Locaciones -->
+      <div class="space-y-3">
+        <h4 class="font-semibold text-[#D6B85A] flex items-center gap-2">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="w-5 h-5 text-[#D6B85A]"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 11c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 
+                 1.343-3 3 1.343 3 3 3zM12 22s8-4.5 8-11a8 8 0 
+                 10-16 0c0 6.5 8 11 8 11z"
+            ></path>
+          </svg>
+          Locaciones
+        </h4>
+        <ul class="space-y-1 text-white/70">
+          <li>
+            <span class="font-semibold text-white">Sheffield</span> — Diseño gráfico - Multimedia - QA
+          </li>
+          <li>
+            <span class="font-semibold text-white">Monterrey</span> — Narración - Fotografía - QA
+          </li>
+          <li>
+            <span class="font-semibold text-white">Santiago</span> — Post-producción - Redes sociales - QA
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
 

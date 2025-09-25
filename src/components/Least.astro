@@ -6,13 +6,15 @@ const works = [
       "Documental acerca del estilo de estética degradada inspirada en el vaporwave",
     image: "public/images/Signalwave.jpg",
     link: "https://youtu.be/lH1kehduaes",
+    stats: { views: "1.7k", likes: "133", duration: "33min" }
   },
   {
-    title: "Kraftwerk | Inicios de la Electrónica Moderna ",
+    title: "Kraftwerk | Inicios de la Electrónica Moderna",
     description:
       "Película donde se comenta la carrera de Kraftwerk canción por canción",
     image: "/images/kraftwerk.jpg",
     link: "https://youtu.be/mJOw439YJNI",
+    stats: { views: "337k", likes: "9.7k", duration: "92min" }
   },
   {
     title: "Una Breve Historia del Álbum Conceptual",
@@ -20,39 +22,88 @@ const works = [
       "Entendimiento del concepto en la música a lo largo de la historia",
     image: "/images/concept.png",
     link: "https://youtu.be/4i0i8vqY6RQ",
+    stats: { views: "1.3k", likes: "77", duration: "18min" }
+  },
+  {
+    title: "El Peligro de la Estética Liminal: Hauntología y la Lenta Cancelación del Futuro",
+    description:
+      "Entendimiento de cómo los espacios liminales definen nuestro sentir actual",
+    image: "/images/liminal.jpg",
+    link: "https://youtu.be/KI3dAr2Yc_k",
+    stats: { views: "2.9k", likes: "297", duration: "16min" }
+  },
+  {
+    title: "Nipper: El Perro Icónico",
+    description:
+      "Historia de Nipper, la mascota de RCA presente en numerosos dispositivos",
+    image: "/images/nipper.png",
+    link: "https://youtu.be/jhZn5LIUj4k",
+    stats: { views: "8k", likes: "275", duration: "5min" }
+  },
+  {
+    title: "La Música de Huesos (URSS)",
+    description:
+      "Historia de los vinilos de radiografías con música occidental, producidos en la Unión Soviética",
+    image: "/images/bones.png",
+    link: "https://youtu.be/4i0i8vqY6RQ",
+    stats: { views: "1.1k", likes: "48", duration: "7min" }
   },
 ];
 
-// 👇 Otros 3 works extra
-const moreWorks = [
+const futureWorks = [
   {
-    title: "La Estética Espacial",
-    description: "Cómo el ser humano imaginó el espacio antes de llegar a él",
-    image: "/images/space.png",
-    link: "https://youtu.be/example1",
+    title: "Kraftwerk: La Definición del Mundo Moderno",
+    description: "Serie de estética: Parte 3",
+    progress: 75
   },
   {
-    title: "Vaporwave y Cultura Digital",
-    description: "Una exploración del internet estético de los 2010s",
-    image: "/images/vaporwave.png",
-    link: "https://youtu.be/example2",
+    title: "Libro: La Historia no Contada del Viejo Oeste",
+    description: "Trabajo que nos ayudará a entender el Viejo Oeste desde una mejor perspectiva",
+    progress: 25
   },
   {
-    title: "Historia del Ambient",
-    description: "Desde Brian Eno hasta la era digital",
-    image: "/images/ambient.png",
-    link: "https://youtu.be/example3",
+    title: "El Improbable Origen del Surf Rock",
+    description: "Historia del surf rock en un documental didáctico (en reconstrucción)",
+    progress: 40
+  },
+  {
+    title: "La Estética Sonora de Bob Esponja",
+    description: "La apasionante historia de cómo una serie heredó toda una estética concreta en el imaginario popular",
+    progress: 10
   },
 ];
 ---
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+  const cards = document.querySelectorAll<HTMLElement>(".work-card");
 
-<!-- ========= SECCIÓN PROYECTOS ANTERIORES ========= -->
-<section class="min-h-screen bg-white text-black py-16 px-6">
-  <div class="max-w-6xl mx-auto text-center mb-12">
-    <h2 class="text-4xl md:text-5xl font-bold mb-4">Proyectos anteriores</h2>
+  cards.forEach((card) => {
+    let tapped = false;
+
+    card.addEventListener("click", (e) => {
+      if (window.innerWidth < 768) {
+        if (!tapped) {
+          e.preventDefault(); 
+          tapped = true;
+          card.classList.add("hover"); 
+          setTimeout(() => (tapped = false), 8000); 
+        } else {
+          const link = card.dataset.link; 
+          if (link) window.open(link, "_blank");
+        }
+      }
+    });
+  });
+});
+
+</script>
+
+
+<section class="bg-white text-black py-12 px-6 helvetica">  
+  <div class="max-w-6xl mx-auto text-center mb-6">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">Portafolio</h2>
     <p class="text-lg opacity-80">
-      Un espacio para proyectos paralelos que complementan nuestra visión
-      estética.
+      Proyectos que forman parte de la historia de ATB como referencias
     </p>
   </div>
 
@@ -60,52 +111,68 @@ const moreWorks = [
     {works.map((work) => (
       <a
         href={work.link}
-        class="relative group overflow-hidden rounded-xl shadow-lg"
+        class="relative group overflow-hidden rounded-xl shadow-lg work-card"
         target="_blank"
+        data-link={work.link}
       >
-        <img
-          src={work.image}
-          alt={work.title}
-          class="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-105"
-        />
-        <div class="absolute inset-x-0 bottom-0 bg-gradient-to-t from-white/90 to-transparent p-4">
-          <h3 class="text-lg font-semibold">{work.title}</h3>
-        </div>
-        <div class="absolute inset-0 bg-white/90 opacity-0 group-hover:opacity-100 transition duration-500 flex items-center justify-center text-center p-4">
-          <p class="text-sm text-black opacity-90">{work.description}</p>
+      <img
+        src={work.image}
+        alt={work.title}
+        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
+      />
+        <div class="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col items-center justify-center text-center p-6">
+          <h3 class="text-xl font-bold mb-2">{work.title}</h3>
+          <p class="text-sm text-gray-700 mb-4">{work.description}</p>
+          <div class="flex space-x-6 text-sm text-gray-700">
+            <!-- stats -->
+            <div class="flex items-center space-x-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+              <span>{work.stats.views}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.657l-6.828-6.829a4 4 0 010-5.656z"/>
+              </svg>
+              <span>{work.stats.likes}</span>
+            </div>
+            <div class="flex items-center space-x-1">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{work.stats.duration}</span>
+            </div>
+          </div>
         </div>
       </a>
     ))}
   </div>
 </section>
 
-<!-- ========= SECCIÓN FUTUROS PROYECTOS ========= -->
-<section class="min-h-screen bg-white text-black py-16 px-6">
-  <div class="max-w-6xl mx-auto text-center mb-12">
-    <h2 class="text-4xl md:text-5xl font-bold mb-4">Futuros proyectos</h2>
+<section class="bg-white text-black py-12 px-6 helvetica">
+  <div class="max-w-6xl mx-auto text-center mb-6">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">En progreso</h2>
     <p class="text-lg opacity-80">
-      Ideas en desarrollo que pronto formarán parte de nuestra narrativa estética.
+      Proyectos en desarrollo por el equipo de ATB a un futuro cercano
     </p>
   </div>
 
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto text-center">
-    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
-      <h3 class="text-xl font-semibold mb-2">Proyecto 1</h3>
-      <p class="text-sm text-gray-700">
-        Investigación sobre música experimental y paisajes sonoros.
-      </p>
-    </div>
-    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
-      <h3 class="text-xl font-semibold mb-2">Proyecto 2</h3>
-      <p class="text-sm text-gray-700">
-        Estudio sobre la relación entre videojuegos y estética cultural.
-      </p>
-    </div>
-    <div class="p-8 border rounded-xl bg-gray-50 hover:bg-gray-100 transition">
-      <h3 class="text-xl font-semibold mb-2">Proyecto 3</h3>
-      <p class="text-sm text-gray-700">
-        Una exploración del futuro de la música digital y la IA.
-      </p>
-    </div>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+    {futureWorks.map((fw) => (
+      <div class="p-6 border rounded-xl bg-gray-50 hover:bg-gray-100 transition flex flex-col">
+        <h3 class="text-xl font-semibold mb-2">{fw.title}</h3>
+        <p class="text-sm text-gray-700 mb-4">{fw.description}</p>
+        <!-- Barra de progreso -->
+        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
+          <div
+            class="bg-black h-3 rounded-full transition-all duration-700"
+            style={`width: ${fw.progress}%`}
+          ></div>
+        </div>
+        <span class="text-xs text-gray-600 mt-2 text-right">{fw.progress}%</span>
+      </div>
+    ))}
   </div>
 </section>
