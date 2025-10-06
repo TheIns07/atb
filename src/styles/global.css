@@ -747,3 +747,13 @@ section:has(.btn-western:hover) .absolute.inset-0 {
 html, body {
   overflow-x: hidden;
 }
+
+#tiktok img {
+  filter: blur(8px);
+  transform: scale(1.05);
+  transition: filter 0.5s ease, transform 0.5s ease;
+}
+#tiktok img.loaded {
+  filter: blur(0);
+  transform: scale(1);
+}

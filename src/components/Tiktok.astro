@@ -96,4 +96,9 @@ const randomVideos = [
       {videoTitle}
     </div>
   </div>
+  <script is:inline>
+    document.querySelectorAll("#tiktok img").forEach((img) => {
+      img.addEventListener("load", () => img.classList.add("loaded"));
+    });
+  </script>
 </section>
