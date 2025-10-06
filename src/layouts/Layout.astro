@@ -69,6 +69,32 @@ import "aos/dist/aos.css";
     <link rel="icon" type="image/png" href="/images/ATB.png" />
   </head>
   <body class="snap-y snap-mandatory scroll-smooth">
+    <!-- Loader -->
+    <div
+      id="loader"
+      class="fixed inset-0 bg-black flex flex-col items-center justify-center z-[9999] transition-opacity duration-700"
+    >
+      <svg
+        class="w-24 h-auto mb-4 animate-pulse"
+        viewBox="0 0 112 54"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M67.9053 9.27039C70.4649 9.27058 72.5398 11.3455 72.54 13.9052V44.7294H41.7158C39.1562 44.7292 37.0812 42.6542 37.0811 40.0946V9.27039H67.9053ZM49.4414 18.5409V19.5594H54.873V34.7225H56.0615V19.5594H61.6064V18.5409H49.4414Z"
+          fill="#D6B85A"
+          fill-opacity="0.8"></path>
+        <path
+          d="M106.33 18.5406C109.001 18.5407 111.167 20.6157 111.167 23.1754V49.3649C111.167 51.9246 109.001 53.9996 106.33 53.9996H79C76.3287 53.9995 74.1633 51.9246 74.1631 49.3649V18.5406H106.33ZM87.0625 27.8112V43.9938H94.0176C97.5367 43.9938 99.2968 42.4356 99.2969 39.3199C99.2969 37.1925 98.0608 35.9288 95.5889 35.5289C97.919 34.7368 99.0839 33.4203 99.084 31.5797C99.084 29.0675 97.4778 27.8112 94.2656 27.8112H87.0625ZM94.1836 28.8297C96.6083 28.8298 97.8203 29.7728 97.8203 31.6588C97.8202 33.7786 95.8523 35.0088 91.916 35.3483V36.151H92.8604C96.2693 36.151 97.9746 37.2191 97.9746 39.3541C97.9745 41.768 96.6116 42.9752 93.8877 42.9752H88.3018V28.8297H94.1836Z"
+          fill="#D6B85A"
+          fill-opacity="0.8"></path>
+        <path
+          d="M32.5361 0C34.193 0 35.5361 1.34315 35.5361 3V35.5361H3C1.34315 35.5361 0 34.193 0 32.5361V3C7.17672e-07 1.34315 1.34315 2.20962e-09 3 0H32.5361ZM16.5918 9.27051L9.27051 25.4531H10.5381L17.2256 10.1982L21.1074 19.002H14.6455L14.2949 20.0205H21.5488L23.9473 25.4531H25.3623L18.0068 9.27051H16.5918Z"
+          fill="#D6B85A"
+          fill-opacity="0.8"></path>
+      </svg>
+    </div>
+
     <!-- SVG logo -->
     <svg
       id="logo-svg"
@@ -95,4 +121,13 @@ import "aos/dist/aos.css";
 
     <slot />
   </body>
+  <script>
+    window.addEventListener("load", () => {
+    const loader = document.getElementById("loader");
+    if (loader) {
+      loader.classList.add("opacity-0");
+      setTimeout(() => loader.remove(), 700);
+    }
+  });
+  </script>
 </html>

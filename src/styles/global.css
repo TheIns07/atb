@@ -734,3 +734,16 @@ section:has(.btn-western:hover) .absolute.inset-0 {
   font-weight: 400;
   letter-spacing: 0.3px; 
 }
+
+#first-electronic video {
+  transform-origin: center center;
+}
+
+#first-electronic video.scale-110 {
+  transform: scale(1.1);
+  overflow: hidden;
+}
+
+html, body {
+  overflow-x: hidden;
+}
