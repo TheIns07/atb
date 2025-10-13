@@ -757,3 +757,20 @@ html, body {
   filter: blur(0);
   transform: scale(1);
 }
+
+.alegreya-sc {
+  font-family: "Alegreya Sans SC", sans-serif;
+  /* La familia SC ya es small caps; mantenemos buen kerning */
+  font-kerning: normal;
+  font-variant-numeric: proportional-nums;
+}
+
+#germany-map {
+  overflow: visible;        /* evita que se corte el stroke en los bordes */
+  display: block;
+}
+#germany-map[width], 
+#germany-map[height] {
+  width: 100% !important;   /* ignora width/height fijos del archivo */
+  height: 100% !important;
+}

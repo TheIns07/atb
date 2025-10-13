@@ -1,94 +1,99 @@
 ---
-
+import GermanyMap from "../../public/images/germany.svg";
 ---
 
 <section
-  id="first-electronic"
-  class="relative h-[800px] w-full bg-cover bg-center flex items-center justify-end"
-  style="background-image: url('/images/FirstElectronic.png')"
->
-  <!-- Fondo estático -->
+  id="kraftwerk-hero"
+  class="relative h-screen w-full bg-black text-white overflow-hidden flex items-center
+         justify-start">
+  <!-- Fondo -->
   <div
-    class="absolute inset-0 bg-black/60 z-0 transition-opacity duration-700"
-    id="static-bg"
+    class="absolute inset-0 z-0 bg-cover bg-center transition-transform duration-[4000ms] ease-out hover:scale-105"
+    style="background-image: url('/images/kraftwerk_bg.png')"
   >
   </div>
 
-  <!-- Video como fondo -->
   <div
-    id="video-bg"
-    class="absolute inset-0 z-0 opacity-0 transition-opacity duration-700"
+    class="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/90 z-0"
   >
-    <video
-      class="w-full h-full object-cover transition-transform duration-1000"
-      autoplay
-      muted
-      loop
-      playsinline
-    >
-      <source src="/videos/Brief.mp4" type="video/mp4" />
-    </video>
+  </div>
+
+  <!-- SVG: centrado en mobile, a la derecha en desktop -->
+  <!-- Contenedor centrado -->
+  <div class="absolute inset-0 opacity-60 grid place-items-left md:justify-items-end pointer-events-none">
+
+    <!-- Caja que limita tamaño -->
+    <div
+    class="w-[90vw] max-w-[900px] md:w-[48vw] md:max-w-[1100px] h-auto md:h-[70vh] max-h-[80vh]
+           md:justify-self-end md:pr-7"
+  >
+      <GermanyMap
+        id="germany-map"
+        class="block w-full h-full mx-auto"
+        preserveAspectRatio="xMidYMid meet"
+      />
+    </div>
   </div>
 
   <!-- Contenido -->
-  <div class="relative z-10 w-full max-w-4xl px-6 text-white text-right">
+  <div
+    class="relative z-20 text-left max-w-3xl pl-6 md:pl-16"
+    data-aos="fade-up" data-aos-duration="800"
+  >
     <h1
-      class="text-5xl md:text-6xl font-bold mb-6 aboreto-regular"
-      data-aos="fade-up"
-      data-aos-duration="800"
+      class="alegreya-sc text-4xl md:text-7xl font-bold mb-4 text-[#D6B85A] tracking-tight"
     >
-      Una breve historia de la estética espacial
+      KRAFTWERK
     </h1>
 
     <p
-      class="text-lg md:text-lg mb-6 krub-extralight"
+      class="text-lg md:text-xl krub-extralight text-white/80 mb-6 leading-relaxed"
       data-aos="fade-up"
       data-aos-delay="200"
-      data-aos-duration="800"
     >
-      ¿Cómo el humano crea el sonido e imagen de un lugar que no puede escuchar
-      y solo puede ver de lejos?
+      La definición del mundo moderno: una historia sobre cómo cuatro hombres de
+      Düsseldorf rediseñaron la relación entre máquina, música y estética.
     </p>
 
-    <!-- Botón que activa el video -->
     <a
-      href="https://www.youtube.com/watch?v=hsDlH8ZYxKU"
-      class="btn-trigger relative inline-block px-6 py-3 rounded-full border border-white text-white font-medium overflow-hidden transition-colors duration-500 z-20"
+      href="https://www.youtube.com/watch?v=bMuTN8xis6U"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-block mt-4 px-8 py-3 rounded-full border border-[#D6B85A] text-[#D6B85A] hover:bg-[#D6B85A] hover:text-black transition duration-500 font-medium"
       data-aos="fade-up"
       data-aos-delay="400"
-      data-aos-duration="800"
-      target="_blank"
     >
-      Ver video
+      Ver el nuevo documental
     </a>
   </div>
 </section>
 
 <script is:inline>
-  const btn = document.querySelector("#first-electronic .btn-trigger");
-  const videoBg = document.querySelector("#video-bg");
-  const staticBg = document.querySelector("#static-bg");
-  const video = videoBg.querySelector("video");
+  const DRAW_BASE_SEC = 12;
+  const STAGGER_SEC = 0.12;
 
-  const svgGlobal = document.querySelector("body > svg.fixed");
-
-  btn?.addEventListener("mouseenter", () => {
-    staticBg.classList.add("opacity-0");
-    videoBg.classList.add("opacity-100");
-    video.classList.add("scale-110");
-
-    if (svgGlobal) {
-      svgGlobal.style.opacity = "0";
-    }
-  });
-
-  btn?.addEventListener("mouseleave", () => {
-    staticBg.classList.remove("opacity-0");
-    videoBg.classList.remove("opacity-100");
-    video.classList.remove("scale-110");
-
-    if (svgGlobal) {
-      svgGlobal.style.opacity = "1";
-    }
+  document.addEventListener("DOMContentLoaded", () => {
+    const paths = document.querySelectorAll("#germany-map path");
+    paths.forEach((path, i) => {
+      const length = path.getTotalLength();
+      path.style.stroke = "#D6B85A";
+      path.style.fill = "none";
+      path.style.strokeWidth = "1.5";
+      path.style.strokeDasharray = length;
+      path.style.strokeDashoffset = length;
+      path.style.opacity = "0.75";
+      path.style.animation = `drawLine ${DRAW_BASE_SEC}s ease forwards ${i * STAGGER_SEC}s`;
+    });
   });
 </script>
+
+<style>
+  @keyframes drawLine {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+  #germany-map path {
+    filter: drop-shadow(0 0 6px #d6b85a80);
+  }
+</style>
