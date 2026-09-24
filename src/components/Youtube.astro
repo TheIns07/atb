@@ -3,111 +3,130 @@ const contents = [
   {
     title: "¿De dónde vino la música electrónica?",
     subtitle:
-      "La primera canción electrónica de la historia no fue solo una curiosidad técnica. Fue el inicio de una estética que transformó nuestra relación con la realidad",
+      "La primera canción electrónica de la historia no fue solo una curiosidad técnica. Fue el inicio de una estética que transformó nuestra relación con la realidad.",
     videoTitle:
       "¿Cuál es la primera canción electrónica de la historia? | Estética: Una serie de ilusiones (Parte 1)",
     background: "/images/Ele.png",
     youtubeUrl: "https://www.youtube.com/watch?v=pq_y3V0qdCI",
+    fontClass: "strait-regular",
+    buttonVariant: "retro",
   },
   {
     title: "ARTE, HISTORIA Y WESTERN",
     subtitle:
-      "La concepción del viejo oeste como tropo no surge del vacío. Es el resultado de un proceso estético donde la historia, los mitos y las imágenes se entrelazaron para crear un relato compartido",
+      "La concepción del viejo oeste como tropo no surge del vacío. Es el resultado de un proceso estético donde la historia, los mitos y las imágenes se entrelazaron para crear un relato compartido.",
     videoTitle: "Película | La Historia No Contada del Viejo Oeste",
     background: "/images/BookCover.png",
     youtubeUrl: "https://www.youtube.com/watch?v=yLFnB-mXSjI",
+    fontClass: "western-bangbang",
+    buttonVariant: "western",
   },
   {
     title: "El mundo de los años 90",
     subtitle:
-      "Entre las luces de neón, la era digital de 32 bits y la explosión del internet, los 90 definieron una estética que mezclaba futurismo, cultura pop y un optimismo tecnológico sin precedentes",
+      "Entre las luces de neón, la era digital de 32 bits y la explosión del internet, los 90 definieron una estética que mezclaba futurismo, cultura pop y un optimismo tecnológico sin precedentes.",
     videoTitle: "Documental | La Psicodelia Estética de los Años 90",
     background: "/images/90s.png",
     youtubeUrl: "https://www.youtube.com/watch?v=u_warG6uzKE",
+    fontClass: "kaisei-harunoumi-medium",
+    buttonVariant: "nineties",
   },
 ];
 ---
 
-<section class="relative snap-y snap-mandatory scroll-smooth" id="youtube">
+<section class="relative snap-y snap-mandatory scroll-smooth" id="secondary-sections">
   {
-    contents.map((item, index) => {
-      let fontClass = "";
-      if (index === 0) fontClass = "strait-regular";
-      if (index === 1) fontClass = "western-bangbang";
-      if (index === 2) fontClass = "kaisei-harunoumi-medium ";
+    contents.map((item, index) => (
+      <section
+        class="snap-start h-screen w-full bg-cover bg-center relative flex flex-col items-center justify-center text-white scroll-smooth"
+        style={`background-image: url('${item.background}')`}
+      >
+        <!-- capa oscura -->
+        <div class="absolute inset-0 bg-black/60 z-0" />
 
-      return (
-        <section
-          class="snap-start h-screen w-full bg-cover bg-center relative flex flex-col items-center justify-center text-white scroll-smooth"
-          style={`background-image: url('${item.background}')`}
-          id={index === contents.length - 1 ? "youtube" : undefined}
+        <!-- contenido -->
+        <div
+          class="relative z-10 text-center max-w-3xl px-6"
+          data-aos="fade-up"
+          data-aos-duration="800"
+          data-aos-delay={index * 100}
         >
-          {/* capa oscura */}
-          <div class="absolute inset-0 bg-black/60 z-0" />
-
-          {/* contenido */}
-          <div
-            class="relative z-10 text-center max-w-3xl px-6"
-            data-aos="fade-up"
-            data-aos-duration="800"
-            data-aos-delay={index * 100}
+          <h2
+            class={`text-5xl md:text-7xl font-normal leading-tight mb-6 ${item.fontClass}`}
           >
-            <h2
-              class={`text-5xl md:text-7xl font-normal leading-tight mb-6 ${fontClass}`}
-            >
-              {item.title}
-            </h2>
-            <p class="text-base md:text-lg mb-6 krub-extralight mx-auto max-w-md md:max-w-3xl leading-relaxed text-center">
-              {item.subtitle}
-            </p>
+            {item.title}
+          </h2>
 
-            <a
-              href={item.youtubeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              class={`${
-                index === 0
-                  ? "btn-retro"
-                  : index === 1
-                    ? "btn-western"
-                    : index === 2
-                      ? "btn-90s"
+          <p class="text-base md:text-lg mb-6 krub-extralight mx-auto max-w-md md:max-w-3xl leading-relaxed text-center">
+            {item.subtitle}
+          </p>
+
+          <a
+            href={item.youtubeUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            class={
+              item.buttonVariant === "retro"
+                ? "btn-retro"
+                : item.buttonVariant === "western"
+                  ? "btn-western"
+                  : item.buttonVariant === "nineties"
+                    ? "btn-90s"
+                    : item.buttonVariant === "kraftwerk"
+                      ? "btn-kraftwerk"
                       : "inline-block bg-white text-black px-6 py-3 rounded-full font-semibold hover:bg-gray-300"
-              }`}
-            >
-              <span class="btn-text">Ver en YouTube</span>
-
-              {index === 2 && (
-                <>
-                  <span class="shape circle" />
-                  <span class="shape triangle" />
-                  <span class="shape zigzag" />
-                  <span class="shape square" />
-                  <span class="shape circle2" />
-                  <span class="shape triangle2" />
-                  <span class="shape rect" />
-                  <span class="shape cross" />
-                  {/* más figuras etéreas */}
-                  <span class="shape dot1" />
-                  <span class="shape dot2" />
-                  <span class="shape dot3" />
-                  <span class="shape mini-triangle" />
-                  <span class="shape mini-rect" />
-                </>
-              )}
-            </a>
-          </div>
-
-          {/* título del video */}
-          <div
-            class="absolute bottom-6 text-xs md:text-sm text-white z-10 opacity-80 
-            w-full text-center px-4 leading-snug
-            md:w-auto md:text-right md:right-6 md:px-0"
+            }
           >
-            {item.videoTitle}
-          </div>
-        </section>
-      );
-    })
+            <span class="btn-text">Ver en YouTube</span>
+
+            {item.buttonVariant === "nineties" && (
+              <>
+                <span class="shape circle" />
+                <span class="shape triangle" />
+                <span class="shape zigzag" />
+                <span class="shape square" />
+                <span class="shape circle2" />
+                <span class="shape triangle2" />
+                <span class="shape rect" />
+                <span class="shape cross" />
+                <span class="shape dot1" />
+                <span class="shape dot2" />
+                <span class="shape dot3" />
+                <span class="shape mini-triangle" />
+                <span class="shape mini-rect" />
+              </>
+            )}
+          </a>
+        </div>
+
+        <!-- título del video -->
+        <div
+          class="absolute bottom-6 text-xs md:text-sm text-white z-10 opacity-80 
+          w-full text-center px-4 leading-snug
+          md:w-auto md:text-right md:right-6 md:px-0"
+        >
+          {item.videoTitle}
+        </div>
+      </section>
+    ))
   }
 </section>
+
+<style>
+  .btn-kraftwerk {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    border-radius: 9999px;
+    border: 1px solid #d6b85a;
+    color: #d6b85a;
+    font-weight: 500;
+    transition: all 0.4s ease;
+    background: transparent;
+  }
+
+  .btn-kraftwerk:hover {
+    background: #d6b85a;
+    color: black;
+  }
+</style>
