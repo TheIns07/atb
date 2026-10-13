@@ -8,6 +8,11 @@ import {
   createClient,
 } from "@supabase/supabase-js";
 
+import {
+  sendNewOrderNotificationEmail,
+  type OrderNotificationAddress,
+} from "../../../lib/server/shop/email";
+
 // ============================================================
 // SERVER ONLY
 // ============================================================
@@ -75,97 +80,205 @@ const supabase =
 // TYPES
 // ============================================================
 
-type ShopOrderItem = {
-  sku: string;
+type PaidOrderItem = {
+  sku:
+    string;
 
-  product_name: string;
+  product_name:
+    string;
 
   variant_description:
     | string
     | null;
 
-  quantity: number;
+  quantity:
+    number;
 
-  unit_amount: number;
+  unit_amount:
+    number;
 
-  line_total: number;
+  line_total:
+    number;
 
-  currency: string;
+  currency:
+    string;
+};
+
+type ShippingAddressLike = {
+  line1?:
+    | string
+    | null;
+
+  line2?:
+    | string
+    | null;
+
+  city?:
+    | string
+    | null;
+
+  state?:
+    | string
+    | null;
+
+  postal_code?:
+    | string
+    | null;
+
+  country?:
+    | string
+    | null;
+};
+
+type ShippingDetailsLike = {
+  name?:
+    | string
+    | null;
+
+  address?:
+    | ShippingAddressLike
+    | null;
+};
+
+type SessionShippingCompatibility = {
+  shipping_details?:
+    | ShippingDetailsLike
+    | null;
+
+  collected_information?: {
+    shipping_details?:
+      | ShippingDetailsLike
+      | null;
+  } | null;
 };
 
 type ProcessOrderResponse = {
-  success?: boolean;
+  success?:
+    boolean;
 
-  duplicate?: boolean;
+  duplicate?:
+    boolean;
 
-  order_id?: string;
+  order_id?:
+    string;
 
-  reservation_id?: string;
+  status?:
+    string;
 };
 
-type ReleaseReservationResponse = {
-  success?: boolean;
+type NotificationStateRow = {
+  confirmation_email_sent_at?:
+    string | null;
 
-  released?: boolean;
-
-  duplicate?: boolean;
-
-  status?: string;
-
-  reservation_id?: string;
+  confirmation_email_id?:
+    string | null;
 };
 
 // ============================================================
 // RESPONSE
 // ============================================================
 
-function jsonResponse(
-  body: Record<
-    string,
-    unknown
-  >,
-
-  status = 200,
+function okResponse(
+  message =
+    "ok",
 ): Response {
   return new Response(
-    JSON.stringify(
-      body,
-    ),
+    message,
     {
-      status,
-
-      headers: {
-        "Content-Type":
-          "application/json",
-
-        "Cache-Control":
-          "no-store",
-      },
+      status:
+        200,
     },
   );
 }
 
 // ============================================================
-// UUID
+// HELPERS
 // ============================================================
 
-function isUuid(
+function getString(
   value:
-    | string
-    | null
-    | undefined,
-): value is string {
-  if (!value) {
-    return false;
+    unknown,
+): string | null {
+  if (
+    typeof value !==
+    "string"
+  ) {
+    return null;
   }
 
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    value,
-  );
+  const normalized =
+    value.trim();
+
+  return normalized
+    ? normalized
+    : null;
+}
+
+function getInteger(
+  value:
+    unknown,
+): number | null {
+  if (
+    typeof value !==
+      "number" ||
+    !Number.isSafeInteger(
+      value,
+    )
+  ) {
+    return null;
+  }
+
+  return value;
+}
+
+function parseMetadataInteger(
+  value:
+    | string
+    | undefined,
+): number | null {
+  if (!value) {
+    return null;
+  }
+
+  const parsed =
+    Number(
+      value,
+    );
+
+  if (
+    !Number.isSafeInteger(
+      parsed,
+    ) ||
+    parsed < 0
+  ) {
+    return null;
+  }
+
+  return parsed;
 }
 
 // ============================================================
-// PAYMENT INTENT ID
+// ORDER REFERENCE
+// ============================================================
+
+function getOrderReference(
+  orderId:
+    string,
+): string {
+  return orderId
+    .replace(
+      /-/g,
+      "",
+    )
+    .slice(
+      0,
+      8,
+    )
+    .toUpperCase();
+}
+
+// ============================================================
+// PAYMENT INTENT
 // ============================================================
 
 function getPaymentIntentId(
@@ -175,10 +288,6 @@ function getPaymentIntentId(
   const paymentIntent =
     session.payment_intent;
 
-  if (!paymentIntent) {
-    return null;
-  }
-
   if (
     typeof paymentIntent ===
     "string"
@@ -186,32 +295,117 @@ function getPaymentIntentId(
     return paymentIntent;
   }
 
-  return paymentIntent.id;
+  if (
+    paymentIntent &&
+    typeof paymentIntent ===
+      "object" &&
+    "id" in paymentIntent
+  ) {
+    return getString(
+      paymentIntent.id,
+    );
+  }
+
+  return null;
+}
+
+// ============================================================
+// SHIPPING DETAILS
+// ============================================================
+
+function getShippingDetails(
+  session:
+    Stripe.Checkout.Session,
+): ShippingDetailsLike | null {
+  const compatible =
+    session as unknown as
+      SessionShippingCompatibility;
+
+  return (
+    compatible
+      .shipping_details ??
+    compatible
+      .collected_information
+      ?.shipping_details ??
+    null
+  );
+}
+
+// ============================================================
+// SHIPPING ADDRESS FOR INTERNAL EMAIL
+// ============================================================
+
+function getNotificationShippingAddress(
+  session:
+    Stripe.Checkout.Session,
+): OrderNotificationAddress | null {
+  const shipping =
+    getShippingDetails(
+      session,
+    );
+
+  const address =
+    shipping?.address;
+
+  if (!address) {
+    return null;
+  }
+
+  return {
+    name:
+      getString(
+        shipping?.name,
+      ),
+
+    line1:
+      getString(
+        address.line1,
+      ),
+
+    line2:
+      getString(
+        address.line2,
+      ),
+
+    city:
+      getString(
+        address.city,
+      ),
+
+    state:
+      getString(
+        address.state,
+      ),
+
+    postalCode:
+      getString(
+        address.postal_code,
+      ),
+
+    country:
+      getString(
+        address.country,
+      )?.toUpperCase() ??
+      null,
+  };
 }
 
 // ============================================================
 // RESERVATION ID
-//
-// Primero usamos metadata.
-//
-// Como fallback buscamos por stripe_session_id en Supabase.
-// Esto ayuda si por alguna razón metadata no estuviera presente.
 // ============================================================
 
 async function getReservationId(
   session:
     Stripe.Checkout.Session,
-): Promise<
-  string | null
-> {
+): Promise<string | null> {
   const metadataReservationId =
-    session.metadata
-      ?.reservation_id;
+    getString(
+      session.metadata
+        ?.reservation_id,
+    );
 
   if (
-    isUuid(
-      metadataReservationId,
-    )
+    metadataReservationId
   ) {
     return metadataReservationId;
   }
@@ -237,9 +431,11 @@ async function getReservationId(
       )
       .maybeSingle();
 
-  if (error) {
+  if (
+    error
+  ) {
     console.error(
-      "[ATB Shop] Error buscando reserva por Stripe Session:",
+      "[ATB Shop] No se pudo localizar la reserva:",
       {
         stripeSessionId:
           session.id,
@@ -255,75 +451,115 @@ async function getReservationId(
       },
     );
 
-    throw error;
-  }
-
-  if (
-    !data?.id ||
-    !isUuid(
-      data.id,
-    )
-  ) {
     return null;
   }
 
-  return data.id;
+  return getString(
+    data?.id,
+  );
 }
 
 // ============================================================
-// PRODUCT FROM STRIPE LINE ITEM
+// RELEASE RESERVATION
 // ============================================================
 
-function getStripeProduct(
-  lineItem:
-    Stripe.LineItem,
-): Stripe.Product {
-  const product =
-    lineItem.price
-      ?.product;
-
-  if (!product) {
-    throw new Error(
-      "Stripe line item has no product.",
-    );
-  }
-
-  if (
-    typeof product ===
-    "string"
-  ) {
-    throw new Error(
-      "Stripe Product was not expanded.",
-    );
-  }
-
-  if (
-    "deleted" in
-      product &&
-    product.deleted
-  ) {
-    throw new Error(
-      "Stripe Product was deleted.",
-    );
-  }
-
-  return product as
-    Stripe.Product;
-}
-
-// ============================================================
-// GET ORDER ITEMS FROM STRIPE
-// ============================================================
-
-async function getOrderItems(
+async function releaseReservation(
   session:
     Stripe.Checkout.Session,
-): Promise<
-  ShopOrderItem[]
-> {
+
+  status:
+    | "expired"
+    | "failed",
+): Promise<void> {
+  if (!supabase) {
+    throw new Error(
+      "Supabase no está configurado.",
+    );
+  }
+
+  const reservationId =
+    await getReservationId(
+      session,
+    );
+
+  if (
+    !reservationId
+  ) {
+    console.warn(
+      "[ATB Shop] No existe reservation_id para liberar:",
+      {
+        stripeSessionId:
+          session.id,
+
+        status,
+      },
+    );
+
+    return;
+  }
+
+  const {
+    error,
+  } =
+    await supabase.rpc(
+      "release_shop_inventory_reservation",
+      {
+        p_reservation_id:
+          reservationId,
+
+        p_status:
+          status,
+      },
+    );
+
+  if (
+    error
+  ) {
+    console.error(
+      "[ATB Shop] Error liberando reserva:",
+      {
+        reservationId,
+
+        status,
+
+        message:
+          error.message,
+
+        details:
+          error.details,
+
+        hint:
+          error.hint,
+      },
+    );
+
+    throw error;
+  }
+
+  console.log(
+    "[ATB Shop] Reserva liberada:",
+    {
+      reservationId,
+
+      stripeSessionId:
+        session.id,
+
+      status,
+    },
+  );
+}
+
+// ============================================================
+// PAID ITEMS
+// ============================================================
+
+async function getPaidItems(
+  session:
+    Stripe.Checkout.Session,
+): Promise<PaidOrderItem[]> {
   if (!stripe) {
     throw new Error(
-      "Stripe is not configured.",
+      "Stripe no está configurado.",
     );
   }
 
@@ -342,17 +578,8 @@ async function getOrderItems(
         },
       );
 
-  if (
-    lineItems.data.length ===
-    0
-  ) {
-    throw new Error(
-      "Stripe Checkout contains no line items.",
-    );
-  }
-
   const items:
-    ShopOrderItem[] =
+    PaidOrderItem[] =
     [];
 
   for (
@@ -360,110 +587,110 @@ async function getOrderItems(
     of lineItems.data
   ) {
     const quantity =
-      lineItem.quantity;
-
-    if (
-      !quantity ||
-      !Number.isInteger(
-        quantity,
-      ) ||
-      quantity <= 0
-    ) {
-      throw new Error(
-        "Stripe line item has invalid quantity.",
+      getInteger(
+        lineItem.quantity,
       );
-    }
 
     const price =
       lineItem.price;
 
-    if (!price) {
-      throw new Error(
-        "Stripe line item has no price.",
-      );
-    }
-
     const unitAmount =
-      price.unit_amount;
-
-    if (
-      unitAmount ===
-        null ||
-      !Number.isInteger(
-        unitAmount,
-      ) ||
-      unitAmount < 0
-    ) {
-      throw new Error(
-        "Stripe line item has invalid unit amount.",
+      getInteger(
+        price?.unit_amount,
       );
-    }
-
-    const stripeProduct =
-      getStripeProduct(
-        lineItem,
-      );
-
-    const sku =
-      stripeProduct
-        .metadata
-        ?.sku
-        ?.trim()
-        .toUpperCase();
-
-    if (
-      !sku ||
-      !/^[A-Z0-9-]+$/.test(
-        sku,
-      )
-    ) {
-      throw new Error(
-        "Stripe product is missing a valid ATB SKU.",
-      );
-    }
 
     const lineTotal =
-      lineItem.amount_total;
+      getInteger(
+        lineItem.amount_total,
+      );
 
     if (
-      !Number.isInteger(
-        lineTotal,
-      ) ||
+      quantity ===
+        null ||
+      quantity <= 0 ||
+      unitAmount ===
+        null ||
+      unitAmount < 0 ||
+      lineTotal ===
+        null ||
       lineTotal < 0
     ) {
       throw new Error(
-        `Stripe line item ${sku} has invalid total.`,
+        `Stripe devolvió cantidades inválidas para ${session.id}.`,
+      );
+    }
+
+    const productReference =
+      price?.product;
+
+    if (
+      !productReference ||
+      typeof productReference ===
+        "string"
+    ) {
+      throw new Error(
+        `Stripe no devolvió el Product expandido para ${session.id}.`,
+      );
+    }
+
+    if (
+      "deleted" in
+        productReference &&
+      productReference.deleted
+    ) {
+      throw new Error(
+        "Uno de los productos de Stripe fue eliminado.",
+      );
+    }
+
+    const product =
+      productReference as
+        Stripe.Product;
+
+    const sku =
+      getString(
+        product.metadata
+          ?.sku,
+      );
+
+    if (
+      !sku
+    ) {
+      throw new Error(
+        `Un producto de ${session.id} no contiene SKU.`,
+      );
+    }
+
+    const productName =
+      getString(
+        product.name,
+      );
+
+    if (
+      !productName
+    ) {
+      throw new Error(
+        `El SKU ${sku} no contiene nombre.`,
       );
     }
 
     const currency =
       (
-        lineItem.currency ??
-        price.currency ??
-        session.currency ??
-        ""
-      )
-        .trim()
-        .toLowerCase();
+        getString(
+          lineItem.currency,
+        ) ??
+        getString(
+          price?.currency,
+        )
+      )?.toLowerCase();
 
-    if (!currency) {
+    if (
+      !currency
+    ) {
       throw new Error(
-        `Stripe line item ${sku} has no currency.`,
+        `El SKU ${sku} no contiene moneda.`,
       );
     }
-
-    const productName =
-      (
-        stripeProduct.name ||
-        lineItem.description ||
-        sku
-      ).trim();
-
-    const variantDescription =
-      stripeProduct
-        .description
-        ?.trim() ||
-      null;
 
     items.push({
       sku,
@@ -472,7 +699,9 @@ async function getOrderItems(
         productName,
 
       variant_description:
-        variantDescription,
+        getString(
+          product.description,
+        ),
 
       quantity,
 
@@ -486,17 +715,1038 @@ async function getOrderItems(
     });
   }
 
-  // ==========================================================
-  // VERIFY STRIPE SUBTOTAL
-  //
-  // Se compara contra amount_subtotal, no amount_total.
-  //
-  // Así en el futuro amount_total podrá incluir:
-  // - envío
-  // - impuestos
-  //
-  // sin romper esta validación.
-  // ==========================================================
+  if (
+    items.length ===
+    0
+  ) {
+    throw new Error(
+      `Checkout ${session.id} no contiene artículos.`,
+    );
+  }
+
+  return items;
+}
+
+// ============================================================
+// SHIPPING AMOUNT
+// ============================================================
+
+function getShippingAmount(
+  session:
+    Stripe.Checkout.Session,
+): number | null {
+  const stripeShipping =
+    getInteger(
+      session
+        .shipping_cost
+        ?.amount_total,
+    );
+
+  if (
+    stripeShipping !==
+    null
+  ) {
+    return stripeShipping;
+  }
+
+  return parseMetadataInteger(
+    session.metadata
+      ?.expected_shipping,
+  );
+}
+
+// ============================================================
+// SHIPPING METHOD
+// ============================================================
+
+function getShippingMethod(
+  session:
+    Stripe.Checkout.Session,
+): string | null {
+  const method =
+    getString(
+      session.metadata
+        ?.shipping_method,
+    );
+
+  if (
+    method ===
+      "standard" ||
+    method ===
+      "free"
+  ) {
+    return method;
+  }
+
+  return null;
+}
+
+// ============================================================
+// SHIPPING METHOD NAME
+// ============================================================
+
+function getShippingMethodName(
+  session:
+    Stripe.Checkout.Session,
+
+  amountShipping:
+    number,
+): string {
+  const method =
+    getShippingMethod(
+      session,
+    );
+
+  if (
+    method ===
+      "free" ||
+    amountShipping ===
+      0
+  ) {
+    return "Envío estándar gratuito";
+  }
+
+  return "Envío estándar";
+}
+
+// ============================================================
+// UPDATE ORDER SHIPPING
+// ============================================================
+
+async function updateOrderShippingData(
+  session:
+    Stripe.Checkout.Session,
+
+  amountSubtotal:
+    number,
+
+  amountShipping:
+    number,
+): Promise<string> {
+  if (
+    !supabase
+  ) {
+    throw new Error(
+      "Supabase no está configurado.",
+    );
+  }
+
+  const shipping =
+    getShippingDetails(
+      session,
+    );
+
+  const address =
+    shipping?.address ??
+    null;
+
+  const customerDetails =
+    session.customer_details;
+
+  const shippingName =
+    getString(
+      shipping?.name,
+    ) ??
+    getString(
+      customerDetails
+        ?.name,
+    );
+
+  const shippingPhone =
+    getString(
+      customerDetails
+        ?.phone,
+    );
+
+  const line1 =
+    getString(
+      address?.line1,
+    );
+
+  const line2 =
+    getString(
+      address?.line2,
+    );
+
+  const city =
+    getString(
+      address?.city,
+    );
+
+  const state =
+    getString(
+      address?.state,
+    );
+
+  const postalCode =
+    getString(
+      address?.postal_code,
+    );
+
+  const country =
+    getString(
+      address?.country,
+    )?.toUpperCase() ??
+    null;
+
+  // ========================================================
+  // COUNTRY
+  // ========================================================
+
+  if (
+    country &&
+    country !==
+      "MX"
+  ) {
+    throw new Error(
+      `País de envío inesperado: ${country}.`,
+    );
+  }
+
+  // ========================================================
+  // ADDRESS
+  // ========================================================
+
+  if (
+    !line1 ||
+    !country
+  ) {
+    throw new Error(
+      `Checkout ${session.id} no contiene una dirección de envío válida.`,
+    );
+  }
+
+  // ========================================================
+  // FIND ORDER
+  // ========================================================
+
+  const {
+    data:
+      orderData,
+
+    error:
+      orderError,
+  } =
+    await supabase
+      .from(
+        "shop_orders",
+      )
+      .select(
+        "id",
+      )
+      .eq(
+        "stripe_session_id",
+        session.id,
+      )
+      .maybeSingle();
+
+  if (
+    orderError
+  ) {
+    console.error(
+      "[ATB Shop] Error consultando pedido:",
+      {
+        stripeSessionId:
+          session.id,
+
+        message:
+          orderError.message,
+
+        details:
+          orderError.details,
+
+        hint:
+          orderError.hint,
+      },
+    );
+
+    throw orderError;
+  }
+
+  const orderId =
+    getString(
+      orderData?.id,
+    );
+
+  if (
+    !orderId
+  ) {
+    throw new Error(
+      `No encontramos shop_orders para ${session.id}.`,
+    );
+  }
+
+  // ========================================================
+  // UPDATE
+  // ========================================================
+
+  const {
+    error:
+      updateError,
+  } =
+    await supabase
+      .from(
+        "shop_orders",
+      )
+      .update({
+        amount_subtotal:
+          amountSubtotal,
+
+        amount_shipping:
+          amountShipping,
+
+        shipping_method:
+          getShippingMethod(
+            session,
+          ),
+
+        shipping_name:
+          shippingName,
+
+        shipping_phone:
+          shippingPhone,
+
+        shipping_address_line1:
+          line1,
+
+        shipping_address_line2:
+          line2,
+
+        shipping_city:
+          city,
+
+        shipping_state:
+          state,
+
+        shipping_postal_code:
+          postalCode,
+
+        shipping_country:
+          country,
+      })
+      .eq(
+        "id",
+        orderId,
+      );
+
+  if (
+    updateError
+  ) {
+    console.error(
+      "[ATB Shop] No se pudieron guardar datos de envío:",
+      {
+        orderId,
+
+        stripeSessionId:
+          session.id,
+
+        message:
+          updateError.message,
+
+        details:
+          updateError.details,
+
+        hint:
+          updateError.hint,
+      },
+    );
+
+    throw updateError;
+  }
+
+  return orderId;
+}
+
+// ============================================================
+// SAVE EMAIL ERROR
+// ============================================================
+
+async function saveNotificationError(
+  orderId:
+    string,
+
+  message:
+    string,
+): Promise<void> {
+  if (
+    !supabase
+  ) {
+    return;
+  }
+
+  try {
+    const {
+      error,
+    } =
+      await supabase
+        .from(
+          "shop_orders",
+        )
+        .update({
+          email_last_error:
+            message.slice(
+              0,
+              2000,
+            ),
+        })
+        .eq(
+          "id",
+          orderId,
+        );
+
+    if (
+      error
+    ) {
+      console.error(
+        "[ATB Shop] No se pudo guardar email_last_error:",
+        {
+          orderId,
+
+          message:
+            error.message,
+        },
+      );
+    }
+  } catch (
+    error
+  ) {
+    console.error(
+      "[ATB Shop] Error guardando fallo de notificación:",
+      {
+        orderId,
+
+        error,
+      },
+    );
+  }
+}
+
+// ============================================================
+// OWNER NOTIFICATION
+//
+// IMPORTANTE:
+//
+// La notificación al propietario NO es parte crítica del pago.
+//
+// Si Resend falla:
+// - el pago sigue válido
+// - el pedido sigue válido
+// - el inventario sigue descontado
+// - Stripe recibe 200
+//
+// Sólo registramos el error.
+// ============================================================
+
+async function sendOwnerNotificationSafely(
+  orderId:
+    string,
+
+  session:
+    Stripe.Checkout.Session,
+
+  items:
+    PaidOrderItem[],
+
+  amountSubtotal:
+    number,
+
+  amountShipping:
+    number,
+
+  amountTotal:
+    number,
+
+  currency:
+    string,
+
+  paymentIntentId:
+    string | null,
+): Promise<void> {
+  if (
+    !supabase
+  ) {
+    return;
+  }
+
+  try {
+    // ========================================================
+    // PREVENT DUPLICATE NOTIFICATIONS
+    //
+    // Reutilizamos confirmation_email_* de la migración que
+    // ya existe.
+    //
+    // Ahora representan la notificación interna de nueva compra.
+    // ========================================================
+
+    const {
+      data:
+        emailStateData,
+
+      error:
+        emailStateError,
+    } =
+      await supabase
+        .from(
+          "shop_orders",
+        )
+        .select(
+          `
+            confirmation_email_sent_at,
+            confirmation_email_id
+          `,
+        )
+        .eq(
+          "id",
+          orderId,
+        )
+        .maybeSingle();
+
+    if (
+      emailStateError
+    ) {
+      /*
+        No bloqueamos la notificación.
+
+        Resend tiene además Idempotency-Key.
+      */
+
+      console.error(
+        "[ATB Shop] No se pudo consultar estado de notificación:",
+        {
+          orderId,
+
+          message:
+            emailStateError.message,
+        },
+      );
+    }
+
+    const notificationState =
+      emailStateData as
+        | NotificationStateRow
+        | null;
+
+    if (
+      notificationState
+        ?.confirmation_email_sent_at
+    ) {
+      console.log(
+        "[ATB Shop] Notificación de compra ya enviada:",
+        {
+          orderId,
+
+          emailId:
+            notificationState
+              .confirmation_email_id,
+        },
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // CUSTOMER
+    // ========================================================
+
+    const customerEmail =
+      getString(
+        session
+          .customer_details
+          ?.email,
+      ) ??
+      getString(
+        session.customer_email,
+      );
+
+    const customerName =
+      getString(
+        session
+          .customer_details
+          ?.name,
+      );
+
+    const customerPhone =
+      getString(
+        session
+          .customer_details
+          ?.phone,
+      );
+
+    // ========================================================
+    // SEND
+    // ========================================================
+
+    const result =
+      await sendNewOrderNotificationEmail({
+        orderId,
+
+        reference:
+          getOrderReference(
+            orderId,
+          ),
+
+        stripeSessionId:
+          session.id,
+
+        paymentIntentId,
+
+        customerName,
+
+        customerEmail,
+
+        customerPhone,
+
+        currency:
+          currency.toUpperCase(),
+
+        amountSubtotal,
+
+        amountShipping,
+
+        amountTotal,
+
+        shippingMethodName:
+          getShippingMethodName(
+            session,
+            amountShipping,
+          ),
+
+        shippingAddress:
+          getNotificationShippingAddress(
+            session,
+          ),
+
+        items:
+          items.map(
+            (
+              item,
+            ) => ({
+              sku:
+                item.sku,
+
+              name:
+                item.product_name,
+
+              variant:
+                item.variant_description,
+
+              quantity:
+                item.quantity,
+
+              unitAmount:
+                item.unit_amount,
+
+              lineTotal:
+                item.line_total,
+            }),
+          ),
+      });
+
+    // ========================================================
+    // EMAIL DISABLED
+    // ========================================================
+
+    if (
+      result.success &&
+      result.skipped
+    ) {
+      console.log(
+        "[ATB Shop] Notificación interna deshabilitada:",
+        {
+          orderId,
+        },
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // FAILED
+    // ========================================================
+
+    if (
+      !result.success
+    ) {
+      const message =
+        result.error ??
+        "No fue posible enviar la notificación de compra.";
+
+      console.error(
+        "[ATB Shop] Falló notificación interna:",
+        {
+          orderId,
+
+          message,
+        },
+      );
+
+      await saveNotificationError(
+        orderId,
+        message,
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // NO EMAIL ID
+    // ========================================================
+
+    if (
+      !result.emailId
+    ) {
+      await saveNotificationError(
+        orderId,
+        "Resend reportó éxito pero no devolvió emailId.",
+      );
+
+      return;
+    }
+
+    // ========================================================
+    // SAVE SENT STATE
+    //
+    // Las columnas conservan el nombre anterior.
+    // No necesitamos otra migración sólo para renombrarlas.
+    // ========================================================
+
+    const {
+      error:
+        updateError,
+    } =
+      await supabase
+        .from(
+          "shop_orders",
+        )
+        .update({
+          confirmation_email_sent_at:
+            new Date()
+              .toISOString(),
+
+          confirmation_email_id:
+            result.emailId,
+
+          email_last_error:
+            null,
+        })
+        .eq(
+          "id",
+          orderId,
+        );
+
+    if (
+      updateError
+    ) {
+      /*
+        El email YA salió.
+
+        No fallamos el webhook.
+
+        Resend además utiliza:
+        atb-new-order/{orderId}
+
+        como Idempotency-Key.
+      */
+
+      console.error(
+        "[ATB Shop] Notificación enviada pero no se pudo guardar su estado:",
+        {
+          orderId,
+
+          emailId:
+            result.emailId,
+
+          message:
+            updateError.message,
+        },
+      );
+
+      return;
+    }
+
+    console.log(
+      "[ATB Shop] Notificación de nueva compra enviada:",
+      {
+        orderId,
+
+        emailId:
+          result.emailId,
+      },
+    );
+  } catch (
+    error
+  ) {
+    // ========================================================
+    // FINAL SAFETY BARRIER
+    // ========================================================
+
+    console.error(
+      "[ATB Shop] Error inesperado enviando notificación:",
+      {
+        orderId,
+
+        error,
+      },
+    );
+
+    await saveNotificationError(
+      orderId,
+
+      error instanceof
+        Error
+        ? error.message
+        : "Error inesperado enviando notificación.",
+    );
+  }
+}
+
+// ============================================================
+// PROCESS PAID CHECKOUT
+// ============================================================
+
+async function processPaidCheckout(
+  eventSession:
+    Stripe.Checkout.Session,
+): Promise<void> {
+  if (
+    !stripe ||
+    !supabase
+  ) {
+    throw new Error(
+      "Stripe o Supabase no están configurados.",
+    );
+  }
+
+  // ========================================================
+  // ONLY ATB
+  // ========================================================
+
+  if (
+    eventSession.metadata
+      ?.source !==
+    "atb-shop"
+  ) {
+    console.log(
+      "[ATB Shop] Ignorando Checkout externo:",
+      eventSession.id,
+    );
+
+    return;
+  }
+
+  if (
+    eventSession.mode !==
+    "payment"
+  ) {
+    console.log(
+      "[ATB Shop] Checkout ignorado por mode:",
+      eventSession.id,
+    );
+
+    return;
+  }
+
+  // ========================================================
+  // CURRENT STRIPE SESSION
+  // ========================================================
+
+  const session =
+    await stripe.checkout
+      .sessions.retrieve(
+        eventSession.id,
+      );
+
+  // ========================================================
+  // PAYMENT STATUS
+  // ========================================================
+
+  const paid =
+    session.payment_status ===
+      "paid" ||
+    session.payment_status ===
+      "no_payment_required";
+
+  /*
+    Para métodos de pago asíncronos:
+
+    checkout.session.completed puede llegar antes del pago.
+
+    En ese caso esperamos:
+    checkout.session.async_payment_succeeded
+  */
+
+  if (
+    !paid
+  ) {
+    console.log(
+      "[ATB Shop] Pago todavía pendiente:",
+      {
+        stripeSessionId:
+          session.id,
+
+        paymentStatus:
+          session.payment_status,
+      },
+    );
+
+    return;
+  }
+
+  // ========================================================
+  // RESERVATION
+  // ========================================================
+
+  const reservationId =
+    await getReservationId(
+      session,
+    );
+
+  if (
+    !reservationId
+  ) {
+    throw new Error(
+      `No se encontró reservation_id para ${session.id}.`,
+    );
+  }
+
+  // ========================================================
+  // AMOUNTS
+  // ========================================================
+
+  const amountSubtotal =
+    getInteger(
+      session.amount_subtotal,
+    );
+
+  const amountShipping =
+    getShippingAmount(
+      session,
+    );
+
+  const amountTotal =
+    getInteger(
+      session.amount_total,
+    );
+
+  if (
+    amountSubtotal ===
+      null ||
+    amountSubtotal < 0
+  ) {
+    throw new Error(
+      `Subtotal inválido en ${session.id}.`,
+    );
+  }
+
+  if (
+    amountShipping ===
+      null ||
+    amountShipping < 0
+  ) {
+    throw new Error(
+      `Costo de envío inválido en ${session.id}.`,
+    );
+  }
+
+  if (
+    amountTotal ===
+      null ||
+    amountTotal < 0
+  ) {
+    throw new Error(
+      `Total inválido en ${session.id}.`,
+    );
+  }
+
+  // ========================================================
+  // EXPECTED VALUES FROM OUR CHECKOUT
+  // ========================================================
+
+  const expectedSubtotal =
+    parseMetadataInteger(
+      session.metadata
+        ?.expected_subtotal,
+    );
+
+  const expectedShipping =
+    parseMetadataInteger(
+      session.metadata
+        ?.expected_shipping,
+    );
+
+  const expectedTotal =
+    parseMetadataInteger(
+      session.metadata
+        ?.expected_total,
+    );
+
+  if (
+    expectedSubtotal !==
+      null &&
+    expectedSubtotal !==
+      amountSubtotal
+  ) {
+    throw new Error(
+      `Subtotal no coincide. Esperado ${expectedSubtotal}, Stripe ${amountSubtotal}.`,
+    );
+  }
+
+  if (
+    expectedShipping !==
+      null &&
+    expectedShipping !==
+      amountShipping
+  ) {
+    throw new Error(
+      `Envío no coincide. Esperado ${expectedShipping}, Stripe ${amountShipping}.`,
+    );
+  }
+
+  if (
+    expectedTotal !==
+      null &&
+    expectedTotal !==
+      amountTotal
+  ) {
+    throw new Error(
+      `Total no coincide. Esperado ${expectedTotal}, Stripe ${amountTotal}.`,
+    );
+  }
+
+  // ========================================================
+  // CURRENCY
+  // ========================================================
+
+  const currency =
+    getString(
+      session.currency,
+    )?.toLowerCase();
+
+  if (
+    !currency
+  ) {
+    throw new Error(
+      `Stripe no devolvió currency para ${session.id}.`,
+    );
+  }
+
+  if (
+    currency !==
+    "mxn"
+  ) {
+    throw new Error(
+      `Moneda inesperada: ${currency}.`,
+    );
+  }
+
+  // ========================================================
+  // ITEMS
+  // ========================================================
+
+  const items =
+    await getPaidItems(
+      session,
+    );
 
   const calculatedSubtotal =
     items.reduce(
@@ -511,201 +1761,84 @@ async function getOrderItems(
     );
 
   if (
-    session.amount_subtotal !==
-      null &&
     calculatedSubtotal !==
-      session.amount_subtotal
+    amountSubtotal
   ) {
     throw new Error(
-      `Stripe subtotal mismatch. Expected ${session.amount_subtotal}, received ${calculatedSubtotal}.`,
+      `Productos (${calculatedSubtotal}) no coinciden con subtotal (${amountSubtotal}).`,
     );
   }
 
-  return items;
-}
-
-// ============================================================
-// PROCESS PAID CHECKOUT
-// ============================================================
-
-async function processPaidCheckout(
-  session:
-    Stripe.Checkout.Session,
-): Promise<void> {
-  if (!supabase) {
-    throw new Error(
-      "Supabase is not configured.",
-    );
-  }
-
-  // ==========================================================
-  // SOURCE
-  // ==========================================================
-
-  if (
-    session.metadata
-      ?.source !==
-    "atb-shop"
+  for (
+    const item
+    of items
   ) {
-    console.log(
-      "[ATB Shop] Sesión ignorada porque no pertenece a ATB Shop:",
-      session.id,
-    );
-
-    return;
+    if (
+      item.currency !==
+      currency
+    ) {
+      throw new Error(
+        `Moneda inconsistente en SKU ${item.sku}.`,
+      );
+    }
   }
 
-  // ==========================================================
-  // MODE
-  // ==========================================================
-
-  if (
-    session.mode !==
-    "payment"
-  ) {
-    console.log(
-      "[ATB Shop] Sesión ignorada porque no es mode=payment:",
-      session.id,
-    );
-
-    return;
-  }
-
-  // ==========================================================
-  // PAYMENT STATUS
-  // ==========================================================
-
-  if (
-    session.payment_status !==
-      "paid" &&
-    session.payment_status !==
-      "no_payment_required"
-  ) {
-    /*
-      Para métodos asíncronos checkout.session.completed
-      puede llegar antes del pago.
-
-      En ese caso esperamos:
-      checkout.session.async_payment_succeeded
-    */
-
-    console.log(
-      "[ATB Shop] Checkout completado pero pago todavía pendiente:",
-      {
-        stripeSessionId:
-          session.id,
-
-        paymentStatus:
-          session.payment_status,
-      },
-    );
-
-    return;
-  }
-
-  // ==========================================================
-  // RESERVATION
-  // ==========================================================
-
-  const reservationId =
-    await getReservationId(
-      session,
-    );
-
-  if (!reservationId) {
-    throw new Error(
-      `Paid Stripe session ${session.id} has no inventory reservation.`,
-    );
-  }
-
-  // ==========================================================
-  // AMOUNT
-  // ==========================================================
-
-  const amountTotal =
-    session.amount_total;
-
-  if (
-    amountTotal ===
-      null ||
-    !Number.isInteger(
-      amountTotal,
-    ) ||
-    amountTotal < 0
-  ) {
-    throw new Error(
-      `Stripe session ${session.id} has invalid amount_total.`,
-    );
-  }
-
-  // ==========================================================
-  // CURRENCY
-  // ==========================================================
-
-  const currency =
-    session.currency
-      ?.trim()
-      .toLowerCase();
-
-  if (!currency) {
-    throw new Error(
-      `Stripe session ${session.id} has no currency.`,
-    );
-  }
-
-  // ==========================================================
-  // ORDER ITEMS
-  // ==========================================================
-
-  const items =
-    await getOrderItems(
-      session,
-    );
-
-  // ==========================================================
+  // ========================================================
   // CUSTOMER
-  // ==========================================================
+  // ========================================================
 
   const customerEmail =
-    session
-      .customer_details
-      ?.email ??
-    session.customer_email ??
-    null;
+    getString(
+      session
+        .customer_details
+        ?.email,
+    ) ??
+    getString(
+      session.customer_email,
+    );
 
   const customerName =
-    session
-      .customer_details
-      ?.name ??
-    null;
+    getString(
+      session
+        .customer_details
+        ?.name,
+    );
 
   const customerPhone =
-    session
-      .customer_details
-      ?.phone ??
-    null;
+    getString(
+      session
+        .customer_details
+        ?.phone,
+    );
+
+  // ========================================================
+  // PAYMENT INTENT
+  // ========================================================
 
   const paymentIntentId =
     getPaymentIntentId(
       session,
     );
 
-  // ==========================================================
-  // ATOMIC CONFIRMATION
+  // ========================================================
+  // ATOMIC ORDER + INVENTORY
   //
-  // En una sola transacción SQL:
+  // PARTE CRÍTICA:
   //
-  // - verifica reserva
+  // - valida reserva
   // - crea pedido
-  // - crea order_items
-  // - stock -= quantity
-  // - reserved_stock -= quantity
-  // - reservation -> confirmed
-  // ==========================================================
+  // - crea items
+  // - descuenta stock
+  // - limpia reserved_stock
+  // - confirma reserva
+  // ========================================================
 
   const {
-    data,
-    error,
+    data:
+      processData,
+
+    error:
+      processError,
   } =
     await supabase.rpc(
       "process_paid_shop_order_with_reservation",
@@ -739,65 +1872,84 @@ async function processPaidCheckout(
       },
     );
 
-  if (error) {
+  if (
+    processError
+  ) {
     console.error(
-      "[ATB Shop] Error procesando pedido pagado:",
+      "[ATB Shop] Error registrando pedido:",
       {
         reservationId,
 
         stripeSessionId:
           session.id,
 
-        paymentIntentId,
-
         message:
-          error.message,
+          processError.message,
 
         details:
-          error.details,
+          processError.details,
 
         hint:
-          error.hint,
+          processError.hint,
       },
     );
 
-    /*
-      Lanzamos error deliberadamente.
-
-      El webhook responderá 500 y Stripe volverá
-      a intentar entregar el evento.
-    */
-
-    throw error;
+    throw processError;
   }
 
-  const result =
-    data as
+  const processResult =
+    processData as
       | ProcessOrderResponse
       | null;
 
-  if (
-    !result ||
-    result.success !==
-      true
-  ) {
-    throw new Error(
-      `Invalid database response while processing Stripe session ${session.id}.`,
+  // ========================================================
+  // SHIPPING DATA
+  // ========================================================
+
+  const orderId =
+    await updateOrderShippingData(
+      session,
+      amountSubtotal,
+      amountShipping,
     );
-  }
 
-  // ==========================================================
-  // DUPLICATE
-  // ==========================================================
+  // ========================================================
+  // CRITICAL FLOW COMPLETE
+  //
+  // Desde este punto:
+  //
+  // pago        ✅
+  // pedido      ✅
+  // inventario  ✅
+  // reserva     ✅
+  // dirección   ✅
+  //
+  // El correo NO puede romper la compra.
+  // ========================================================
+
+  await sendOwnerNotificationSafely(
+    orderId,
+    session,
+    items,
+    amountSubtotal,
+    amountShipping,
+    amountTotal,
+    currency,
+    paymentIntentId,
+  );
+
+  // ========================================================
+  // LOG
+  // ========================================================
 
   if (
-    result.duplicate
+    processResult
+      ?.duplicate
   ) {
     console.log(
-      "[ATB Shop] Webhook duplicado ignorado:",
+      "[ATB Shop] Webhook duplicado procesado idempotentemente:",
       {
-        orderId:
-          result.order_id,
+        orderId,
 
         reservationId,
 
@@ -808,193 +1960,35 @@ async function processPaidCheckout(
 
     return;
   }
-
-  // ==========================================================
-  // SUCCESS
-  // ==========================================================
 
   console.log(
     "[ATB SHOP] PEDIDO REGISTRADO",
-  );
-
-  console.log({
-    orderId:
-      result.order_id,
-
-    reservationId,
-
-    stripeSessionId:
-      session.id,
-
-    paymentIntentId,
-
-    email:
-      customerEmail,
-
-    amount:
-      amountTotal,
-
-    currency,
-
-    items:
-      items.map(
-        (
-          item,
-        ) => ({
-          sku:
-            item.sku,
-
-          quantity:
-            item.quantity,
-
-          total:
-            item.line_total,
-        }),
-      ),
-  });
-}
-
-// ============================================================
-// RELEASE RESERVATION
-// ============================================================
-
-async function releaseReservation(
-  session:
-    Stripe.Checkout.Session,
-
-  status:
-    | "expired"
-    | "failed",
-): Promise<void> {
-  if (!supabase) {
-    throw new Error(
-      "Supabase is not configured.",
-    );
-  }
-
-  if (
-    session.metadata
-      ?.source !==
-    "atb-shop"
-  ) {
-    return;
-  }
-
-  const reservationId =
-    await getReservationId(
-      session,
-    );
-
-  /*
-    Una sesión antigua creada antes del sistema
-    de reservas puede no tener reservation_id.
-
-    Si está expirando/fallando no hay nada nuevo
-    que liberar.
-  */
-
-  if (!reservationId) {
-    console.warn(
-      "[ATB Shop] Sesión sin reserva al intentar liberar inventario:",
-      {
-        stripeSessionId:
-          session.id,
-
-        status,
-      },
-    );
-
-    return;
-  }
-
-  const {
-    data,
-    error,
-  } =
-    await supabase.rpc(
-      "release_shop_inventory_reservation",
-      {
-        p_reservation_id:
-          reservationId,
-
-        p_status:
-          status,
-      },
-    );
-
-  if (error) {
-    console.error(
-      "[ATB Shop] Error liberando reserva:",
-      {
-        reservationId,
-
-        stripeSessionId:
-          session.id,
-
-        status,
-
-        message:
-          error.message,
-
-        details:
-          error.details,
-
-        hint:
-          error.hint,
-      },
-    );
-
-    /*
-      Respondemos 500 posteriormente para que Stripe
-      vuelva a enviar el evento.
-    */
-
-    throw error;
-  }
-
-  const result =
-    data as
-      | ReleaseReservationResponse
-      | null;
-
-  if (
-    !result ||
-    result.success !==
-      true
-  ) {
-    throw new Error(
-      `Invalid release response for reservation ${reservationId}.`,
-    );
-  }
-
-  if (
-    result.duplicate
-  ) {
-    console.log(
-      "[ATB Shop] Reserva ya estaba resuelta:",
-      {
-        reservationId,
-
-        stripeSessionId:
-          session.id,
-
-        currentStatus:
-          result.status,
-      },
-    );
-
-    return;
-  }
-
-  console.log(
-    "[ATB Shop] Reserva liberada:",
     {
+      orderId,
+
+      reference:
+        getOrderReference(
+          orderId,
+        ),
+
       reservationId,
 
       stripeSessionId:
         session.id,
 
-      status,
+      subtotal:
+        amountSubtotal,
+
+      shipping:
+        amountShipping,
+
+      total:
+        amountTotal,
+
+      currency,
+
+      ownerNotification:
+        "processed",
     },
   );
 }
@@ -1012,50 +2006,21 @@ export const POST:
     // CONFIG
     // ========================================================
 
-    if (!stripe) {
-      console.error(
-        "[ATB Shop] Webhook: falta STRIPE_SECRET_KEY.",
-      );
-
-      return jsonResponse(
-        {
-          error:
-            "Stripe not configured.",
-        },
-
-        500,
-      );
-    }
-
     if (
-      !stripeWebhookSecret
+      !stripe ||
+      !stripeWebhookSecret ||
+      !supabase
     ) {
       console.error(
-        "[ATB Shop] Webhook: falta STRIPE_WEBHOOK_SECRET.",
+        "[ATB Shop] Webhook no configurado correctamente.",
       );
 
-      return jsonResponse(
+      return new Response(
+        "Webhook configuration error",
         {
-          error:
-            "Stripe webhook not configured.",
+          status:
+            500,
         },
-
-        500,
-      );
-    }
-
-    if (!supabase) {
-      console.error(
-        "[ATB Shop] Webhook: Supabase no está configurado.",
-      );
-
-      return jsonResponse(
-        {
-          error:
-            "Supabase not configured.",
-        },
-
-        500,
       );
     }
 
@@ -1068,31 +2033,26 @@ export const POST:
         "stripe-signature",
       );
 
-    if (!signature) {
-      console.warn(
-        "[ATB Shop] Webhook sin stripe-signature.",
-      );
-
-      return jsonResponse(
+    if (
+      !signature
+    ) {
+      return new Response(
+        "Missing Stripe signature",
         {
-          error:
-            "Missing Stripe signature.",
+          status:
+            400,
         },
-
-        400,
       );
     }
 
     // ========================================================
     // RAW BODY
     //
-    // IMPORTANTE:
-    //
-    // Stripe requiere el cuerpo EXACTO.
-    // No usar request.json() antes de constructEvent().
+    // No usar request.json().
+    // Stripe necesita el cuerpo original para verificar firma.
     // ========================================================
 
-    const rawBody =
+    const payload =
       await request.text();
 
     let event:
@@ -1102,10 +2062,8 @@ export const POST:
       event =
         stripe.webhooks
           .constructEvent(
-            rawBody,
-
+            payload,
             signature,
-
             stripeWebhookSecret,
           );
     } catch (
@@ -1113,24 +2071,20 @@ export const POST:
     ) {
       console.error(
         "[ATB Shop] Firma Stripe inválida:",
-        error instanceof
-          Error
-          ? error.message
-          : error,
+        error,
       );
 
-      return jsonResponse(
+      return new Response(
+        "Invalid Stripe signature",
         {
-          error:
-            "Invalid Stripe signature.",
+          status:
+            400,
         },
-
-        400,
       );
     }
 
     // ========================================================
-    // EVENT
+    // PROCESS EVENT
     // ========================================================
 
     try {
@@ -1138,9 +2092,7 @@ export const POST:
         event.type
       ) {
         // ====================================================
-        // CHECKOUT COMPLETED
-        //
-        // Tarjetas normales suelen llegar aquí ya pagadas.
+        // NORMAL CARD PAYMENT
         // ====================================================
 
         case "checkout.session.completed": {
@@ -1183,19 +2135,22 @@ export const POST:
               .object as
               Stripe.Checkout.Session;
 
-          await releaseReservation(
-            session,
-            "failed",
-          );
+          if (
+            session.metadata
+              ?.source ===
+            "atb-shop"
+          ) {
+            await releaseReservation(
+              session,
+              "failed",
+            );
+          }
 
           break;
         }
 
         // ====================================================
         // CHECKOUT EXPIRED
-        //
-        // El usuario no terminó de pagar.
-        // Devolvemos reserved_stock.
         // ====================================================
 
         case "checkout.session.expired": {
@@ -1204,48 +2159,43 @@ export const POST:
               .object as
               Stripe.Checkout.Session;
 
-          await releaseReservation(
-            session,
-            "expired",
+          if (
+            session.metadata
+              ?.source ===
+            "atb-shop"
+          ) {
+            await releaseReservation(
+              session,
+              "expired",
+            );
+          }
+
+          break;
+        }
+
+        // ====================================================
+        // IGNORE OTHER EVENTS
+        // ====================================================
+
+        default: {
+          console.log(
+            "[ATB Shop] Evento Stripe ignorado:",
+            event.type,
           );
 
           break;
         }
-
-        // ====================================================
-        // UNHANDLED
-        // ====================================================
-
-        default: {
-          /*
-            Stripe envía muchos tipos de eventos.
-
-            No es un error recibir uno que ATB Shop
-            no necesita.
-          */
-
-          break;
-        }
       }
-
-      // ======================================================
-      // ACKNOWLEDGE
-      // ======================================================
-
-      return jsonResponse(
-        {
-          received:
-            true,
-
-          event:
-            event.type,
-        },
-
-        200,
-      );
     } catch (
       error
     ) {
+      /*
+        Sólo errores del proceso crítico llegan aquí.
+
+        Los errores de Resend se manejan internamente y
+        NO provocan un 500 después de una compra válida.
+      */
+
       console.error(
         "[ATB Shop] Webhook processing error:",
         {
@@ -1255,30 +2205,24 @@ export const POST:
           eventType:
             event.type,
 
-          error:
-            error instanceof
-            Error
-              ? error.message
-              : error,
+          error,
         },
       );
 
-      /*
-        500 es deliberado.
-
-        Stripe volverá a intentar enviar el evento,
-        mientras nuestras funciones SQL son idempotentes.
-      */
-
-      return jsonResponse(
+      return new Response(
+        "Webhook processing error",
         {
-          error:
-            "Webhook processing failed.",
+          status:
+            500,
         },
-
-        500,
       );
     }
+
+    // ========================================================
+    // SUCCESS
+    // ========================================================
+
+    return okResponse();
   };
 
 // ============================================================
@@ -1288,12 +2232,43 @@ export const POST:
 export const GET:
   APIRoute =
   async () => {
-    return jsonResponse(
+    return new Response(
+      "Method not allowed",
       {
-        error:
-          "Method not allowed.",
+        status:
+          405,
       },
+    );
+  };
 
-      405,
+// ============================================================
+// PUT
+// ============================================================
+
+export const PUT:
+  APIRoute =
+  async () => {
+    return new Response(
+      "Method not allowed",
+      {
+        status:
+          405,
+      },
+    );
+  };
+
+// ============================================================
+// DELETE
+// ============================================================
+
+export const DELETE:
+  APIRoute =
+  async () => {
+    return new Response(
+      "Method not allowed",
+      {
+        status:
+          405,
+      },
     );
   };

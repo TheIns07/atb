@@ -1,0 +1,2337 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/Footer.astro";
+
+const supabaseUrl =
+  import.meta.env.SUPABASE_URL ?? "";
+
+const supabaseAnonKey =
+  import.meta.env.PUBLIC_SUPABASE_ANON_KEY ?? "";
+---
+
+<Layout>
+  <main
+    class="admin-page"
+    data-admin-orders
+    data-supabase-url={supabaseUrl}
+    data-supabase-anon-key={supabaseAnonKey}
+  >
+    <!-- ======================================================
+         LOGIN
+    ======================================================= -->
+
+    <section
+      class="admin-auth"
+      data-auth-view
+    >
+      <div class="auth-card">
+        <p class="eyebrow">
+          ATB / ADMIN
+        </p>
+
+        <h1>
+          Pedidos.
+        </h1>
+
+        <p class="auth-copy">
+          Acceso exclusivo para administración de ATB Shop.
+        </p>
+
+        <form
+          class="login-form"
+          data-login-form
+        >
+          <label>
+            <span>
+              Correo
+            </span>
+
+            <input
+              type="email"
+              autocomplete="email"
+              required
+              data-login-email
+            />
+          </label>
+
+          <label>
+            <span>
+              Contraseña
+            </span>
+
+            <input
+              type="password"
+              autocomplete="current-password"
+              required
+              data-login-password
+            />
+          </label>
+
+          <button
+            type="submit"
+            data-login-button
+          >
+            Entrar
+          </button>
+
+          <p
+            class="form-message"
+            data-login-message
+            aria-live="polite"
+          ></p>
+        </form>
+      </div>
+    </section>
+
+    <!-- ======================================================
+         ADMIN
+    ======================================================= -->
+
+    <section
+      class="admin-app"
+      data-admin-view
+      hidden
+    >
+      <header class="admin-header">
+        <div>
+          <p class="eyebrow">
+            ATB / SHOP ADMIN
+          </p>
+
+          <h1>
+            Pedidos.
+          </h1>
+
+          <p
+            class="admin-email"
+            data-admin-email
+          ></p>
+        </div>
+
+        <button
+          type="button"
+          class="logout-button"
+          data-logout
+        >
+          Cerrar sesión
+        </button>
+      </header>
+
+      <!-- ====================================================
+           FILTERS
+      ===================================================== -->
+
+      <div class="admin-toolbar">
+        <div class="filters">
+          <button
+            type="button"
+            class="filter-button is-active"
+            data-filter=""
+          >
+            Todos
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="pending"
+          >
+            Recibidos
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="ready"
+          >
+            Preparando
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="shipped"
+          >
+            Enviados
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="delivered"
+          >
+            Entregados
+          </button>
+
+          <button
+            type="button"
+            class="filter-button"
+            data-filter="cancelled"
+          >
+            Cancelados
+          </button>
+        </div>
+
+        <button
+          type="button"
+          class="refresh-button"
+          data-refresh
+        >
+          Actualizar
+        </button>
+      </div>
+
+      <!-- ====================================================
+           STATUS
+      ===================================================== -->
+
+      <div
+        class="admin-status"
+        data-admin-status
+        aria-live="polite"
+      >
+        Cargando pedidos…
+      </div>
+
+      <!-- ====================================================
+           ORDERS
+      ===================================================== -->
+
+      <div
+        class="orders-list"
+        data-orders-list
+      ></div>
+
+      <!-- ====================================================
+           PAGINATION
+      ===================================================== -->
+
+      <div
+        class="pagination"
+        data-pagination
+        hidden
+      >
+        <button
+          type="button"
+          data-prev-page
+        >
+          Anterior
+        </button>
+
+        <span data-page-info>
+          Página 1
+        </span>
+
+        <button
+          type="button"
+          data-next-page
+        >
+          Siguiente
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <Footer />
+
+  <script>
+    import {
+      createClient,
+      type Session,
+    } from "@supabase/supabase-js";
+
+    // ============================================================
+    // TYPES
+    // ============================================================
+
+    type ShippingStatus =
+      | "pending"
+      | "ready"
+      | "shipped"
+      | "delivered"
+      | "cancelled";
+
+    type OrderItem = {
+      id: string;
+      sku: string;
+      productName: string;
+      variantDescription: string | null;
+      quantity: number;
+      unitAmount: number;
+      lineTotal: number;
+      currency: string;
+    };
+
+    type AdminOrder = {
+      id: string;
+      reference: string;
+
+      customer: {
+        name: string | null;
+        email: string | null;
+        phone: string | null;
+      };
+
+      payment: {
+        status: string;
+        currency: string;
+        amountSubtotal: number;
+        amountShipping: number;
+        amountTotal: number;
+      };
+
+      shipping: {
+        method: string | null;
+        status: ShippingStatus;
+        name: string | null;
+        phone: string | null;
+
+        address: {
+          line1: string | null;
+          line2: string | null;
+          city: string | null;
+          state: string | null;
+          postalCode: string | null;
+          country: string | null;
+        };
+
+        carrier: string | null;
+        trackingNumber: string | null;
+        shippedAt: string | null;
+        deliveredAt: string | null;
+      };
+
+      email: {
+        confirmationSentAt: string | null;
+        confirmationEmailId: string | null;
+        shippingSentAt: string | null;
+        shippingEmailId: string | null;
+        lastError: string | null;
+      };
+
+      items: OrderItem[];
+
+      createdAt: string;
+    };
+
+    type OrdersResponse = {
+      orders?: AdminOrder[];
+
+      pagination?: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+
+      error?: string;
+    };
+
+    type UpdateOrderResponse = {
+      success?: boolean;
+      order?: AdminOrder;
+      error?: string;
+    };
+
+    // ============================================================
+    // REQUIRE ELEMENT
+    // ============================================================
+
+    function requireElement<T extends Element>(
+      root: ParentNode,
+      selector: string,
+    ): T {
+      const element =
+        root.querySelector<T>(
+          selector,
+        );
+
+      if (!element) {
+        throw new Error(
+          `[ATB Admin] Elemento requerido no encontrado: ${selector}`,
+        );
+      }
+
+      return element;
+    }
+
+    // ============================================================
+    // MONEY
+    // ============================================================
+
+    function formatMoney(
+      amount: number,
+      currency: string,
+    ): string {
+      try {
+        return new Intl.NumberFormat(
+          "es-MX",
+          {
+            style: "currency",
+            currency:
+              currency ||
+              "MXN",
+          },
+        ).format(
+          amount / 100,
+        );
+      } catch {
+        return `$${(
+          amount / 100
+        ).toFixed(2)}`;
+      }
+    }
+
+    // ============================================================
+    // DATE
+    // ============================================================
+
+    function formatDate(
+      value: string | null,
+    ): string {
+      if (!value) {
+        return "—";
+      }
+
+      const date =
+        new Date(value);
+
+      if (
+        Number.isNaN(
+          date.getTime(),
+        )
+      ) {
+        return value;
+      }
+
+      return new Intl.DateTimeFormat(
+        "es-MX",
+        {
+          dateStyle: "medium",
+          timeStyle: "short",
+        },
+      ).format(date);
+    }
+
+    // ============================================================
+    // STATUS LABEL
+    // ============================================================
+
+    function getShippingStatusLabel(
+      status: ShippingStatus,
+    ): string {
+      switch (status) {
+        case "pending":
+          return "Pedido recibido";
+
+        case "ready":
+          return "Preparando";
+
+        case "shipped":
+          return "Enviado";
+
+        case "delivered":
+          return "Entregado";
+
+        case "cancelled":
+          return "Cancelado";
+      }
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    function initializeAdmin(): void {
+      const page =
+        document.querySelector<HTMLElement>(
+          "[data-admin-orders]",
+        );
+
+      if (!page) {
+        return;
+      }
+
+      if (
+        page.dataset.initialized ===
+        "true"
+      ) {
+        return;
+      }
+
+      page.dataset.initialized =
+        "true";
+
+      // ========================================================
+      // SUPABASE CONFIG
+      //
+      // SUPABASE_URL viene del servidor Astro.
+      //
+      // PUBLIC_SUPABASE_ANON_KEY es una clave pública.
+      //
+      // JAMÁS usamos SUPABASE_SERVICE_ROLE_KEY aquí.
+      // ========================================================
+
+      const supabaseUrl =
+        page.dataset
+          .supabaseUrl
+          ?.trim() ??
+        "";
+
+      const supabaseAnonKey =
+        page.dataset
+          .supabaseAnonKey
+          ?.trim() ??
+        "";
+
+      // ========================================================
+      // ELEMENTS
+      // ========================================================
+
+      const authView =
+        requireElement<HTMLElement>(
+          page,
+          "[data-auth-view]",
+        );
+
+      const adminView =
+        requireElement<HTMLElement>(
+          page,
+          "[data-admin-view]",
+        );
+
+      const loginForm =
+        requireElement<HTMLFormElement>(
+          page,
+          "[data-login-form]",
+        );
+
+      const loginEmail =
+        requireElement<HTMLInputElement>(
+          page,
+          "[data-login-email]",
+        );
+
+      const loginPassword =
+        requireElement<HTMLInputElement>(
+          page,
+          "[data-login-password]",
+        );
+
+      const loginButton =
+        requireElement<HTMLButtonElement>(
+          page,
+          "[data-login-button]",
+        );
+
+      const loginMessage =
+        requireElement<HTMLElement>(
+          page,
+          "[data-login-message]",
+        );
+
+      const adminEmail =
+        requireElement<HTMLElement>(
+          page,
+          "[data-admin-email]",
+        );
+
+      const logoutButton =
+        requireElement<HTMLButtonElement>(
+          page,
+          "[data-logout]",
+        );
+
+      const refreshButton =
+        requireElement<HTMLButtonElement>(
+          page,
+          "[data-refresh]",
+        );
+
+      const adminStatus =
+        requireElement<HTMLElement>(
+          page,
+          "[data-admin-status]",
+        );
+
+      const ordersList =
+        requireElement<HTMLElement>(
+          page,
+          "[data-orders-list]",
+        );
+
+      const pagination =
+        requireElement<HTMLElement>(
+          page,
+          "[data-pagination]",
+        );
+
+      const previousPageButton =
+        requireElement<HTMLButtonElement>(
+          page,
+          "[data-prev-page]",
+        );
+
+      const nextPageButton =
+        requireElement<HTMLButtonElement>(
+          page,
+          "[data-next-page]",
+        );
+
+      const pageInfo =
+        requireElement<HTMLElement>(
+          page,
+          "[data-page-info]",
+        );
+
+      const filterButtons =
+        Array.from(
+          page.querySelectorAll<HTMLButtonElement>(
+            "[data-filter]",
+          ),
+        );
+
+      // ========================================================
+      // MISSING CONFIG
+      // ========================================================
+
+      if (
+        !supabaseUrl ||
+        !supabaseAnonKey
+      ) {
+        authView.hidden =
+          false;
+
+        adminView.hidden =
+          true;
+
+        loginForm.hidden =
+          true;
+
+        loginMessage.textContent =
+          "Falta configurar PUBLIC_SUPABASE_ANON_KEY.";
+
+        console.error(
+          "[ATB Admin] Falta SUPABASE_URL o PUBLIC_SUPABASE_ANON_KEY.",
+        );
+
+        return;
+      }
+
+      // ========================================================
+      // CLIENT
+      // ========================================================
+
+      const supabase =
+        createClient(
+          supabaseUrl,
+          supabaseAnonKey,
+          {
+            auth: {
+              persistSession:
+                true,
+
+              autoRefreshToken:
+                true,
+
+              detectSessionInUrl:
+                true,
+            },
+          },
+        );
+
+      // ========================================================
+      // STATE
+      // ========================================================
+
+      let currentSession:
+        Session | null =
+        null;
+
+      let currentPage =
+        1;
+
+      let totalPages =
+        1;
+
+      let currentFilter =
+        "";
+
+      let loading =
+        false;
+
+      // ========================================================
+      // VIEW
+      // ========================================================
+
+      function showLogin(): void {
+        authView.hidden =
+          false;
+
+        adminView.hidden =
+          true;
+
+        ordersList.replaceChildren();
+      }
+
+      function showAdmin(
+        session: Session,
+      ): void {
+        authView.hidden =
+          true;
+
+        adminView.hidden =
+          false;
+
+        adminEmail.textContent =
+          session.user.email ??
+          session.user.id;
+      }
+
+      // ========================================================
+      // SESSION
+      // ========================================================
+
+      async function getFreshSession():
+        Promise<Session | null> {
+        const {
+          data,
+          error,
+        } =
+          await supabase.auth
+            .getSession();
+
+        if (error) {
+          console.error(
+            "[ATB Admin] Error consultando sesión:",
+            error,
+          );
+
+          return null;
+        }
+
+        currentSession =
+          data.session;
+
+        return data.session;
+      }
+
+      // ========================================================
+      // ADMIN FETCH
+      // ========================================================
+
+      async function adminFetch(
+        input: string,
+        init: RequestInit = {},
+      ): Promise<Response> {
+        const session =
+          await getFreshSession();
+
+        if (!session) {
+          showLogin();
+
+          throw new Error(
+            "Debes iniciar sesión.",
+          );
+        }
+
+        const headers =
+          new Headers(
+            init.headers,
+          );
+
+        headers.set(
+          "Authorization",
+          `Bearer ${session.access_token}`,
+        );
+
+        headers.set(
+          "Accept",
+          "application/json",
+        );
+
+        return fetch(
+          input,
+          {
+            ...init,
+            headers,
+            cache: "no-store",
+          },
+        );
+      }
+
+      // ========================================================
+      // ADDRESS
+      // ========================================================
+
+      function buildAddress(
+        order: AdminOrder,
+      ): string {
+        const address =
+          order.shipping.address;
+
+        return [
+          address.line1,
+          address.line2,
+
+          [
+            address.city,
+            address.state,
+          ]
+            .filter(Boolean)
+            .join(", "),
+
+          address.postalCode,
+          address.country,
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      // ========================================================
+      // DOM HELPER
+      // ========================================================
+
+      function createTextElement(
+        tag:
+          keyof HTMLElementTagNameMap,
+
+        className:
+          string,
+
+        text:
+          string,
+      ): HTMLElement {
+        const element =
+          document.createElement(
+            tag,
+          );
+
+        element.className =
+          className;
+
+        element.textContent =
+          text;
+
+        return element;
+      }
+
+      // ========================================================
+      // UPDATE ORDER
+      // ========================================================
+
+      async function updateOrder(
+        order: AdminOrder,
+
+        payload: {
+          shippingStatus:
+            ShippingStatus;
+
+          carrier?: string;
+
+          trackingNumber?: string;
+        },
+
+        button:
+          HTMLButtonElement,
+      ): Promise<void> {
+        button.disabled =
+          true;
+
+        const oldText =
+          button.textContent;
+
+        button.textContent =
+          "Guardando…";
+
+        try {
+          const response =
+            await adminFetch(
+              `/api/admin/orders/${encodeURIComponent(
+                order.id,
+              )}`,
+              {
+                method: "PATCH",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                },
+
+                body:
+                  JSON.stringify(
+                    payload,
+                  ),
+              },
+            );
+
+          const data =
+            (await response.json()) as
+              UpdateOrderResponse;
+
+          if (!response.ok) {
+            throw new Error(
+              data.error ??
+                "No fue posible actualizar el pedido.",
+            );
+          }
+
+          await loadOrders();
+        } catch (error) {
+          window.alert(
+            error instanceof Error
+              ? error.message
+              : "No fue posible actualizar el pedido.",
+          );
+        } finally {
+          button.disabled =
+            false;
+
+          button.textContent =
+            oldText;
+        }
+      }
+
+      // ========================================================
+      // ITEMS
+      // ========================================================
+
+      function renderItems(
+        container: HTMLElement,
+        order: AdminOrder,
+      ): void {
+        const section =
+          document.createElement(
+            "div",
+          );
+
+        section.className =
+          "order-section";
+
+        section.appendChild(
+          createTextElement(
+            "p",
+            "section-label",
+            "Productos",
+          ),
+        );
+
+        for (
+          const item
+          of order.items
+        ) {
+          const row =
+            document.createElement(
+              "div",
+            );
+
+          row.className =
+            "product-row";
+
+          const information =
+            document.createElement(
+              "div",
+            );
+
+          information.appendChild(
+            createTextElement(
+              "strong",
+              "product-name",
+              item.productName,
+            ),
+          );
+
+          if (
+            item.variantDescription
+          ) {
+            information.appendChild(
+              createTextElement(
+                "span",
+                "product-detail",
+                item.variantDescription,
+              ),
+            );
+          }
+
+          information.appendChild(
+            createTextElement(
+              "span",
+              "product-detail",
+              `${item.quantity} × ${item.sku}`,
+            ),
+          );
+
+          row.appendChild(
+            information,
+          );
+
+          row.appendChild(
+            createTextElement(
+              "span",
+              "product-price",
+              formatMoney(
+                item.lineTotal,
+                order.payment.currency,
+              ),
+            ),
+          );
+
+          section.appendChild(
+            row,
+          );
+        }
+
+        container.appendChild(
+          section,
+        );
+      }
+
+      // ========================================================
+      // ACTIONS
+      // ========================================================
+
+      function renderActions(
+        container: HTMLElement,
+        order: AdminOrder,
+      ): void {
+        const actions =
+          document.createElement(
+            "div",
+          );
+
+        actions.className =
+          "order-actions";
+
+        const status =
+          order.shipping.status;
+
+        // ======================================================
+        // PENDING
+        // ======================================================
+
+        if (
+          status ===
+          "pending"
+        ) {
+          const ready =
+            document.createElement(
+              "button",
+            );
+
+          ready.type =
+            "button";
+
+          ready.className =
+            "action-primary";
+
+          ready.textContent =
+            "Preparar pedido";
+
+          ready.addEventListener(
+            "click",
+            () => {
+              void updateOrder(
+                order,
+                {
+                  shippingStatus:
+                    "ready",
+                },
+                ready,
+              );
+            },
+          );
+
+          actions.appendChild(
+            ready,
+          );
+        }
+
+        // ======================================================
+        // READY
+        // ======================================================
+
+        if (
+          status ===
+          "ready"
+        ) {
+          const fields =
+            document.createElement(
+              "div",
+            );
+
+          fields.className =
+            "shipping-fields";
+
+          const carrier =
+            document.createElement(
+              "input",
+            );
+
+          carrier.type =
+            "text";
+
+          carrier.placeholder =
+            "Paquetería";
+
+          carrier.value =
+            order.shipping.carrier ??
+            "";
+
+          const tracking =
+            document.createElement(
+              "input",
+            );
+
+          tracking.type =
+            "text";
+
+          tracking.placeholder =
+            "Número de guía";
+
+          tracking.value =
+            order.shipping.trackingNumber ??
+            "";
+
+          fields.append(
+            carrier,
+            tracking,
+          );
+
+          const shipped =
+            document.createElement(
+              "button",
+            );
+
+          shipped.type =
+            "button";
+
+          shipped.className =
+            "action-primary";
+
+          shipped.textContent =
+            "Marcar como enviado";
+
+          shipped.addEventListener(
+            "click",
+            () => {
+              const carrierValue =
+                carrier.value.trim();
+
+              const trackingValue =
+                tracking.value.trim();
+
+              if (
+                !carrierValue ||
+                !trackingValue
+              ) {
+                window.alert(
+                  "Ingresa paquetería y número de guía.",
+                );
+
+                return;
+              }
+
+              void updateOrder(
+                order,
+                {
+                  shippingStatus:
+                    "shipped",
+
+                  carrier:
+                    carrierValue,
+
+                  trackingNumber:
+                    trackingValue,
+                },
+                shipped,
+              );
+            },
+          );
+
+          actions.append(
+            fields,
+            shipped,
+          );
+        }
+
+        // ======================================================
+        // SHIPPED
+        // ======================================================
+
+        if (
+          status ===
+          "shipped"
+        ) {
+          actions.appendChild(
+            createTextElement(
+              "p",
+              "tracking-summary",
+              `${order.shipping.carrier ?? "Paquetería"} · ${order.shipping.trackingNumber ?? "Sin guía"}`,
+            ),
+          );
+
+          const delivered =
+            document.createElement(
+              "button",
+            );
+
+          delivered.type =
+            "button";
+
+          delivered.className =
+            "action-primary";
+
+          delivered.textContent =
+            "Marcar como entregado";
+
+          delivered.addEventListener(
+            "click",
+            () => {
+              void updateOrder(
+                order,
+                {
+                  shippingStatus:
+                    "delivered",
+                },
+                delivered,
+              );
+            },
+          );
+
+          actions.appendChild(
+            delivered,
+          );
+        }
+
+        // ======================================================
+        // FINAL
+        // ======================================================
+
+        if (
+          status ===
+            "delivered" ||
+          status ===
+            "cancelled"
+        ) {
+          actions.appendChild(
+            createTextElement(
+              "p",
+              "final-state",
+              status ===
+                "delivered"
+                ? "Pedido finalizado."
+                : "Pedido cancelado.",
+            ),
+          );
+        }
+
+        container.appendChild(
+          actions,
+        );
+      }
+
+      // ========================================================
+      // ORDER
+      // ========================================================
+
+      function renderOrder(
+        order: AdminOrder,
+      ): HTMLElement {
+        const article =
+          document.createElement(
+            "article",
+          );
+
+        article.className =
+          "order-card";
+
+        // HEADER
+
+        const header =
+          document.createElement(
+            "div",
+          );
+
+        header.className =
+          "order-header";
+
+        const headerInfo =
+          document.createElement(
+            "div",
+          );
+
+        headerInfo.appendChild(
+          createTextElement(
+            "span",
+            "order-reference",
+            `#${order.reference}`,
+          ),
+        );
+
+        headerInfo.appendChild(
+          createTextElement(
+            "span",
+            "order-date",
+            formatDate(
+              order.createdAt,
+            ),
+          ),
+        );
+
+        header.append(
+          headerInfo,
+
+          createTextElement(
+            "span",
+            `status-badge status-${order.shipping.status}`,
+            getShippingStatusLabel(
+              order.shipping.status,
+            ),
+          ),
+        );
+
+        article.appendChild(
+          header,
+        );
+
+        // GRID
+
+        const grid =
+          document.createElement(
+            "div",
+          );
+
+        grid.className =
+          "order-grid";
+
+        // CUSTOMER
+
+        const customer =
+          document.createElement(
+            "div",
+          );
+
+        customer.className =
+          "order-section";
+
+        customer.appendChild(
+          createTextElement(
+            "p",
+            "section-label",
+            "Cliente",
+          ),
+        );
+
+        customer.appendChild(
+          createTextElement(
+            "strong",
+            "section-main",
+            order.customer.name ??
+              order.shipping.name ??
+              "Sin nombre",
+          ),
+        );
+
+        customer.appendChild(
+          createTextElement(
+            "span",
+            "section-detail",
+            order.customer.email ??
+              "Sin correo",
+          ),
+        );
+
+        customer.appendChild(
+          createTextElement(
+            "span",
+            "section-detail",
+            order.customer.phone ??
+              order.shipping.phone ??
+              "Sin teléfono",
+          ),
+        );
+
+        // ADDRESS
+
+        const shipping =
+          document.createElement(
+            "div",
+          );
+
+        shipping.className =
+          "order-section";
+
+        shipping.appendChild(
+          createTextElement(
+            "p",
+            "section-label",
+            "Entrega",
+          ),
+        );
+
+        shipping.appendChild(
+          createTextElement(
+            "span",
+            "address",
+            buildAddress(order) ||
+              "Sin dirección",
+          ),
+        );
+
+        // PAYMENT
+
+        const payment =
+          document.createElement(
+            "div",
+          );
+
+        payment.className =
+          "order-section";
+
+        payment.appendChild(
+          createTextElement(
+            "p",
+            "section-label",
+            "Total",
+          ),
+        );
+
+        payment.appendChild(
+          createTextElement(
+            "strong",
+            "payment-total",
+            formatMoney(
+              order.payment.amountTotal,
+              order.payment.currency,
+            ),
+          ),
+        );
+
+        payment.appendChild(
+          createTextElement(
+            "span",
+            "section-detail",
+            `Productos ${formatMoney(
+              order.payment.amountSubtotal,
+              order.payment.currency,
+            )}`,
+          ),
+        );
+
+        payment.appendChild(
+          createTextElement(
+            "span",
+            "section-detail",
+            `Envío ${
+              order.payment.amountShipping ===
+              0
+                ? "Gratis"
+                : formatMoney(
+                    order.payment.amountShipping,
+                    order.payment.currency,
+                  )
+            }`,
+          ),
+        );
+
+        grid.append(
+          customer,
+          shipping,
+          payment,
+        );
+
+        article.appendChild(
+          grid,
+        );
+
+        renderItems(
+          article,
+          order,
+        );
+
+        // EMAIL
+
+        const email =
+          document.createElement(
+            "div",
+          );
+
+        email.className =
+          "email-state";
+
+        email.appendChild(
+          createTextElement(
+            "span",
+            "",
+            order.email.confirmationSentAt
+              ? `Confirmación enviada · ${formatDate(
+                  order.email.confirmationSentAt,
+                )}`
+              : "Confirmación no registrada",
+          ),
+        );
+
+        if (
+          order.email.shippingSentAt
+        ) {
+          email.appendChild(
+            createTextElement(
+              "span",
+              "",
+              `Tracking enviado · ${formatDate(
+                order.email.shippingSentAt,
+              )}`,
+            ),
+          );
+        }
+
+        if (
+          order.email.lastError
+        ) {
+          email.appendChild(
+            createTextElement(
+              "span",
+              "email-error",
+              `Email: ${order.email.lastError}`,
+            ),
+          );
+        }
+
+        article.appendChild(
+          email,
+        );
+
+        renderActions(
+          article,
+          order,
+        );
+
+        return article;
+      }
+
+      // ========================================================
+      // RENDER ORDERS
+      // ========================================================
+
+      function renderOrders(
+        orders: AdminOrder[],
+      ): void {
+        ordersList.replaceChildren();
+
+        if (
+          orders.length ===
+          0
+        ) {
+          ordersList.appendChild(
+            createTextElement(
+              "p",
+              "empty-state",
+              "No hay pedidos en esta categoría.",
+            ),
+          );
+
+          return;
+        }
+
+        for (
+          const order
+          of orders
+        ) {
+          ordersList.appendChild(
+            renderOrder(order),
+          );
+        }
+      }
+
+      // ========================================================
+      // LOAD
+      // ========================================================
+
+      async function loadOrders():
+        Promise<void> {
+        if (loading) {
+          return;
+        }
+
+        loading =
+          true;
+
+        adminStatus.textContent =
+          "Cargando pedidos…";
+
+        refreshButton.disabled =
+          true;
+
+        try {
+          const params =
+            new URLSearchParams();
+
+          params.set(
+            "page",
+            String(currentPage),
+          );
+
+          params.set(
+            "limit",
+            "25",
+          );
+
+          if (
+            currentFilter
+          ) {
+            params.set(
+              "shipping_status",
+              currentFilter,
+            );
+          }
+
+          const response =
+            await adminFetch(
+              `/api/admin/orders?${params.toString()}`,
+            );
+
+          const data =
+            (await response.json()) as
+              OrdersResponse;
+
+          if (
+            response.status ===
+            401
+          ) {
+            await supabase.auth
+              .signOut();
+
+            showLogin();
+
+            throw new Error(
+              data.error ??
+                "La sesión expiró.",
+            );
+          }
+
+          if (
+            response.status ===
+            403
+          ) {
+            throw new Error(
+              data.error ??
+                "Tu cuenta no tiene acceso al administrador.",
+            );
+          }
+
+          if (!response.ok) {
+            throw new Error(
+              data.error ??
+                "No fue posible consultar los pedidos.",
+            );
+          }
+
+          const orders =
+            data.orders ??
+            [];
+
+          renderOrders(
+            orders,
+          );
+
+          const pageData =
+            data.pagination;
+
+          currentPage =
+            pageData?.page ??
+            1;
+
+          totalPages =
+            Math.max(
+              1,
+              pageData?.totalPages ??
+                1,
+            );
+
+          pageInfo.textContent =
+            `Página ${currentPage} de ${totalPages}`;
+
+          previousPageButton.disabled =
+            currentPage <=
+            1;
+
+          nextPageButton.disabled =
+            currentPage >=
+            totalPages;
+
+          pagination.hidden =
+            (
+              pageData?.total ??
+              0
+            ) <=
+            25;
+
+          const total =
+            pageData?.total ??
+            orders.length;
+
+          adminStatus.textContent =
+            `${total} pedido${
+              total === 1
+                ? ""
+                : "s"
+            }`;
+        } catch (error) {
+          console.error(
+            "[ATB Admin]",
+            error,
+          );
+
+          adminStatus.textContent =
+            error instanceof Error
+              ? error.message
+              : "No fue posible cargar pedidos.";
+        } finally {
+          loading =
+            false;
+
+          refreshButton.disabled =
+            false;
+        }
+      }
+
+      // ========================================================
+      // LOGIN
+      // ========================================================
+
+      loginForm.addEventListener(
+        "submit",
+        (event) => {
+          event.preventDefault();
+
+          void (
+            async () => {
+              loginButton.disabled =
+                true;
+
+              loginMessage.textContent =
+                "Verificando…";
+
+              try {
+                const {
+                  data,
+                  error,
+                } =
+                  await supabase.auth
+                    .signInWithPassword({
+                      email:
+                        loginEmail.value.trim(),
+
+                      password:
+                        loginPassword.value,
+                    });
+
+                if (
+                  error ||
+                  !data.session
+                ) {
+                  loginMessage.textContent =
+                    error?.message ??
+                    "No fue posible iniciar sesión.";
+
+                  return;
+                }
+
+                currentSession =
+                  data.session;
+
+                showAdmin(
+                  data.session,
+                );
+
+                loginMessage.textContent =
+                  "";
+
+                loginPassword.value =
+                  "";
+
+                currentPage =
+                  1;
+
+                await loadOrders();
+              } finally {
+                loginButton.disabled =
+                  false;
+              }
+            }
+          )();
+        },
+      );
+
+      // ========================================================
+      // LOGOUT
+      // ========================================================
+
+      logoutButton.addEventListener(
+        "click",
+        () => {
+          void (
+            async () => {
+              await supabase.auth
+                .signOut();
+
+              currentSession =
+                null;
+
+              showLogin();
+            }
+          )();
+        },
+      );
+
+      // ========================================================
+      // FILTERS
+      // ========================================================
+
+      for (
+        const button
+        of filterButtons
+      ) {
+        button.addEventListener(
+          "click",
+          () => {
+            currentFilter =
+              button.dataset.filter ??
+              "";
+
+            currentPage =
+              1;
+
+            for (
+              const candidate
+              of filterButtons
+            ) {
+              candidate.classList.toggle(
+                "is-active",
+                candidate === button,
+              );
+            }
+
+            void loadOrders();
+          },
+        );
+      }
+
+      // ========================================================
+      // REFRESH
+      // ========================================================
+
+      refreshButton.addEventListener(
+        "click",
+        () => {
+          void loadOrders();
+        },
+      );
+
+      // ========================================================
+      // PAGINATION
+      // ========================================================
+
+      previousPageButton.addEventListener(
+        "click",
+        () => {
+          if (
+            currentPage <=
+            1
+          ) {
+            return;
+          }
+
+          currentPage -=
+            1;
+
+          void loadOrders();
+        },
+      );
+
+      nextPageButton.addEventListener(
+        "click",
+        () => {
+          if (
+            currentPage >=
+            totalPages
+          ) {
+            return;
+          }
+
+          currentPage +=
+            1;
+
+          void loadOrders();
+        },
+      );
+
+      // ========================================================
+      // INITIAL SESSION
+      // ========================================================
+
+      void (
+        async () => {
+          const session =
+            await getFreshSession();
+
+          if (!session) {
+            showLogin();
+
+            return;
+          }
+
+          showAdmin(
+            session,
+          );
+
+          await loadOrders();
+        }
+      )();
+
+      // ========================================================
+      // AUTH CHANGE
+      // ========================================================
+
+      supabase.auth
+        .onAuthStateChange(
+          (
+            _event,
+            session,
+          ) => {
+            currentSession =
+              session;
+
+            if (!session) {
+              showLogin();
+            }
+          },
+        );
+    }
+
+    initializeAdmin();
+
+    document.addEventListener(
+      "astro:page-load",
+      initializeAdmin,
+    );
+  </script>
+</Layout>
+
+<style>
+  .admin-page {
+    min-height: 100vh;
+    padding: 9rem 4rem 6rem;
+    background: #fff;
+    color: #111;
+  }
+
+  .admin-auth,
+  .admin-app {
+    width: min(1180px, 100%);
+    margin: 0 auto;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
+
+  .eyebrow {
+    margin: 0 0 1rem;
+    color: #888;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  h1 {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    font-size: clamp(3rem, 7vw, 6rem);
+    font-weight: 400;
+    line-height: 0.95;
+    letter-spacing: -0.055em;
+  }
+
+  .auth-card {
+    width: min(100%, 440px);
+    margin: 6vh 0;
+  }
+
+  .auth-copy {
+    margin: 1.75rem 0 0;
+    color: #777;
+    font-family: "Inter", sans-serif;
+    font-size: 0.76rem;
+    line-height: 1.6;
+  }
+
+  .login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.2rem;
+    margin-top: 2.5rem;
+  }
+
+  .login-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+  }
+
+  .login-form label span {
+    color: #777;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.54rem;
+    text-transform: uppercase;
+  }
+
+  .login-form input,
+  :global(.shipping-fields input) {
+    width: 100%;
+    padding: 0.9rem;
+    border: 1px solid #ddd;
+    border-radius: 0;
+    outline: none;
+    background: #fff;
+    color: #111;
+    font-family: "Inter", sans-serif;
+    font-size: 0.75rem;
+  }
+
+  .login-form input:focus,
+  :global(.shipping-fields input:focus) {
+    border-color: #111;
+  }
+
+  .login-form button {
+    margin-top: 0.5rem;
+    padding: 1rem;
+    border: 1px solid #111;
+    background: #111;
+    color: #fff;
+    font-family: "Inter", sans-serif;
+    font-size: 0.72rem;
+    cursor: pointer;
+  }
+
+  .form-message {
+    min-height: 1.3em;
+    margin: 0;
+    color: #8e2e2e;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.55rem;
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .admin-email {
+    margin: 1rem 0 0;
+    color: #777;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.57rem;
+  }
+
+  .logout-button,
+  .refresh-button {
+    padding: 0.7rem 1rem;
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #333;
+    font-family: "Inter", sans-serif;
+    font-size: 0.65rem;
+    cursor: pointer;
+  }
+
+  .admin-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    padding: 1.2rem 0;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .filter-button {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #777;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.54rem;
+    cursor: pointer;
+  }
+
+  .filter-button.is-active {
+    border-color: #111;
+    color: #111;
+  }
+
+  .admin-status {
+    padding: 1rem 0;
+    color: #888;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.55rem;
+  }
+
+  :global(.order-card) {
+    margin-top: 1rem;
+    border: 1px solid #dedede;
+    background: #fff;
+  }
+
+  :global(.order-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1.2rem;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  :global(.order-header > div) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  :global(.order-reference) {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  :global(.order-date) {
+    color: #888;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.52rem;
+  }
+
+  :global(.status-badge) {
+    padding: 0.4rem 0.55rem;
+    border: 1px solid #ccc;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.5rem;
+    text-transform: uppercase;
+  }
+
+  :global(.order-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1.5fr 0.8fr;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  :global(.order-section) {
+    padding: 1.2rem;
+  }
+
+  :global(.order-grid .order-section) {
+    border-right: 1px solid #e5e5e5;
+  }
+
+  :global(.order-grid .order-section:last-child) {
+    border-right: 0;
+  }
+
+  :global(.section-label) {
+    margin: 0 0 0.7rem;
+    color: #999;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  :global(.section-main),
+  :global(.payment-total) {
+    display: block;
+    margin-bottom: 0.35rem;
+    font-family: "Inter", sans-serif;
+    font-size: 0.72rem;
+  }
+
+  :global(.section-detail),
+  :global(.address) {
+    display: block;
+    margin-top: 0.25rem;
+    color: #777;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.52rem;
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+
+  :global(.product-row) {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  :global(.product-row:last-child) {
+    border-bottom: 0;
+  }
+
+  :global(.product-name) {
+    display: block;
+    font-family: "Inter", sans-serif;
+    font-size: 0.68rem;
+  }
+
+  :global(.product-detail) {
+    display: block;
+    margin-top: 0.2rem;
+    color: #888;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.5rem;
+  }
+
+  :global(.product-price) {
+    flex: 0 0 auto;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.58rem;
+  }
+
+  :global(.email-state) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem 1.5rem;
+    padding: 0.8rem 1.2rem;
+    border-top: 1px solid #eee;
+    color: #888;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.48rem;
+  }
+
+  :global(.email-error) {
+    color: #8e2e2e;
+  }
+
+  :global(.order-actions) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+    padding: 1rem 1.2rem;
+    border-top: 1px solid #e5e5e5;
+  }
+
+  :global(.shipping-fields) {
+    display: grid;
+    grid-template-columns: minmax(160px, 220px) minmax(180px, 280px);
+    gap: 0.5rem;
+    flex: 1 1 auto;
+  }
+
+  :global(.action-primary),
+  :global(.action-secondary) {
+    padding: 0.7rem 0.9rem;
+    font-family: "Inter", sans-serif;
+    font-size: 0.62rem;
+    cursor: pointer;
+  }
+
+  :global(.action-primary) {
+    border: 1px solid #111;
+    background: #111;
+    color: #fff;
+  }
+
+  :global(.action-secondary) {
+    border: 1px solid #ccc;
+    background: #fff;
+    color: #555;
+  }
+
+  :global(.tracking-summary),
+  :global(.final-state) {
+    margin: 0;
+    color: #666;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.55rem;
+  }
+
+  :global(.empty-state) {
+    padding: 4rem 0;
+    color: #999;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.6rem;
+  }
+
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .pagination button {
+    padding: 0.6rem 0.9rem;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 0.62rem;
+    cursor: pointer;
+  }
+
+  .pagination span {
+    color: #777;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.52rem;
+  }
+
+  @media (
+    max-width: 800px
+  ) {
+    .admin-page {
+      padding: 7rem 1rem 4rem;
+    }
+
+    .admin-header {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .admin-toolbar {
+      flex-direction: column;
+    }
+
+    :global(.order-grid) {
+      grid-template-columns: 1fr;
+    }
+
+    :global(.order-grid .order-section) {
+      border-right: 0;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    :global(.shipping-fields) {
+      grid-template-columns: 1fr;
+      width: 100%;
+    }
+
+    :global(.order-actions) {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    :global(.action-primary),
+    :global(.action-secondary) {
+      width: 100%;
+    }
+  }
+</style>

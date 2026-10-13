@@ -15,9 +15,7 @@ import Footer from "../../components/Footer.astro";
           ATB SHOP
         </p>
 
-        <h1
-          data-success-title
-        >
+        <h1 data-success-title>
           Confirmando tu compra.
         </h1>
 
@@ -45,15 +43,13 @@ import Footer from "../../components/Footer.astro";
             aria-hidden="true"
           ></span>
 
-          <p
-            data-status-message
-          >
+          <p data-status-message>
             Confirmando pedido…
           </p>
         </div>
 
         <!-- ==================================================
-             ORDER
+             ORDER SUMMARY
         =================================================== -->
 
         <section
@@ -61,27 +57,27 @@ import Footer from "../../components/Footer.astro";
           data-order-summary
           hidden
         >
+          <!-- ================================================
+               PRIMARY DATA
+          ================================================= -->
+
           <div class="order-meta">
             <div class="order-meta-item">
               <span class="order-meta-label">
                 Pedido
               </span>
 
-              <strong
-                data-order-reference
-              >
+              <strong data-order-reference>
                 —
               </strong>
             </div>
 
             <div class="order-meta-item">
               <span class="order-meta-label">
-                Total
+                Estado
               </span>
 
-              <strong
-                data-order-total
-              >
+              <strong data-order-status>
                 —
               </strong>
             </div>
@@ -95,22 +91,86 @@ import Footer from "../../components/Footer.astro";
                 Confirmación
               </span>
 
-              <strong
-                data-order-email
-              >
+              <strong data-order-email>
                 —
               </strong>
             </div>
           </div>
 
+          <!-- ================================================
+               ITEMS
+          ================================================= -->
+
           <div
             class="order-items"
             data-order-items
           ></div>
+
+          <!-- ================================================
+               TOTALS
+          ================================================= -->
+
+          <div class="order-totals">
+            <div class="order-total-row">
+              <span>
+                Subtotal
+              </span>
+
+              <strong data-order-subtotal>
+                —
+              </strong>
+            </div>
+
+            <div class="order-total-row">
+              <span data-shipping-label>
+                Envío
+              </span>
+
+              <strong data-order-shipping>
+                —
+              </strong>
+            </div>
+
+            <div class="order-total-row total">
+              <span>
+                Total
+              </span>
+
+              <strong data-order-total>
+                —
+              </strong>
+            </div>
+          </div>
+
+          <!-- ================================================
+               SHIPPING
+          ================================================= -->
+
+          <div class="shipping-summary">
+            <div>
+              <span class="shipping-label">
+                Método de envío
+              </span>
+
+              <strong data-shipping-method>
+                —
+              </strong>
+            </div>
+
+            <div>
+              <span class="shipping-label">
+                Estado
+              </span>
+
+              <strong data-shipping-status>
+                —
+              </strong>
+            </div>
+          </div>
         </section>
 
         <!-- ==================================================
-             FALLBACK REFERENCE
+             FALLBACK STRIPE REFERENCE
         =================================================== -->
 
         <div
@@ -122,9 +182,7 @@ import Footer from "../../components/Footer.astro";
             Referencia
           </span>
 
-          <code
-            data-session-reference
-          ></code>
+          <code data-session-reference></code>
         </div>
 
         <!-- ==================================================
@@ -166,13 +224,15 @@ import Footer from "../../components/Footer.astro";
         | string
         | null;
 
-      productName: string;
+      productName:
+        string;
 
       variantDescription:
         | string
         | null;
 
-      quantity: number;
+      quantity:
+        number;
 
       unitAmount:
         | number
@@ -181,18 +241,31 @@ import Footer from "../../components/Footer.astro";
       lineTotal:
         | number
         | null;
+
+      currency:
+        string;
     };
 
     type PublicOrder = {
-      id: string;
+      id:
+        string;
 
       reference:
         | string
         | null;
 
-      status: string;
+      status:
+        string;
 
-      currency: string;
+      currency:
+        string;
+
+      amountSubtotal:
+        | number
+        | null;
+
+      amountShipping:
+        number;
 
       amountTotal:
         | number
@@ -201,6 +274,17 @@ import Footer from "../../components/Footer.astro";
       customerEmail:
         | string
         | null;
+
+      shippingMethod:
+        | string
+        | null;
+
+      shippingMethodName:
+        | string
+        | null;
+
+      shippingStatus:
+        string;
 
       createdAt:
         | string
@@ -211,14 +295,24 @@ import Footer from "../../components/Footer.astro";
     };
 
     type OrderStatusResponse = {
-      confirmed?: boolean;
+      confirmed?:
+        boolean;
 
-      processing?: boolean;
+      processing?:
+        boolean;
 
-      order?: PublicOrder;
+      order?:
+        PublicOrder;
 
-      error?: string;
+      error?:
+        string;
     };
+
+    type StatusState =
+      | "loading"
+      | "success"
+      | "warning"
+      | "error";
 
     // ============================================================
     // CONFIG
@@ -231,11 +325,48 @@ import Footer from "../../components/Footer.astro";
       1000;
 
     // ============================================================
-    // HELPERS
+    // REQUIRE ELEMENT
+    //
+    // querySelector normalmente devuelve T | null.
+    //
+    // Este helper hace que todos los elementos utilizados
+    // después sean T, no T | null.
+    //
+    // Así eliminamos errores como:
+    //
+    // 'orderTotal' is possibly 'null'.ts(18047)
+    // ============================================================
+
+    function requireElement<
+      T extends Element
+    >(
+      root:
+        ParentNode,
+
+      selector:
+        string,
+    ): T {
+      const element =
+        root.querySelector<T>(
+          selector,
+        );
+
+      if (!element) {
+        throw new Error(
+          `[ATB Shop] Elemento requerido no encontrado: ${selector}`,
+        );
+      }
+
+      return element;
+    }
+
+    // ============================================================
+    // WAIT
     // ============================================================
 
     function wait(
-      milliseconds: number,
+      milliseconds:
+        number,
     ): Promise<void> {
       return new Promise(
         (
@@ -248,6 +379,10 @@ import Footer from "../../components/Footer.astro";
         },
       );
     }
+
+    // ============================================================
+    // MONEY
+    // ============================================================
 
     function formatMoney(
       amount:
@@ -283,6 +418,9 @@ import Footer from "../../components/Footer.astro";
 
             minimumFractionDigits:
               2,
+
+            maximumFractionDigits:
+              2,
           },
         ).format(
           amount /
@@ -298,8 +436,13 @@ import Footer from "../../components/Footer.astro";
       }
     }
 
+    // ============================================================
+    // SESSION REFERENCE
+    // ============================================================
+
     function getShortSessionReference(
-      sessionId: string,
+      sessionId:
+        string,
     ): string {
       if (
         sessionId.length <=
@@ -317,6 +460,68 @@ import Footer from "../../components/Footer.astro";
     }
 
     // ============================================================
+    // SHIPPING STATUS
+    // ============================================================
+
+    function getShippingStatusLabel(
+      status:
+        string,
+    ): string {
+      switch (
+        status
+      ) {
+        case "pending":
+          return "Pedido recibido";
+
+        case "ready":
+          return "Preparando envío";
+
+        case "shipped":
+          return "Enviado";
+
+        case "delivered":
+          return "Entregado";
+
+        case "cancelled":
+          return "Cancelado";
+
+        default:
+          return status;
+      }
+    }
+
+    // ============================================================
+    // ORDER STATUS
+    // ============================================================
+
+    function getOrderStatusLabel(
+      status:
+        string,
+    ): string {
+      switch (
+        status
+      ) {
+        case "paid":
+          return "Pago confirmado";
+
+        case "completed":
+          return "Pago confirmado";
+
+        case "confirmed":
+          return "Pago confirmado";
+
+        case "pending":
+          return "Pendiente";
+
+        case "cancelled":
+          return "Cancelado";
+
+        default:
+          return status;
+      }
+    }
+
+    // ============================================================
     // INITIALIZE
     // ============================================================
 
@@ -329,6 +534,10 @@ import Footer from "../../components/Footer.astro";
       if (!page) {
         return;
       }
+
+      // ========================================================
+      // PREVENT DUPLICATE INITIALIZATION
+      // ========================================================
 
       if (
         page.dataset
@@ -344,105 +553,204 @@ import Footer from "../../components/Footer.astro";
 
       // ========================================================
       // ELEMENTS
+      //
+      // Todos quedan tipados como elementos no-null.
       // ========================================================
 
-      const title =
-        page.querySelector<HTMLElement>(
-          "[data-success-title]",
-        );
+      let title:
+        HTMLElement;
 
-      const description =
-        page.querySelector<HTMLElement>(
-          "[data-success-description]",
-        );
+      let description:
+        HTMLElement;
 
-      const status =
-        page.querySelector<HTMLElement>(
-          "[data-success-status]",
-        );
+      let statusContainer:
+        HTMLElement;
 
-      const statusIndicator =
-        page.querySelector<HTMLElement>(
-          "[data-status-indicator]",
-        );
+      let statusIndicator:
+        HTMLElement;
 
-      const statusMessage =
-        page.querySelector<HTMLElement>(
-          "[data-status-message]",
-        );
+      let statusMessage:
+        HTMLElement;
 
-      const orderSummary =
-        page.querySelector<HTMLElement>(
-          "[data-order-summary]",
-        );
+      let orderSummary:
+        HTMLElement;
 
-      const orderReference =
-        page.querySelector<HTMLElement>(
-          "[data-order-reference]",
-        );
+      let orderReference:
+        HTMLElement;
 
-      const orderTotal =
-        page.querySelector<HTMLElement>(
-          "[data-order-total]",
-        );
+      let orderStatus:
+        HTMLElement;
 
-      const emailContainer =
-        page.querySelector<HTMLElement>(
-          "[data-email-container]",
-        );
+      let emailContainer:
+        HTMLElement;
 
-      const orderEmail =
-        page.querySelector<HTMLElement>(
-          "[data-order-email]",
-        );
+      let orderEmail:
+        HTMLElement;
 
-      const orderItems =
-        page.querySelector<HTMLElement>(
-          "[data-order-items]",
-        );
+      let orderItems:
+        HTMLElement;
 
-      const successReference =
-        page.querySelector<HTMLElement>(
-          "[data-success-reference]",
-        );
+      let orderSubtotal:
+        HTMLElement;
 
-      const sessionReference =
-        page.querySelector<HTMLElement>(
-          "[data-session-reference]",
-        );
+      let orderShipping:
+        HTMLElement;
 
-      if (
-        !title ||
-        !description ||
-        !status ||
-        !statusIndicator ||
-        !statusMessage ||
-        !orderSummary ||
-        !orderReference ||
-        !orderTotal ||
-        !emailContainer ||
-        !orderEmail ||
-        !orderItems ||
-        !successReference ||
-        !sessionReference
+      let orderTotal:
+        HTMLElement;
+
+      let shippingLabel:
+        HTMLElement;
+
+      let shippingMethod:
+        HTMLElement;
+
+      let shippingStatus:
+        HTMLElement;
+
+      let successReference:
+        HTMLElement;
+
+      let sessionReference:
+        HTMLElement;
+
+      try {
+        title =
+          requireElement<HTMLElement>(
+            page,
+            "[data-success-title]",
+          );
+
+        description =
+          requireElement<HTMLElement>(
+            page,
+            "[data-success-description]",
+          );
+
+        statusContainer =
+          requireElement<HTMLElement>(
+            page,
+            "[data-success-status]",
+          );
+
+        statusIndicator =
+          requireElement<HTMLElement>(
+            page,
+            "[data-status-indicator]",
+          );
+
+        statusMessage =
+          requireElement<HTMLElement>(
+            page,
+            "[data-status-message]",
+          );
+
+        orderSummary =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-summary]",
+          );
+
+        orderReference =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-reference]",
+          );
+
+        orderStatus =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-status]",
+          );
+
+        emailContainer =
+          requireElement<HTMLElement>(
+            page,
+            "[data-email-container]",
+          );
+
+        orderEmail =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-email]",
+          );
+
+        orderItems =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-items]",
+          );
+
+        orderSubtotal =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-subtotal]",
+          );
+
+        orderShipping =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-shipping]",
+          );
+
+        orderTotal =
+          requireElement<HTMLElement>(
+            page,
+            "[data-order-total]",
+          );
+
+        shippingLabel =
+          requireElement<HTMLElement>(
+            page,
+            "[data-shipping-label]",
+          );
+
+        shippingMethod =
+          requireElement<HTMLElement>(
+            page,
+            "[data-shipping-method]",
+          );
+
+        shippingStatus =
+          requireElement<HTMLElement>(
+            page,
+            "[data-shipping-status]",
+          );
+
+        successReference =
+          requireElement<HTMLElement>(
+            page,
+            "[data-success-reference]",
+          );
+
+        sessionReference =
+          requireElement<HTMLElement>(
+            page,
+            "[data-session-reference]",
+          );
+      } catch (
+        error
       ) {
+        console.error(
+          "[ATB Shop] No fue posible inicializar la página de confirmación:",
+          error,
+        );
+
         return;
       }
 
       // ========================================================
-      // STATUS
+      // STATUS HELPER
       // ========================================================
 
       function setStatus(
         state:
-          | "loading"
-          | "success"
-          | "warning"
-          | "error",
+          StatusState,
 
-        message: string,
+        message:
+          string,
       ): void {
-        status.dataset.state =
+        statusContainer.dataset.state =
           state;
 
         statusMessage.textContent =
@@ -461,7 +769,7 @@ import Footer from "../../components/Footer.astro";
       }
 
       // ========================================================
-      // SESSION
+      // SESSION ID
       // ========================================================
 
       const params =
@@ -469,13 +777,13 @@ import Footer from "../../components/Footer.astro";
           window.location.search,
         );
 
-      const sessionId =
+      const rawSessionId =
         params.get(
           "session_id",
         );
 
       if (
-        !sessionId
+        !rawSessionId
       ) {
         title.textContent =
           "No pudimos verificar la compra.";
@@ -491,8 +799,20 @@ import Footer from "../../components/Footer.astro";
         return;
       }
 
+      /*
+        Creamos otra constante explícitamente string.
+
+        De esta manera TypeScript no vuelve a considerar
+        que sessionId pueda ser null dentro de funciones
+        asíncronas internas.
+      */
+
+      const sessionId:
+        string =
+        rawSessionId;
+
       // ========================================================
-      // FALLBACK REFERENCE
+      // FALLBACK STRIPE REFERENCE
       // ========================================================
 
       sessionReference.textContent =
@@ -504,7 +824,7 @@ import Footer from "../../components/Footer.astro";
         false;
 
       // ========================================================
-      // RENDER ORDER ITEMS
+      // RENDER ITEMS
       // ========================================================
 
       function renderItems(
@@ -512,6 +832,28 @@ import Footer from "../../components/Footer.astro";
           PublicOrder,
       ): void {
         orderItems.replaceChildren();
+
+        if (
+          order.items.length ===
+          0
+        ) {
+          const empty =
+            document.createElement(
+              "p",
+            );
+
+          empty.className =
+            "order-items-empty";
+
+          empty.textContent =
+            "No fue posible mostrar el detalle de los artículos.";
+
+          orderItems.appendChild(
+            empty,
+          );
+
+          return;
+        }
 
         for (
           const item
@@ -524,6 +866,10 @@ import Footer from "../../components/Footer.astro";
 
           row.className =
             "order-item";
+
+          // ====================================================
+          // INFORMATION
+          // ====================================================
 
           const information =
             document.createElement(
@@ -567,11 +913,18 @@ import Footer from "../../components/Footer.astro";
             );
 
           quantity.textContent =
-            `Cantidad: ${item.quantity}`;
+            item.quantity ===
+              1
+              ? "1 unidad"
+              : `${item.quantity} unidades`;
 
           information.appendChild(
             quantity,
           );
+
+          // ====================================================
+          // PRICE
+          // ====================================================
 
           const price =
             document.createElement(
@@ -602,7 +955,7 @@ import Footer from "../../components/Footer.astro";
       }
 
       // ========================================================
-      // CONFIRMED
+      // RENDER CONFIRMED ORDER
       // ========================================================
 
       function renderConfirmedOrder(
@@ -610,13 +963,15 @@ import Footer from "../../components/Footer.astro";
           PublicOrder,
       ): void {
         /*
-          IMPORTANTE:
-
-          Sólo limpiamos el carrito cuando el backend
-          confirma que shop_orders contiene el pedido.
+          Sólo limpiamos la bolsa después de haber recibido
+          confirmación real desde shop_orders.
         */
 
         clearCart();
+
+        // ======================================================
+        // HEADER
+        // ======================================================
 
         title.textContent =
           "Gracias por tu compra.";
@@ -629,15 +984,26 @@ import Footer from "../../components/Footer.astro";
           "Pago confirmado.",
         );
 
+        // ======================================================
+        // REFERENCE
+        // ======================================================
+
         orderReference.textContent =
           order.reference ??
           "ATB";
 
-        orderTotal.textContent =
-          formatMoney(
-            order.amountTotal,
-            order.currency,
+        // ======================================================
+        // ORDER STATUS
+        // ======================================================
+
+        orderStatus.textContent =
+          getOrderStatusLabel(
+            order.status,
           );
+
+        // ======================================================
+        // EMAIL
+        // ======================================================
 
         if (
           order.customerEmail
@@ -648,20 +1014,83 @@ import Footer from "../../components/Footer.astro";
           emailContainer.hidden =
             false;
         } else {
+          orderEmail.textContent =
+            "—";
+
           emailContainer.hidden =
             true;
         }
+
+        // ======================================================
+        // MONEY
+        // ======================================================
+
+        orderSubtotal.textContent =
+          formatMoney(
+            order.amountSubtotal,
+            order.currency,
+          );
+
+        orderShipping.textContent =
+          order.amountShipping ===
+            0
+            ? "Gratis"
+            : formatMoney(
+                order.amountShipping,
+                order.currency,
+              );
+
+        orderTotal.textContent =
+          formatMoney(
+            order.amountTotal,
+            order.currency,
+          );
+
+        // ======================================================
+        // SHIPPING LABEL
+        // ======================================================
+
+        shippingLabel.textContent =
+          order.shippingMethodName ??
+          "Envío";
+
+        // ======================================================
+        // SHIPPING METHOD
+        // ======================================================
+
+        shippingMethod.textContent =
+          order.shippingMethodName ??
+          "Envío estándar";
+
+        // ======================================================
+        // SHIPPING STATUS
+        // ======================================================
+
+        shippingStatus.textContent =
+          getShippingStatusLabel(
+            order.shippingStatus,
+          );
+
+        // ======================================================
+        // ITEMS
+        // ======================================================
 
         renderItems(
           order,
         );
 
+        // ======================================================
+        // SHOW SUMMARY
+        // ======================================================
+
         orderSummary.hidden =
           false;
 
         /*
-          Ya tenemos una referencia de pedido real.
-          Ocultamos la referencia técnica de Stripe.
+          Ya tenemos una referencia propia de pedido.
+
+          No necesitamos enseñar el identificador técnico
+          de Stripe al comprador.
         */
 
         successReference.hidden =
@@ -721,13 +1150,17 @@ import Footer from "../../components/Footer.astro";
             // CONFIRMED
             // ==================================================
 
+            const confirmedOrder =
+              data.order;
+
             if (
               response.ok &&
-              data.confirmed &&
-              data.order
+              data.confirmed ===
+                true &&
+              confirmedOrder
             ) {
               renderConfirmedOrder(
-                data.order,
+                confirmedOrder,
               );
 
               return;
@@ -740,7 +1173,8 @@ import Footer from "../../components/Footer.astro";
             if (
               response.status ===
                 202 ||
-              data.processing
+              data.processing ===
+                true
             ) {
               if (
                 attempt <
@@ -762,7 +1196,7 @@ import Footer from "../../components/Footer.astro";
                 "Estamos terminando tu pedido.";
 
               description.textContent =
-                "Stripe nos devolvió a la tienda, pero el servidor todavía está terminando de registrar la compra.";
+                "Tu pago fue recibido, pero el servidor todavía está terminando de registrar la compra.";
 
               setStatus(
                 "warning",
@@ -773,7 +1207,7 @@ import Footer from "../../components/Footer.astro";
             }
 
             // ==================================================
-            // ERROR
+            // API ERROR
             // ==================================================
 
             throw new Error(
@@ -784,7 +1218,7 @@ import Footer from "../../components/Footer.astro";
             error
           ) {
             console.error(
-              "[ATB Shop] Success page verification error:",
+              "[ATB Shop] Error verificando pedido:",
               {
                 attempt,
 
@@ -796,6 +1230,11 @@ import Footer from "../../components/Footer.astro";
               attempt <
               MAX_ATTEMPTS
             ) {
+              setStatus(
+                "loading",
+                "Reintentando confirmación…",
+              );
+
               await wait(
                 RETRY_DELAY_MS,
               );
@@ -803,11 +1242,15 @@ import Footer from "../../components/Footer.astro";
               continue;
             }
 
+            // ==================================================
+            // FINAL ERROR
+            // ==================================================
+
             title.textContent =
               "No pudimos verificar el pedido.";
 
             description.textContent =
-              "La página de pago nos devolvió a ATB, pero no pudimos consultar el estado del pedido en este momento.";
+              "Stripe nos devolvió a ATB, pero no pudimos consultar el estado del pedido en este momento.";
 
             setStatus(
               "error",
@@ -839,27 +1282,36 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .success-page {
-    min-height: 100vh;
+    min-height:
+      100vh;
 
-    background: #ffffff;
+    background:
+      #ffffff;
 
-    color: #111111;
+    color:
+      #111111;
   }
 
   .success-container {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
     width:
       min(
         1440px,
-        calc(100% - 5rem)
+        calc(
+          100% - 5rem
+        )
       );
 
-    min-height: 100vh;
+    min-height:
+      100vh;
 
-    margin: 0 auto;
+    margin:
+      0 auto;
 
     padding:
       8rem
@@ -884,15 +1336,18 @@ import Footer from "../../components/Footer.astro";
       0
       1.5rem;
 
-    color: #888888;
+    color:
+      #888888;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.6rem;
+    font-size:
+      0.6rem;
 
-    letter-spacing: 0.14em;
+    letter-spacing:
+      0.14em;
   }
 
   /* ============================================================
@@ -900,9 +1355,11 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .success-content h1 {
-    margin: 0;
+    margin:
+      0;
 
-    color: #111111;
+    color:
+      #111111;
 
     font-family:
       "Inter",
@@ -915,9 +1372,11 @@ import Footer from "../../components/Footer.astro";
         6.5rem
       );
 
-    font-weight: 400;
+    font-weight:
+      400;
 
-    line-height: 0.95;
+    line-height:
+      0.95;
 
     letter-spacing:
       -0.055em;
@@ -928,22 +1387,26 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .success-description {
-    max-width: 500px;
+    max-width:
+      500px;
 
     margin:
       2rem
       0
       0;
 
-    color: #666666;
+    color:
+      #666666;
 
     font-family:
       "Inter",
       sans-serif;
 
-    font-size: 0.82rem;
+    font-size:
+      0.82rem;
 
-    line-height: 1.65;
+    line-height:
+      1.65;
   }
 
   /* ============================================================
@@ -951,15 +1414,20 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .success-status {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    gap: 0.7rem;
+    gap:
+      0.7rem;
 
-    max-width: 520px;
+    max-width:
+      520px;
 
-    margin-top: 1.5rem;
+    margin-top:
+      1.5rem;
 
     padding:
       0.9rem
@@ -975,17 +1443,21 @@ import Footer from "../../components/Footer.astro";
   }
 
   .success-status p {
-    margin: 0;
+    margin:
+      0;
 
-    color: #777777;
+    color:
+      #777777;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.56rem;
+    font-size:
+      0.56rem;
 
-    line-height: 1.5;
+    line-height:
+      1.5;
   }
 
   .status-indicator {
@@ -994,12 +1466,17 @@ import Footer from "../../components/Footer.astro";
       0
       auto;
 
-    width: 7px;
-    height: 7px;
+    width:
+      7px;
 
-    border-radius: 50%;
+    height:
+      7px;
 
-    background: #999999;
+    border-radius:
+      50%;
+
+    background:
+      #999999;
   }
 
   .status-indicator.is-loading {
@@ -1011,37 +1488,47 @@ import Footer from "../../components/Footer.astro";
   }
 
   .status-indicator.is-success {
-    background: #111111;
+    background:
+      #111111;
   }
 
   .status-indicator.is-warning {
-    background: #888888;
+    background:
+      #888888;
   }
 
   .status-indicator.is-error {
-    background: #8e2e2e;
+    background:
+      #8e2e2e;
   }
 
   .success-status[
     data-state="error"
   ] p {
-    color: #8e2e2e;
+    color:
+      #8e2e2e;
   }
 
   @keyframes successPulse {
     0%,
     100% {
-      opacity: 0.3;
+      opacity:
+        0.3;
 
       transform:
-        scale(0.8);
+        scale(
+          0.8
+        );
     }
 
     50% {
-      opacity: 1;
+      opacity:
+        1;
 
       transform:
-        scale(1);
+        scale(
+          1
+        );
     }
   }
 
@@ -1050,7 +1537,8 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .order-summary {
-    margin-top: 2.5rem;
+    margin-top:
+      2.5rem;
 
     border-top:
       1px solid
@@ -1058,11 +1546,17 @@ import Footer from "../../components/Footer.astro";
   }
 
   .order-summary[hidden] {
-    display: none;
+    display:
+      none;
   }
 
+  /* ============================================================
+     ORDER META
+  ============================================================ */
+
   .order-meta {
-    display: grid;
+    display:
+      grid;
 
     grid-template-columns:
       repeat(
@@ -1073,79 +1567,11 @@ import Footer from "../../components/Footer.astro";
         )
       );
 
-    gap: 1.5rem;
+    gap:
+      1.5rem;
 
     padding:
       1.35rem
-      0;
-  }
-
-  .order-meta-item {
-    display: flex;
-
-    flex-direction: column;
-
-    gap: 0.4rem;
-
-    min-width: 0;
-  }
-
-  .order-meta-item[hidden] {
-    display: none;
-  }
-
-  .order-meta-label {
-    color: #999999;
-
-    font-family:
-      "IBM Plex Mono",
-      monospace;
-
-    font-size: 0.52rem;
-
-    letter-spacing: 0.08em;
-
-    text-transform: uppercase;
-  }
-
-  .order-meta-item strong {
-    overflow: hidden;
-
-    color: #222222;
-
-    font-family:
-      "IBM Plex Mono",
-      monospace;
-
-    font-size: 0.66rem;
-
-    font-weight: 500;
-
-    text-overflow: ellipsis;
-  }
-
-  /* ============================================================
-     ORDER ITEMS
-  ============================================================ */
-
-  .order-items {
-    border-top:
-      1px solid
-      #e5e5e5;
-  }
-
-  :global(.order-item) {
-    display: flex;
-
-    align-items: flex-start;
-
-    justify-content:
-      space-between;
-
-    gap: 2rem;
-
-    padding:
-      1.1rem
       0;
 
     border-bottom:
@@ -1153,38 +1579,143 @@ import Footer from "../../components/Footer.astro";
       #e5e5e5;
   }
 
-  :global(.order-item-info) {
-    display: flex;
+  .order-meta-item {
+    display:
+      flex;
 
-    flex-direction: column;
+    flex-direction:
+      column;
 
-    gap: 0.3rem;
+    gap:
+      0.4rem;
 
-    min-width: 0;
+    min-width:
+      0;
   }
 
-  :global(.order-item-info strong) {
-    color: #222222;
-
-    font-family:
-      "Inter",
-      sans-serif;
-
-    font-size: 0.72rem;
-
-    font-weight: 500;
+  .order-meta-item[hidden] {
+    display:
+      none;
   }
 
-  :global(.order-item-info span) {
-    color: #888888;
+  .order-meta-label {
+    color:
+      #999999;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.54rem;
+    font-size:
+      0.52rem;
 
-    line-height: 1.45;
+    letter-spacing:
+      0.08em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .order-meta-item strong {
+    overflow:
+      hidden;
+
+    color:
+      #222222;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.66rem;
+
+    font-weight:
+      500;
+
+    text-overflow:
+      ellipsis;
+  }
+
+  /* ============================================================
+     ORDER ITEMS
+  ============================================================ */
+
+  .order-items {
+    border-bottom:
+      1px solid
+      #e5e5e5;
+  }
+
+  :global(.order-item) {
+    display:
+      flex;
+
+    align-items:
+      flex-start;
+
+    justify-content:
+      space-between;
+
+    gap:
+      2rem;
+
+    padding:
+      1.1rem
+      0;
+
+    border-bottom:
+      1px solid
+      #eeeeee;
+  }
+
+  :global(.order-item:last-child) {
+    border-bottom:
+      0;
+  }
+
+  :global(.order-item-info) {
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    gap:
+      0.3rem;
+
+    min-width:
+      0;
+  }
+
+  :global(.order-item-info strong) {
+    color:
+      #222222;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.72rem;
+
+    font-weight:
+      500;
+  }
+
+  :global(.order-item-info span) {
+    color:
+      #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.54rem;
+
+    line-height:
+      1.45;
   }
 
   :global(.order-item-price) {
@@ -1193,29 +1724,204 @@ import Footer from "../../components/Footer.astro";
       0
       auto;
 
-    color: #444444;
+    color:
+      #444444;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.62rem;
+    font-size:
+      0.62rem;
+  }
+
+  :global(.order-items-empty) {
+    margin:
+      0;
+
+    padding:
+      1rem
+      0;
+
+    color:
+      #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.56rem;
   }
 
   /* ============================================================
-     STRIPE FALLBACK REFERENCE
+     TOTALS
+  ============================================================ */
+
+  .order-totals {
+    padding:
+      1.25rem
+      0;
+
+    border-bottom:
+      1px solid
+      #e5e5e5;
+  }
+
+  .order-total-row {
+    display:
+      flex;
+
+    align-items:
+      center;
+
+    justify-content:
+      space-between;
+
+    gap:
+      1rem;
+
+    margin-bottom:
+      0.7rem;
+
+    color:
+      #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.58rem;
+  }
+
+  .order-total-row:last-child {
+    margin-bottom:
+      0;
+  }
+
+  .order-total-row strong {
+    color:
+      #333333;
+
+    font-weight:
+      500;
+  }
+
+  .order-total-row.total {
+    margin-top:
+      1rem;
+
+    padding-top:
+      1rem;
+
+    border-top:
+      1px solid
+      #dedede;
+
+    color:
+      #111111;
+
+    font-size:
+      0.7rem;
+  }
+
+  .order-total-row.total strong {
+    color:
+      #111111;
+
+    font-size:
+      0.76rem;
+  }
+
+  /* ============================================================
+     SHIPPING
+  ============================================================ */
+
+  .shipping-summary {
+    display:
+      grid;
+
+    grid-template-columns:
+      repeat(
+        2,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap:
+      1.5rem;
+
+    padding:
+      1.25rem
+      0;
+  }
+
+  .shipping-summary > div {
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    gap:
+      0.35rem;
+  }
+
+  .shipping-label {
+    color:
+      #999999;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.52rem;
+
+    letter-spacing:
+      0.05em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .shipping-summary strong {
+    color:
+      #333333;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.68rem;
+
+    font-weight:
+      500;
+  }
+
+  /* ============================================================
+     FALLBACK REFERENCE
   ============================================================ */
 
   .success-reference {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    gap: 1rem;
+    gap:
+      1rem;
 
-    margin-top: 2.5rem;
+    margin-top:
+      2.5rem;
 
-    padding-top: 1.25rem;
+    padding-top:
+      1.25rem;
 
     border-top:
       1px solid
@@ -1223,27 +1929,32 @@ import Footer from "../../components/Footer.astro";
   }
 
   .success-reference[hidden] {
-    display: none;
+    display:
+      none;
   }
 
   .success-reference span {
-    color: #888888;
+    color:
+      #888888;
 
     font-family:
       "Inter",
       sans-serif;
 
-    font-size: 0.62rem;
+    font-size:
+      0.62rem;
   }
 
   .success-reference code {
-    color: #444444;
+    color:
+      #444444;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.6rem;
+    font-size:
+      0.6rem;
 
     background:
       transparent;
@@ -1254,27 +1965,35 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   .success-actions {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    flex-wrap: wrap;
+    flex-wrap:
+      wrap;
 
     gap:
       1rem
       1.5rem;
 
-    margin-top: 3rem;
+    margin-top:
+      3rem;
   }
 
   .primary-link {
-    display: inline-flex;
+    display:
+      inline-flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    justify-content: center;
+    justify-content:
+      center;
 
-    min-width: 170px;
+    min-width:
+      170px;
 
     padding:
       0.95rem
@@ -1287,17 +2006,21 @@ import Footer from "../../components/Footer.astro";
     background:
       #111111;
 
-    color: #ffffff;
+    color:
+      #ffffff;
 
     font-family:
       "Inter",
       sans-serif;
 
-    font-size: 0.7rem;
+    font-size:
+      0.7rem;
 
-    font-weight: 500;
+    font-weight:
+      500;
 
-    text-decoration: none;
+    text-decoration:
+      none;
 
     transition:
       background
@@ -1307,19 +2030,23 @@ import Footer from "../../components/Footer.astro";
   }
 
   .primary-link:hover {
-    background: #ffffff;
+    background:
+      #ffffff;
 
-    color: #111111;
+    color:
+      #111111;
   }
 
   .secondary-link {
-    color: #555555;
+    color:
+      #555555;
 
     font-family:
       "Inter",
       sans-serif;
 
-    font-size: 0.7rem;
+    font-size:
+      0.7rem;
 
     text-decoration:
       underline;
@@ -1329,7 +2056,7 @@ import Footer from "../../components/Footer.astro";
   }
 
   /* ============================================================
-     NORMAL SCROLL
+     GLOBAL PAGE
   ============================================================ */
 
   :global(
@@ -1337,7 +2064,8 @@ import Footer from "../../components/Footer.astro";
       .success-page
     )
   ) {
-    background: #ffffff;
+    background:
+      #ffffff;
 
     scroll-snap-type:
       none !important;
@@ -1348,7 +2076,8 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   @media (
-    max-width: 1000px
+    max-width:
+      1000px
   ) {
     .success-container {
       width:
@@ -1363,7 +2092,8 @@ import Footer from "../../components/Footer.astro";
   ============================================================ */
 
   @media (
-    max-width: 600px
+    max-width:
+      600px
   ) {
     .success-container {
       width:
@@ -1387,20 +2117,32 @@ import Footer from "../../components/Footer.astro";
     }
 
     .success-description {
-      max-width: 340px;
+      max-width:
+        340px;
 
-      font-size: 0.76rem;
+      font-size:
+        0.76rem;
     }
 
     .order-meta {
       grid-template-columns:
         1fr;
 
-      gap: 1rem;
+      gap:
+        1rem;
     }
 
     :global(.order-item) {
-      gap: 1rem;
+      gap:
+        1rem;
+    }
+
+    .shipping-summary {
+      grid-template-columns:
+        1fr;
+
+      gap:
+        1rem;
     }
 
     .success-reference {
@@ -1410,17 +2152,21 @@ import Footer from "../../components/Footer.astro";
       flex-direction:
         column;
 
-      gap: 0.4rem;
+      gap:
+        0.4rem;
     }
 
     .success-actions {
-      align-items: stretch;
+      align-items:
+        stretch;
 
-      flex-direction: column;
+      flex-direction:
+        column;
     }
 
     .primary-link {
-      width: 100%;
+      width:
+        100%;
     }
 
     .secondary-link {
