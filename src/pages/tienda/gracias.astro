@@ -1,0 +1,1452 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout>
+  <main
+    class="success-page"
+    data-success-page
+  >
+    <div class="success-container">
+      <div class="success-content">
+
+        <p class="success-label">
+          ATB SHOP
+        </p>
+
+        <h1
+          data-success-title
+        >
+          Confirmando tu compra.
+        </h1>
+
+        <p
+          class="success-description"
+          data-success-description
+        >
+          Estamos verificando que tu pedido haya quedado
+          registrado correctamente.
+        </p>
+
+        <!-- ==================================================
+             STATUS
+        =================================================== -->
+
+        <div
+          class="success-status"
+          data-success-status
+          data-state="loading"
+          aria-live="polite"
+        >
+          <span
+            class="status-indicator is-loading"
+            data-status-indicator
+            aria-hidden="true"
+          ></span>
+
+          <p
+            data-status-message
+          >
+            Confirmando pedido…
+          </p>
+        </div>
+
+        <!-- ==================================================
+             ORDER
+        =================================================== -->
+
+        <section
+          class="order-summary"
+          data-order-summary
+          hidden
+        >
+          <div class="order-meta">
+            <div class="order-meta-item">
+              <span class="order-meta-label">
+                Pedido
+              </span>
+
+              <strong
+                data-order-reference
+              >
+                —
+              </strong>
+            </div>
+
+            <div class="order-meta-item">
+              <span class="order-meta-label">
+                Total
+              </span>
+
+              <strong
+                data-order-total
+              >
+                —
+              </strong>
+            </div>
+
+            <div
+              class="order-meta-item"
+              data-email-container
+              hidden
+            >
+              <span class="order-meta-label">
+                Confirmación
+              </span>
+
+              <strong
+                data-order-email
+              >
+                —
+              </strong>
+            </div>
+          </div>
+
+          <div
+            class="order-items"
+            data-order-items
+          ></div>
+        </section>
+
+        <!-- ==================================================
+             FALLBACK REFERENCE
+        =================================================== -->
+
+        <div
+          class="success-reference"
+          data-success-reference
+          hidden
+        >
+          <span>
+            Referencia
+          </span>
+
+          <code
+            data-session-reference
+          ></code>
+        </div>
+
+        <!-- ==================================================
+             ACTIONS
+        =================================================== -->
+
+        <div class="success-actions">
+          <a
+            href="/tienda"
+            class="primary-link"
+          >
+            Volver a la tienda
+          </a>
+
+          <a
+            href="/"
+            class="secondary-link"
+          >
+            Ir a ATB
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    import {
+      clearCart,
+    } from "../../lib/shop/cart";
+
+    // ============================================================
+    // TYPES
+    // ============================================================
+
+    type OrderItem = {
+      sku:
+        | string
+        | null;
+
+      productName: string;
+
+      variantDescription:
+        | string
+        | null;
+
+      quantity: number;
+
+      unitAmount:
+        | number
+        | null;
+
+      lineTotal:
+        | number
+        | null;
+    };
+
+    type PublicOrder = {
+      id: string;
+
+      reference:
+        | string
+        | null;
+
+      status: string;
+
+      currency: string;
+
+      amountTotal:
+        | number
+        | null;
+
+      customerEmail:
+        | string
+        | null;
+
+      createdAt:
+        | string
+        | null;
+
+      items:
+        OrderItem[];
+    };
+
+    type OrderStatusResponse = {
+      confirmed?: boolean;
+
+      processing?: boolean;
+
+      order?: PublicOrder;
+
+      error?: string;
+    };
+
+    // ============================================================
+    // CONFIG
+    // ============================================================
+
+    const MAX_ATTEMPTS =
+      10;
+
+    const RETRY_DELAY_MS =
+      1000;
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+
+    function wait(
+      milliseconds: number,
+    ): Promise<void> {
+      return new Promise(
+        (
+          resolve,
+        ) => {
+          window.setTimeout(
+            resolve,
+            milliseconds,
+          );
+        },
+      );
+    }
+
+    function formatMoney(
+      amount:
+        | number
+        | null,
+
+      currency:
+        | string
+        | null,
+    ): string {
+      if (
+        amount ===
+        null
+      ) {
+        return "—";
+      }
+
+      const normalizedCurrency =
+        (
+          currency ??
+          "MXN"
+        ).toUpperCase();
+
+      try {
+        return new Intl.NumberFormat(
+          "es-MX",
+          {
+            style:
+              "currency",
+
+            currency:
+              normalizedCurrency,
+
+            minimumFractionDigits:
+              2,
+          },
+        ).format(
+          amount /
+            100,
+        );
+      } catch {
+        return `$${(
+          amount /
+          100
+        ).toFixed(
+          2,
+        )}`;
+      }
+    }
+
+    function getShortSessionReference(
+      sessionId: string,
+    ): string {
+      if (
+        sessionId.length <=
+        18
+      ) {
+        return sessionId;
+      }
+
+      return `${sessionId.slice(
+        0,
+        10,
+      )}…${sessionId.slice(
+        -6,
+      )}`;
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    function initializeSuccessPage(): void {
+      const page =
+        document.querySelector<HTMLElement>(
+          "[data-success-page]",
+        );
+
+      if (!page) {
+        return;
+      }
+
+      if (
+        page.dataset
+          .initialized ===
+        "true"
+      ) {
+        return;
+      }
+
+      page.dataset
+        .initialized =
+        "true";
+
+      // ========================================================
+      // ELEMENTS
+      // ========================================================
+
+      const title =
+        page.querySelector<HTMLElement>(
+          "[data-success-title]",
+        );
+
+      const description =
+        page.querySelector<HTMLElement>(
+          "[data-success-description]",
+        );
+
+      const status =
+        page.querySelector<HTMLElement>(
+          "[data-success-status]",
+        );
+
+      const statusIndicator =
+        page.querySelector<HTMLElement>(
+          "[data-status-indicator]",
+        );
+
+      const statusMessage =
+        page.querySelector<HTMLElement>(
+          "[data-status-message]",
+        );
+
+      const orderSummary =
+        page.querySelector<HTMLElement>(
+          "[data-order-summary]",
+        );
+
+      const orderReference =
+        page.querySelector<HTMLElement>(
+          "[data-order-reference]",
+        );
+
+      const orderTotal =
+        page.querySelector<HTMLElement>(
+          "[data-order-total]",
+        );
+
+      const emailContainer =
+        page.querySelector<HTMLElement>(
+          "[data-email-container]",
+        );
+
+      const orderEmail =
+        page.querySelector<HTMLElement>(
+          "[data-order-email]",
+        );
+
+      const orderItems =
+        page.querySelector<HTMLElement>(
+          "[data-order-items]",
+        );
+
+      const successReference =
+        page.querySelector<HTMLElement>(
+          "[data-success-reference]",
+        );
+
+      const sessionReference =
+        page.querySelector<HTMLElement>(
+          "[data-session-reference]",
+        );
+
+      if (
+        !title ||
+        !description ||
+        !status ||
+        !statusIndicator ||
+        !statusMessage ||
+        !orderSummary ||
+        !orderReference ||
+        !orderTotal ||
+        !emailContainer ||
+        !orderEmail ||
+        !orderItems ||
+        !successReference ||
+        !sessionReference
+      ) {
+        return;
+      }
+
+      // ========================================================
+      // STATUS
+      // ========================================================
+
+      function setStatus(
+        state:
+          | "loading"
+          | "success"
+          | "warning"
+          | "error",
+
+        message: string,
+      ): void {
+        status.dataset.state =
+          state;
+
+        statusMessage.textContent =
+          message;
+
+        statusIndicator.classList.remove(
+          "is-loading",
+          "is-success",
+          "is-warning",
+          "is-error",
+        );
+
+        statusIndicator.classList.add(
+          `is-${state}`,
+        );
+      }
+
+      // ========================================================
+      // SESSION
+      // ========================================================
+
+      const params =
+        new URLSearchParams(
+          window.location.search,
+        );
+
+      const sessionId =
+        params.get(
+          "session_id",
+        );
+
+      if (
+        !sessionId
+      ) {
+        title.textContent =
+          "No pudimos verificar la compra.";
+
+        description.textContent =
+          "No encontramos una referencia de pago válida para consultar este pedido.";
+
+        setStatus(
+          "error",
+          "Falta la referencia de Stripe.",
+        );
+
+        return;
+      }
+
+      // ========================================================
+      // FALLBACK REFERENCE
+      // ========================================================
+
+      sessionReference.textContent =
+        getShortSessionReference(
+          sessionId,
+        );
+
+      successReference.hidden =
+        false;
+
+      // ========================================================
+      // RENDER ORDER ITEMS
+      // ========================================================
+
+      function renderItems(
+        order:
+          PublicOrder,
+      ): void {
+        orderItems.replaceChildren();
+
+        for (
+          const item
+          of order.items
+        ) {
+          const row =
+            document.createElement(
+              "div",
+            );
+
+          row.className =
+            "order-item";
+
+          const information =
+            document.createElement(
+              "div",
+            );
+
+          information.className =
+            "order-item-info";
+
+          const name =
+            document.createElement(
+              "strong",
+            );
+
+          name.textContent =
+            item.productName;
+
+          information.appendChild(
+            name,
+          );
+
+          if (
+            item.variantDescription
+          ) {
+            const variant =
+              document.createElement(
+                "span",
+              );
+
+            variant.textContent =
+              item.variantDescription;
+
+            information.appendChild(
+              variant,
+            );
+          }
+
+          const quantity =
+            document.createElement(
+              "span",
+            );
+
+          quantity.textContent =
+            `Cantidad: ${item.quantity}`;
+
+          information.appendChild(
+            quantity,
+          );
+
+          const price =
+            document.createElement(
+              "div",
+            );
+
+          price.className =
+            "order-item-price";
+
+          price.textContent =
+            formatMoney(
+              item.lineTotal,
+              order.currency,
+            );
+
+          row.appendChild(
+            information,
+          );
+
+          row.appendChild(
+            price,
+          );
+
+          orderItems.appendChild(
+            row,
+          );
+        }
+      }
+
+      // ========================================================
+      // CONFIRMED
+      // ========================================================
+
+      function renderConfirmedOrder(
+        order:
+          PublicOrder,
+      ): void {
+        /*
+          IMPORTANTE:
+
+          Sólo limpiamos el carrito cuando el backend
+          confirma que shop_orders contiene el pedido.
+        */
+
+        clearCart();
+
+        title.textContent =
+          "Gracias por tu compra.";
+
+        description.textContent =
+          "Tu pago fue confirmado y tu pedido quedó registrado correctamente.";
+
+        setStatus(
+          "success",
+          "Pago confirmado.",
+        );
+
+        orderReference.textContent =
+          order.reference ??
+          "ATB";
+
+        orderTotal.textContent =
+          formatMoney(
+            order.amountTotal,
+            order.currency,
+          );
+
+        if (
+          order.customerEmail
+        ) {
+          orderEmail.textContent =
+            order.customerEmail;
+
+          emailContainer.hidden =
+            false;
+        } else {
+          emailContainer.hidden =
+            true;
+        }
+
+        renderItems(
+          order,
+        );
+
+        orderSummary.hidden =
+          false;
+
+        /*
+          Ya tenemos una referencia de pedido real.
+          Ocultamos la referencia técnica de Stripe.
+        */
+
+        successReference.hidden =
+          true;
+      }
+
+      // ========================================================
+      // VERIFY ORDER
+      // ========================================================
+
+      async function verifyOrder(): Promise<void> {
+        setStatus(
+          "loading",
+          "Confirmando pedido…",
+        );
+
+        for (
+          let attempt = 1;
+          attempt <=
+            MAX_ATTEMPTS;
+          attempt += 1
+        ) {
+          try {
+            const response =
+              await fetch(
+                `/api/order-status?session_id=${encodeURIComponent(
+                  sessionId,
+                )}`,
+                {
+                  method:
+                    "GET",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+                  },
+
+                  cache:
+                    "no-store",
+                },
+              );
+
+            let data:
+              OrderStatusResponse;
+
+            try {
+              data =
+                (await response.json()) as
+                  OrderStatusResponse;
+            } catch {
+              throw new Error(
+                "El servidor devolvió una respuesta no válida.",
+              );
+            }
+
+            // ==================================================
+            // CONFIRMED
+            // ==================================================
+
+            if (
+              response.ok &&
+              data.confirmed &&
+              data.order
+            ) {
+              renderConfirmedOrder(
+                data.order,
+              );
+
+              return;
+            }
+
+            // ==================================================
+            // WEBHOOK STILL PROCESSING
+            // ==================================================
+
+            if (
+              response.status ===
+                202 ||
+              data.processing
+            ) {
+              if (
+                attempt <
+                MAX_ATTEMPTS
+              ) {
+                setStatus(
+                  "loading",
+                  "Terminando de registrar tu pedido…",
+                );
+
+                await wait(
+                  RETRY_DELAY_MS,
+                );
+
+                continue;
+              }
+
+              title.textContent =
+                "Estamos terminando tu pedido.";
+
+              description.textContent =
+                "Stripe nos devolvió a la tienda, pero el servidor todavía está terminando de registrar la compra.";
+
+              setStatus(
+                "warning",
+                "La confirmación está tardando más de lo habitual.",
+              );
+
+              return;
+            }
+
+            // ==================================================
+            // ERROR
+            // ==================================================
+
+            throw new Error(
+              data.error ??
+                "No fue posible verificar el pedido.",
+            );
+          } catch (
+            error
+          ) {
+            console.error(
+              "[ATB Shop] Success page verification error:",
+              {
+                attempt,
+
+                error,
+              },
+            );
+
+            if (
+              attempt <
+              MAX_ATTEMPTS
+            ) {
+              await wait(
+                RETRY_DELAY_MS,
+              );
+
+              continue;
+            }
+
+            title.textContent =
+              "No pudimos verificar el pedido.";
+
+            description.textContent =
+              "La página de pago nos devolvió a ATB, pero no pudimos consultar el estado del pedido en este momento.";
+
+            setStatus(
+              "error",
+              "Intenta volver a cargar esta página en unos momentos.",
+            );
+          }
+        }
+      }
+
+      void verifyOrder();
+    }
+
+    // ============================================================
+    // START
+    // ============================================================
+
+    initializeSuccessPage();
+
+    document.addEventListener(
+      "astro:page-load",
+      initializeSuccessPage,
+    );
+  </script>
+</Layout>
+
+<style>
+  /* ============================================================
+     PAGE
+  ============================================================ */
+
+  .success-page {
+    min-height: 100vh;
+
+    background: #ffffff;
+
+    color: #111111;
+  }
+
+  .success-container {
+    display: flex;
+
+    align-items: center;
+
+    width:
+      min(
+        1440px,
+        calc(100% - 5rem)
+      );
+
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding:
+      8rem
+      0;
+  }
+
+  .success-content {
+    width:
+      min(
+        100%,
+        680px
+      );
+  }
+
+  /* ============================================================
+     LABEL
+  ============================================================ */
+
+  .success-label {
+    margin:
+      0
+      0
+      1.5rem;
+
+    color: #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.6rem;
+
+    letter-spacing: 0.14em;
+  }
+
+  /* ============================================================
+     TITLE
+  ============================================================ */
+
+  .success-content h1 {
+    margin: 0;
+
+    color: #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        3rem,
+        7vw,
+        6.5rem
+      );
+
+    font-weight: 400;
+
+    line-height: 0.95;
+
+    letter-spacing:
+      -0.055em;
+  }
+
+  /* ============================================================
+     DESCRIPTION
+  ============================================================ */
+
+  .success-description {
+    max-width: 500px;
+
+    margin:
+      2rem
+      0
+      0;
+
+    color: #666666;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.82rem;
+
+    line-height: 1.65;
+  }
+
+  /* ============================================================
+     STATUS
+  ============================================================ */
+
+  .success-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 0.7rem;
+
+    max-width: 520px;
+
+    margin-top: 1.5rem;
+
+    padding:
+      0.9rem
+      0;
+
+    border-top:
+      1px solid
+      #e5e5e5;
+
+    border-bottom:
+      1px solid
+      #e5e5e5;
+  }
+
+  .success-status p {
+    margin: 0;
+
+    color: #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.56rem;
+
+    line-height: 1.5;
+  }
+
+  .status-indicator {
+    flex:
+      0
+      0
+      auto;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #999999;
+  }
+
+  .status-indicator.is-loading {
+    animation:
+      successPulse
+      1.2s
+      ease-in-out
+      infinite;
+  }
+
+  .status-indicator.is-success {
+    background: #111111;
+  }
+
+  .status-indicator.is-warning {
+    background: #888888;
+  }
+
+  .status-indicator.is-error {
+    background: #8e2e2e;
+  }
+
+  .success-status[
+    data-state="error"
+  ] p {
+    color: #8e2e2e;
+  }
+
+  @keyframes successPulse {
+    0%,
+    100% {
+      opacity: 0.3;
+
+      transform:
+        scale(0.8);
+    }
+
+    50% {
+      opacity: 1;
+
+      transform:
+        scale(1);
+    }
+  }
+
+  /* ============================================================
+     ORDER SUMMARY
+  ============================================================ */
+
+  .order-summary {
+    margin-top: 2.5rem;
+
+    border-top:
+      1px solid
+      #dedede;
+  }
+
+  .order-summary[hidden] {
+    display: none;
+  }
+
+  .order-meta {
+    display: grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    gap: 1.5rem;
+
+    padding:
+      1.35rem
+      0;
+  }
+
+  .order-meta-item {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 0.4rem;
+
+    min-width: 0;
+  }
+
+  .order-meta-item[hidden] {
+    display: none;
+  }
+
+  .order-meta-label {
+    color: #999999;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.52rem;
+
+    letter-spacing: 0.08em;
+
+    text-transform: uppercase;
+  }
+
+  .order-meta-item strong {
+    overflow: hidden;
+
+    color: #222222;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.66rem;
+
+    font-weight: 500;
+
+    text-overflow: ellipsis;
+  }
+
+  /* ============================================================
+     ORDER ITEMS
+  ============================================================ */
+
+  .order-items {
+    border-top:
+      1px solid
+      #e5e5e5;
+  }
+
+  :global(.order-item) {
+    display: flex;
+
+    align-items: flex-start;
+
+    justify-content:
+      space-between;
+
+    gap: 2rem;
+
+    padding:
+      1.1rem
+      0;
+
+    border-bottom:
+      1px solid
+      #e5e5e5;
+  }
+
+  :global(.order-item-info) {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 0.3rem;
+
+    min-width: 0;
+  }
+
+  :global(.order-item-info strong) {
+    color: #222222;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.72rem;
+
+    font-weight: 500;
+  }
+
+  :global(.order-item-info span) {
+    color: #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.54rem;
+
+    line-height: 1.45;
+  }
+
+  :global(.order-item-price) {
+    flex:
+      0
+      0
+      auto;
+
+    color: #444444;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.62rem;
+  }
+
+  /* ============================================================
+     STRIPE FALLBACK REFERENCE
+  ============================================================ */
+
+  .success-reference {
+    display: flex;
+
+    align-items: center;
+
+    gap: 1rem;
+
+    margin-top: 2.5rem;
+
+    padding-top: 1.25rem;
+
+    border-top:
+      1px solid
+      #dedede;
+  }
+
+  .success-reference[hidden] {
+    display: none;
+  }
+
+  .success-reference span {
+    color: #888888;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.62rem;
+  }
+
+  .success-reference code {
+    color: #444444;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.6rem;
+
+    background:
+      transparent;
+  }
+
+  /* ============================================================
+     ACTIONS
+  ============================================================ */
+
+  .success-actions {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap:
+      1rem
+      1.5rem;
+
+    margin-top: 3rem;
+  }
+
+  .primary-link {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 170px;
+
+    padding:
+      0.95rem
+      1.4rem;
+
+    border:
+      1px solid
+      #111111;
+
+    background:
+      #111111;
+
+    color: #ffffff;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.7rem;
+
+    font-weight: 500;
+
+    text-decoration: none;
+
+    transition:
+      background
+        160ms ease,
+      color
+        160ms ease;
+  }
+
+  .primary-link:hover {
+    background: #ffffff;
+
+    color: #111111;
+  }
+
+  .secondary-link {
+    color: #555555;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.7rem;
+
+    text-decoration:
+      underline;
+
+    text-underline-offset:
+      0.2rem;
+  }
+
+  /* ============================================================
+     NORMAL SCROLL
+  ============================================================ */
+
+  :global(
+    body:has(
+      .success-page
+    )
+  ) {
+    background: #ffffff;
+
+    scroll-snap-type:
+      none !important;
+  }
+
+  /* ============================================================
+     TABLET
+  ============================================================ */
+
+  @media (
+    max-width: 1000px
+  ) {
+    .success-container {
+      width:
+        calc(
+          100% - 2.5rem
+        );
+    }
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (
+    max-width: 600px
+  ) {
+    .success-container {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+
+      padding:
+        7rem
+        0
+        5rem;
+    }
+
+    .success-content h1 {
+      font-size:
+        clamp(
+          3rem,
+          16vw,
+          5rem
+        );
+    }
+
+    .success-description {
+      max-width: 340px;
+
+      font-size: 0.76rem;
+    }
+
+    .order-meta {
+      grid-template-columns:
+        1fr;
+
+      gap: 1rem;
+    }
+
+    :global(.order-item) {
+      gap: 1rem;
+    }
+
+    .success-reference {
+      align-items:
+        flex-start;
+
+      flex-direction:
+        column;
+
+      gap: 0.4rem;
+    }
+
+    .success-actions {
+      align-items: stretch;
+
+      flex-direction: column;
+    }
+
+    .primary-link {
+      width: 100%;
+    }
+
+    .secondary-link {
+      align-self:
+        flex-start;
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .primary-link,
+    .status-indicator {
+      transition-duration:
+        0.01ms !important;
+
+      animation-duration:
+        0.01ms !important;
+
+      animation-iteration-count:
+        1 !important;
+    }
+  }
+</style>

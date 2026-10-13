@@ -1,0 +1,1011 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/Footer.astro";
+---
+
+<Layout>
+  <main
+    class="cancel-page"
+    data-cancel-page
+  >
+    <div class="cancel-container">
+      <div class="cancel-content">
+
+        <!-- ==================================================
+             LABEL
+        =================================================== -->
+
+        <p class="cancel-label">
+          ATB SHOP
+        </p>
+
+        <!-- ==================================================
+             TITLE
+        =================================================== -->
+
+        <h1
+          data-cancel-title
+        >
+          Compra no completada.
+        </h1>
+
+        <!-- ==================================================
+             DESCRIPTION
+        =================================================== -->
+
+        <p
+          class="cancel-description"
+          data-cancel-description
+        >
+          Estamos cerrando la sesión de pago y liberando
+          cualquier unidad que haya quedado reservada.
+        </p>
+
+        <!-- ==================================================
+             STATUS
+        =================================================== -->
+
+        <div
+          class="cancel-status"
+          data-cancel-status
+          aria-live="polite"
+        >
+          <span
+            class="status-indicator is-loading"
+            data-status-indicator
+            aria-hidden="true"
+          ></span>
+
+          <p
+            data-status-message
+          >
+            Liberando reserva…
+          </p>
+        </div>
+
+        <!-- ==================================================
+             ACTIONS
+        =================================================== -->
+
+        <div class="cancel-actions">
+          <button
+            type="button"
+            class="primary-button"
+            data-open-cart
+            disabled
+          >
+            Volver a la bolsa
+          </button>
+
+          <a
+            href="/tienda"
+            class="secondary-link"
+            data-store-link
+            aria-disabled="true"
+          >
+            Seguir viendo la tienda
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <Footer />
+
+  <script>
+    // ============================================================
+    // TYPES
+    // ============================================================
+
+    type CancelCheckoutResponse = {
+      success?: boolean;
+
+      released?: boolean;
+
+      duplicate?: boolean;
+
+      paid?: boolean;
+
+      pending?: boolean;
+
+      status?: string;
+
+      reservationId?: string;
+
+      error?: string;
+    };
+
+    // ============================================================
+    // UUID
+    // ============================================================
+
+    function isUuid(
+      value:
+        | string
+        | null,
+    ): value is string {
+      if (!value) {
+        return false;
+      }
+
+      return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+        value,
+      );
+    }
+
+    // ============================================================
+    // INITIALIZE
+    // ============================================================
+
+    function initializeCancelPage(): void {
+      const page =
+        document.querySelector<HTMLElement>(
+          "[data-cancel-page]",
+        );
+
+      if (!page) {
+        return;
+      }
+
+      /*
+        Evita registrar listeners más de una vez
+        si Astro vuelve a disparar astro:page-load.
+      */
+
+      if (
+        page.dataset
+          .initialized ===
+        "true"
+      ) {
+        return;
+      }
+
+      page.dataset
+        .initialized =
+        "true";
+
+      // ========================================================
+      // ELEMENTS
+      // ========================================================
+
+      const title =
+        page.querySelector<HTMLElement>(
+          "[data-cancel-title]",
+        );
+
+      const description =
+        page.querySelector<HTMLElement>(
+          "[data-cancel-description]",
+        );
+
+      const statusContainer =
+        page.querySelector<HTMLElement>(
+          "[data-cancel-status]",
+        );
+
+      const statusIndicator =
+        page.querySelector<HTMLElement>(
+          "[data-status-indicator]",
+        );
+
+      const statusMessage =
+        page.querySelector<HTMLElement>(
+          "[data-status-message]",
+        );
+
+      const openCartButton =
+        page.querySelector<HTMLButtonElement>(
+          "[data-open-cart]",
+        );
+
+      const storeLink =
+        page.querySelector<HTMLAnchorElement>(
+          "[data-store-link]",
+        );
+
+      if (
+        !title ||
+        !description ||
+        !statusContainer ||
+        !statusIndicator ||
+        !statusMessage ||
+        !openCartButton ||
+        !storeLink
+      ) {
+        return;
+      }
+
+      // ========================================================
+      // STATE HELPERS
+      // ========================================================
+
+      function setStatus(
+        state:
+          | "loading"
+          | "success"
+          | "warning"
+          | "error",
+
+        message: string,
+      ): void {
+        statusMessage.textContent =
+          message;
+
+        statusContainer.dataset.state =
+          state;
+
+        statusIndicator.classList.remove(
+          "is-loading",
+          "is-success",
+          "is-warning",
+          "is-error",
+        );
+
+        statusIndicator.classList.add(
+          `is-${state}`,
+        );
+      }
+
+      function enableActions(): void {
+        openCartButton.disabled =
+          false;
+
+        storeLink.removeAttribute(
+          "aria-disabled",
+        );
+
+        storeLink.classList.remove(
+          "is-disabled",
+        );
+      }
+
+      function disableActions(): void {
+        openCartButton.disabled =
+          true;
+
+        storeLink.setAttribute(
+          "aria-disabled",
+          "true",
+        );
+
+        storeLink.classList.add(
+          "is-disabled",
+        );
+      }
+
+      // ========================================================
+      // OPEN CART
+      // ========================================================
+
+      openCartButton.addEventListener(
+        "click",
+        () => {
+          if (
+            openCartButton.disabled
+          ) {
+            return;
+          }
+
+          window.dispatchEvent(
+            new CustomEvent(
+              "atb:cart-open",
+            ),
+          );
+        },
+      );
+
+      // ========================================================
+      // STORE LINK PROTECTION
+      // ========================================================
+
+      storeLink.addEventListener(
+        "click",
+        (
+          event,
+        ) => {
+          if (
+            storeLink.getAttribute(
+              "aria-disabled",
+            ) ===
+            "true"
+          ) {
+            event.preventDefault();
+          }
+        },
+      );
+
+      // ========================================================
+      // CANCEL RESERVATION
+      // ========================================================
+
+      async function cancelReservation(): Promise<void> {
+        disableActions();
+
+        const params =
+          new URLSearchParams(
+            window.location.search,
+          );
+
+        const reservationId =
+          params.get(
+            "reservation_id",
+          );
+
+        // ======================================================
+        // LEGACY / DIRECT VISIT
+        // ======================================================
+
+        if (
+          !reservationId
+        ) {
+          title.textContent =
+            "Compra no completada.";
+
+          description.textContent =
+            "No se realizó ningún cargo. Tu bolsa sigue guardada para que puedas continuar cuando quieras.";
+
+          setStatus(
+            "success",
+            "No hay ninguna reserva pendiente por liberar.",
+          );
+
+          enableActions();
+
+          return;
+        }
+
+        // ======================================================
+        // INVALID RESERVATION ID
+        // ======================================================
+
+        if (
+          !isUuid(
+            reservationId,
+          )
+        ) {
+          title.textContent =
+            "Compra no completada.";
+
+          description.textContent =
+            "No se realizó ningún cargo. Tu bolsa sigue guardada.";
+
+          setStatus(
+            "warning",
+            "No pudimos identificar correctamente la reserva.",
+          );
+
+          enableActions();
+
+          return;
+        }
+
+        // ======================================================
+        // REQUEST
+        // ======================================================
+
+        setStatus(
+          "loading",
+          "Cerrando la sesión de pago y liberando inventario…",
+        );
+
+        try {
+          const response =
+            await fetch(
+              "/api/cancel-checkout",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "Content-Type":
+                    "application/json",
+
+                  Accept:
+                    "application/json",
+                },
+
+                body:
+                  JSON.stringify({
+                    reservationId,
+                  }),
+
+                cache:
+                  "no-store",
+              },
+            );
+
+          let data:
+            CancelCheckoutResponse;
+
+          try {
+            data =
+              (await response.json()) as
+                CancelCheckoutResponse;
+          } catch {
+            throw new Error(
+              "El servidor devolvió una respuesta no válida.",
+            );
+          }
+
+          // ====================================================
+          // SUCCESS
+          // ====================================================
+
+          if (
+            response.ok &&
+            data.success
+          ) {
+            title.textContent =
+              "Compra no completada.";
+
+            description.textContent =
+              "No se realizó ningún cargo. Tu bolsa sigue guardada para que puedas continuar cuando quieras.";
+
+            if (
+              data.duplicate
+            ) {
+              setStatus(
+                "success",
+                "La reserva ya había sido liberada.",
+              );
+            } else if (
+              data.status ===
+              "expired"
+            ) {
+              setStatus(
+                "success",
+                "La sesión expiró y la unidad reservada volvió a estar disponible.",
+              );
+            } else {
+              setStatus(
+                "success",
+                "La unidad reservada volvió a estar disponible.",
+              );
+            }
+
+            enableActions();
+
+            return;
+          }
+
+          // ====================================================
+          // PAYMENT ALREADY COMPLETED
+          // ====================================================
+
+          if (
+            data.paid
+          ) {
+            title.textContent =
+              "El pago ya fue completado.";
+
+            description.textContent =
+              "La sesión de pago ya fue confirmada, por lo que no se liberó el inventario.";
+
+            setStatus(
+              "warning",
+              "Tu compra ya fue procesada.",
+            );
+
+            enableActions();
+
+            return;
+          }
+
+          // ====================================================
+          // ASYNC PAYMENT PENDING
+          // ====================================================
+
+          if (
+            data.pending
+          ) {
+            title.textContent =
+              "Pago pendiente de confirmación.";
+
+            description.textContent =
+              "La sesión ya fue completada y estamos esperando la confirmación final del método de pago.";
+
+            setStatus(
+              "warning",
+              "El inventario permanecerá reservado mientras se confirma el pago.",
+            );
+
+            enableActions();
+
+            return;
+          }
+
+          // ====================================================
+          // SERVER ERROR
+          // ====================================================
+
+          throw new Error(
+            data.error ??
+              "No fue posible liberar la reserva.",
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            "[ATB Shop] Cancel page error:",
+            error,
+          );
+
+          title.textContent =
+            "Compra no completada.";
+
+          description.textContent =
+            "No se realizó ningún cargo. Tu bolsa sigue guardada.";
+
+          setStatus(
+            "error",
+            error instanceof
+              Error
+              ? error.message
+              : "No pudimos liberar el inventario automáticamente.",
+          );
+
+          /*
+            Permitimos volver a la bolsa.
+
+            El backend mantiene la protección:
+            una reserva que no pudo liberarse seguirá
+            bloqueada hasta que expire o pueda procesarse.
+          */
+
+          enableActions();
+        }
+      }
+
+      void cancelReservation();
+    }
+
+    // ============================================================
+    // START
+    // ============================================================
+
+    initializeCancelPage();
+
+    document.addEventListener(
+      "astro:page-load",
+      initializeCancelPage,
+    );
+  </script>
+</Layout>
+
+<style>
+  /* ============================================================
+     PAGE
+  ============================================================ */
+
+  .cancel-page {
+    min-height: 100vh;
+
+    background: #ffffff;
+
+    color: #111111;
+  }
+
+  .cancel-container {
+    display: flex;
+
+    align-items: center;
+
+    width:
+      min(
+        1440px,
+        calc(100% - 5rem)
+      );
+
+    min-height: 100vh;
+
+    margin: 0 auto;
+
+    padding:
+      8rem
+      0;
+  }
+
+  .cancel-content {
+    width:
+      min(
+        100%,
+        680px
+      );
+  }
+
+  /* ============================================================
+     LABEL
+  ============================================================ */
+
+  .cancel-label {
+    margin:
+      0
+      0
+      1.5rem;
+
+    color: #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.6rem;
+
+    letter-spacing: 0.14em;
+  }
+
+  /* ============================================================
+     TITLE
+  ============================================================ */
+
+  .cancel-content h1 {
+    margin: 0;
+
+    color: #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        3rem,
+        7vw,
+        6.5rem
+      );
+
+    font-weight: 400;
+
+    line-height: 0.95;
+
+    letter-spacing:
+      -0.055em;
+  }
+
+  /* ============================================================
+     DESCRIPTION
+  ============================================================ */
+
+  .cancel-description {
+    max-width: 500px;
+
+    margin:
+      2rem
+      0
+      0;
+
+    color: #666666;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size: 0.82rem;
+
+    line-height: 1.65;
+  }
+
+  /* ============================================================
+     STATUS
+  ============================================================ */
+
+  .cancel-status {
+    display: flex;
+
+    align-items: center;
+
+    gap: 0.7rem;
+
+    max-width: 520px;
+
+    margin-top: 1.5rem;
+
+    padding:
+      0.9rem
+      0;
+
+    border-top:
+      1px solid
+      #e5e5e5;
+
+    border-bottom:
+      1px solid
+      #e5e5e5;
+  }
+
+  .cancel-status p {
+    margin: 0;
+
+    color: #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.56rem;
+
+    line-height: 1.5;
+
+    letter-spacing: 0.02em;
+  }
+
+  /* ============================================================
+     INDICATOR
+  ============================================================ */
+
+  .status-indicator {
+    flex:
+      0
+      0
+      auto;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #999999;
+  }
+
+  .status-indicator.is-loading {
+    animation:
+      cancelPulse
+      1.2s
+      ease-in-out
+      infinite;
+  }
+
+  .status-indicator.is-success {
+    background: #111111;
+  }
+
+  .status-indicator.is-warning {
+    background: #888888;
+  }
+
+  .status-indicator.is-error {
+    background: #8e2e2e;
+  }
+
+  .cancel-status[
+    data-state="error"
+  ] p {
+    color: #8e2e2e;
+  }
+
+  @keyframes cancelPulse {
+    0%,
+    100% {
+      opacity: 0.3;
+
+      transform:
+        scale(0.8);
+    }
+
+    50% {
+      opacity: 1;
+
+      transform:
+        scale(1);
+    }
+  }
+
+  /* ============================================================
+     ACTIONS
+  ============================================================ */
+
+  .cancel-actions {
+    display: flex;
+
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    gap:
+      1rem
+      1.5rem;
+
+    margin-top: 3rem;
+  }
+
+  /* ============================================================
+     PRIMARY BUTTON
+  ============================================================ */
+
+  .primary-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 170px;
+
+    padding:
+      0.95rem
+      1.4rem;
+
+    border:
+      1px solid
+      #111111;
+
+    background:
+      #111111;
+
+    color:
+      #ffffff;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.7rem;
+
+    font-weight: 500;
+
+    cursor: pointer;
+
+    transition:
+      background
+        160ms ease,
+      color
+        160ms ease,
+      opacity
+        160ms ease;
+  }
+
+  .primary-button:not(
+      :disabled
+    ):hover {
+    background:
+      #ffffff;
+
+    color:
+      #111111;
+  }
+
+  .primary-button:disabled {
+    border-color:
+      #dddddd;
+
+    background:
+      #f2f2f2;
+
+    color:
+      #999999;
+
+    cursor: default;
+  }
+
+  /* ============================================================
+     SECONDARY LINK
+  ============================================================ */
+
+  .secondary-link {
+    color:
+      #555555;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.7rem;
+
+    text-decoration:
+      underline;
+
+    text-underline-offset:
+      0.2rem;
+  }
+
+  .secondary-link.is-disabled {
+    color:
+      #b0b0b0;
+
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     GLOBAL PAGE
+  ============================================================ */
+
+  :global(
+    body:has(.cancel-page)
+  ) {
+    background: #ffffff;
+
+    scroll-snap-type:
+      none !important;
+  }
+
+  /* ============================================================
+     TABLET
+  ============================================================ */
+
+  @media (
+    max-width: 1000px
+  ) {
+    .cancel-container {
+      width:
+        calc(
+          100% - 2.5rem
+        );
+    }
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (
+    max-width: 600px
+  ) {
+    .cancel-container {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+
+      padding:
+        7rem
+        0
+        5rem;
+    }
+
+    .cancel-content h1 {
+      font-size:
+        clamp(
+          3rem,
+          16vw,
+          5rem
+        );
+    }
+
+    .cancel-description {
+      max-width: 340px;
+
+      font-size: 0.76rem;
+    }
+
+    .cancel-status {
+      max-width: 100%;
+    }
+
+    .cancel-actions {
+      align-items: stretch;
+
+      flex-direction: column;
+    }
+
+    .primary-button {
+      width: 100%;
+    }
+
+    .secondary-link {
+      align-self: flex-start;
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .primary-button,
+    .status-indicator {
+      transition-duration:
+        0.01ms !important;
+
+      animation-duration:
+        0.01ms !important;
+
+      animation-iteration-count:
+        1 !important;
+    }
+  }
+</style>

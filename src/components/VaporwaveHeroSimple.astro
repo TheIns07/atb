@@ -1,0 +1,701 @@
+---
+// ======================================================
+// CONFIGURACIÓN
+// ======================================================
+
+// Aquí moveríamos la experiencia 3D actual si decidimos conservarla.
+const experienceUrl = "/vaporwave/experiencia";
+
+// Cambiar posteriormente por la URL real del documental.
+const documentaryUrl = "https://www.youtube.com/";
+
+// Preview usado únicamente como fondo al hacer hover
+// sobre "VER DOCUMENTAL".
+const documentaryPreview =
+  "/videos/vaporwave/documentary-preview.mp4";
+---
+
+<section id="vaporwave-hero" class="vaporwave-root">
+  <!-- =====================================================
+       VIDEO PREVIEW DEL DOCUMENTAL
+  ====================================================== -->
+
+  <video
+    id="documentary-preview"
+    class="documentary-preview"
+    muted
+    loop
+    playsinline
+    preload="metadata"
+    aria-hidden="true"
+  >
+    <source src={documentaryPreview} type="video/mp4" />
+  </video>
+
+  <!-- Oscurece ligeramente el video para mantener legibilidad -->
+  <div class="documentary-overlay" aria-hidden="true"></div>
+
+  <!-- =====================================================
+       TEXTURA VISUAL
+  ====================================================== -->
+
+  <div class="screen-vignette" aria-hidden="true"></div>
+  <div class="screen-lines" aria-hidden="true"></div>
+  <div class="screen-noise" aria-hidden="true"></div>
+
+  <!-- =====================================================
+       LANDING
+  ====================================================== -->
+
+  <div class="vaporwave-landing">
+    <div class="landing-inner">
+      <h1 class="landing-title">
+        VAPORWAVE
+      </h1>
+
+      <p class="landing-subtitle">
+        LA HISTORIA NO CONTADA
+      </p>
+
+      <div class="landing-actions">
+        <a
+          href={experienceUrl}
+          class="landing-button"
+        >
+          ENTRAR A LA EXPERIENCIA
+        </a>
+
+        <a
+          id="documentary-trigger"
+          href={documentaryUrl}
+          class="landing-button"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          VER DOCUMENTAL
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+  function initializeVaporwaveHero(): void {
+    const root = document.getElementById("vaporwave-hero");
+    const video = document.getElementById("documentary-preview");
+    const documentaryTrigger =
+      document.getElementById("documentary-trigger");
+
+    if (
+      !(root instanceof HTMLElement) ||
+      !(video instanceof HTMLVideoElement) ||
+      !(documentaryTrigger instanceof HTMLAnchorElement)
+    ) {
+      return;
+    }
+
+    if (root.dataset.simpleHeroInitialized === "true") {
+      return;
+    }
+
+    root.dataset.simpleHeroInitialized = "true";
+
+    let pauseTimer: number | null = null;
+
+    function clearPauseTimer(): void {
+      if (pauseTimer !== null) {
+        window.clearTimeout(pauseTimer);
+        pauseTimer = null;
+      }
+    }
+
+    async function showDocumentaryPreview(): Promise<void> {
+      clearPauseTimer();
+
+      root?.classList.add("documentary-active");
+
+      if (!(video instanceof HTMLVideoElement)) {
+        return;
+      }
+
+      try {
+        await video.play();
+      } catch {
+        // El navegador puede impedir autoplay en ciertos escenarios.
+        // Al estar muted normalmente no habrá problema.
+      }
+    }
+
+    function hideDocumentaryPreview(): void {
+      clearPauseTimer();
+
+      root?.classList.remove("documentary-active");
+
+      pauseTimer = window.setTimeout(() => {
+        if (!(video instanceof HTMLVideoElement)) {
+          return;
+        }
+
+        video.pause();
+
+        pauseTimer = null;
+      }, 700);
+    }
+
+    documentaryTrigger.addEventListener(
+      "pointerenter",
+      showDocumentaryPreview,
+    );
+
+    documentaryTrigger.addEventListener(
+      "pointerleave",
+      hideDocumentaryPreview,
+    );
+
+    documentaryTrigger.addEventListener(
+      "focus",
+      showDocumentaryPreview,
+    );
+
+    documentaryTrigger.addEventListener(
+      "blur",
+      hideDocumentaryPreview,
+    );
+
+    function cleanup(): void {
+      clearPauseTimer();
+
+      if (video instanceof HTMLVideoElement) {
+        video.pause();
+      }
+
+      documentaryTrigger?.removeEventListener(
+        "pointerenter",
+        showDocumentaryPreview,
+      );
+
+      documentaryTrigger?.removeEventListener(
+        "pointerleave",
+        hideDocumentaryPreview,
+      );
+
+      documentaryTrigger?.removeEventListener(
+        "focus",
+        showDocumentaryPreview,
+      );
+
+      documentaryTrigger?.removeEventListener(
+        "blur",
+        hideDocumentaryPreview,
+      );
+
+      root?.removeAttribute("data-simple-hero-initialized");
+    }
+
+    document.addEventListener(
+      "astro:before-swap",
+      cleanup,
+      {
+        once: true,
+      },
+    );
+  }
+
+  initializeVaporwaveHero();
+
+  document.addEventListener(
+    "astro:page-load",
+    initializeVaporwaveHero,
+  );
+</script>
+
+<style>
+  @import url(
+    "https://fonts.googleapis.com/css2?family=Gideon+Roman&family=IBM+Plex+Mono:wght@400;500&display=swap"
+  );
+
+  * {
+    box-sizing: border-box;
+  }
+
+  /* ============================================================
+     ROOT
+  ============================================================ */
+
+  .vaporwave-root {
+    position: relative;
+
+    width: 100%;
+    height: 100dvh;
+    min-height: 100dvh;
+
+    overflow: clip;
+
+    isolation: isolate;
+
+    background: #000;
+
+    color: #eee9df;
+  }
+
+  /* ============================================================
+     DOCUMENTARY VIDEO
+  ============================================================ */
+
+  .documentary-preview {
+    position: absolute;
+
+    z-index: 0;
+
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+    object-position: center;
+
+    opacity: 0;
+
+    transform: scale(1.025);
+
+    filter:
+      saturate(0.82)
+      contrast(1.05)
+      brightness(0.74);
+
+    pointer-events: none;
+
+    transition:
+      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+      transform 2.4s cubic-bezier(0.22, 1, 0.36, 1),
+      filter 900ms ease;
+  }
+
+  .documentary-active .documentary-preview {
+    opacity: 1;
+
+    transform: scale(1);
+
+    filter:
+      saturate(0.92)
+      contrast(1.04)
+      brightness(0.76);
+  }
+
+  /* ============================================================
+     VIDEO OVERLAY
+  ============================================================ */
+
+  .documentary-overlay {
+    position: absolute;
+
+    z-index: 1;
+
+    inset: 0;
+
+    background:
+      linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.16) 0%,
+        rgba(0, 0, 0, 0.18) 45%,
+        rgba(0, 0, 0, 0.32) 100%
+      );
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: opacity 700ms ease;
+  }
+
+  .documentary-active .documentary-overlay {
+    opacity: 1;
+  }
+
+  /* ============================================================
+     SCREEN EFFECTS
+  ============================================================ */
+
+  .screen-vignette,
+  .screen-lines,
+  .screen-noise {
+    position: absolute;
+
+    z-index: 4;
+
+    inset: 0;
+
+    pointer-events: none;
+  }
+
+  .screen-vignette {
+    background:
+      radial-gradient(
+        circle at center,
+        transparent 42%,
+        rgba(4, 5, 6, 0.42) 100%
+      );
+  }
+
+  .screen-lines {
+    opacity: 0.09;
+
+    mix-blend-mode: multiply;
+
+    background:
+      repeating-linear-gradient(
+        0deg,
+        transparent 0,
+        transparent 3px,
+        rgba(0, 0, 0, 0.12) 3px,
+        rgba(0, 0, 0, 0.12) 4px
+      );
+  }
+
+  .screen-noise {
+    opacity: 0.026;
+
+    mix-blend-mode: screen;
+
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.08) 0,
+        rgba(255, 255, 255, 0.08) 1px,
+        transparent 1px,
+        transparent 4px
+      );
+
+    animation: noiseShift 350ms steps(2) infinite;
+  }
+
+  @keyframes noiseShift {
+    0% {
+      transform: translate(0, 0);
+    }
+
+    25% {
+      transform: translate(-1px, 1px);
+    }
+
+    50% {
+      transform: translate(1px, -1px);
+    }
+
+    75% {
+      transform: translate(1px, 1px);
+    }
+
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  /* ============================================================
+     LANDING
+  ============================================================ */
+
+  .vaporwave-landing {
+    position: absolute;
+
+    z-index: 20;
+
+    inset: 0;
+
+    display: grid;
+
+    place-items: center;
+
+    pointer-events: none;
+  }
+
+  .landing-inner {
+    width: min(
+      1120px,
+      calc(100% - 3rem)
+    );
+
+    text-align: center;
+
+    pointer-events: auto;
+  }
+
+  .landing-title {
+    margin: 0;
+
+    color: #f0ece3;
+
+    font-family:
+      "Gideon Roman",
+      serif;
+
+    font-size:
+      clamp(
+        5rem,
+        12vw,
+        11rem
+      );
+
+    font-weight: 400;
+
+    line-height: 0.82;
+
+    letter-spacing: -0.035em;
+
+    text-shadow:
+      0 2px 30px
+      rgba(0, 0, 0, 0.14);
+
+    transition:
+      color 700ms ease,
+      text-shadow 700ms ease;
+  }
+
+  .documentary-active .landing-title {
+    color: #fffaf0;
+
+    text-shadow:
+      0 2px 34px
+      rgba(0, 0, 0, 0.55);
+  }
+
+  .landing-subtitle {
+    margin:
+      1.6rem
+      0
+      0;
+
+    color:
+      rgba(
+        240,
+        236,
+        227,
+        0.88
+      );
+
+    font-family:
+      "Gideon Roman",
+      serif;
+
+    font-size:
+      clamp(
+        1.55rem,
+        3vw,
+        2.7rem
+      );
+
+    font-weight: 400;
+
+    letter-spacing: 0.055em;
+
+    text-shadow:
+      0 2px 20px
+      rgba(0, 0, 0, 0.35);
+  }
+
+  /* ============================================================
+     ACTIONS
+  ============================================================ */
+
+  .landing-actions {
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    gap: 2rem;
+
+    margin-top: 3.2rem;
+  }
+
+  .landing-button {
+    position: relative;
+
+    display: inline-block;
+
+    padding:
+      0.65rem
+      0;
+
+    border: 0;
+
+    background: transparent;
+
+    color:
+      rgba(
+        240,
+        236,
+        227,
+        0.55
+      );
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.68rem;
+
+    font-weight: 400;
+
+    letter-spacing: 0.16em;
+
+    line-height: 1.4;
+
+    text-decoration: none;
+
+    cursor: pointer;
+
+    transition:
+      color 200ms ease,
+      opacity 300ms ease,
+      transform 300ms ease;
+  }
+
+  .landing-button:hover,
+  .landing-button:focus-visible {
+    color: #fff;
+
+    outline: none;
+  }
+
+  .landing-button::after {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    bottom: 0;
+
+    width: 0;
+    height: 1px;
+
+    background: currentColor;
+
+    transform:
+      translateX(-50%);
+
+    transition:
+      width 250ms ease;
+  }
+
+  .landing-button:hover::after,
+  .landing-button:focus-visible::after {
+    width: 100%;
+  }
+
+  /*
+    Cuando estamos viendo el preview,
+    el botón documental toma protagonismo.
+  */
+
+  .documentary-active
+    .landing-button:not(#documentary-trigger) {
+    opacity: 0.45;
+  }
+
+  .documentary-active
+    #documentary-trigger {
+    color: #fff;
+  }
+
+  .documentary-active
+    #documentary-trigger::after {
+    width: 100%;
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (max-width: 800px) {
+    .landing-inner {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+
+      padding:
+        0
+        0.35rem;
+    }
+
+    .landing-title {
+      font-size:
+        clamp(
+          3.15rem,
+          13.3vw,
+          5rem
+        );
+
+      line-height: 0.93;
+
+      letter-spacing:
+        -0.045em;
+
+      white-space: nowrap;
+    }
+
+    .landing-subtitle {
+      margin-top: 1.3rem;
+
+      font-size:
+        clamp(
+          1.15rem,
+          5.3vw,
+          1.55rem
+        );
+
+      letter-spacing:
+        0.035em;
+    }
+
+    .landing-actions {
+      margin-top: 2.8rem;
+
+      flex-direction: column;
+
+      gap: 0.65rem;
+    }
+
+    .documentary-preview {
+      transform:
+        scale(1.015);
+    }
+  }
+
+  /* ============================================================
+     VERY SMALL MOBILE
+  ============================================================ */
+
+  @media (max-width: 430px) {
+    .landing-title {
+      font-size:
+        min(
+          13.3vw,
+          4rem
+        );
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+    reduce
+  ) {
+    .documentary-preview,
+    .documentary-overlay,
+    .landing-button,
+    .landing-title {
+      transition-duration:
+        0.01ms !important;
+    }
+
+    .screen-noise {
+      animation: none;
+    }
+  }
+</style>

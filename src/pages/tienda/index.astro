@@ -1,0 +1,1556 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import Footer from "../../components/Footer.astro";
+
+import {
+  formatMXN,
+  getActiveProducts,
+  getProductStartingPrice,
+  type Product,
+} from "../../data/products";
+
+// ============================================================
+// PRODUCTS
+// ============================================================
+
+const products =
+  getActiveProducts();
+
+// ============================================================
+// PRICE
+// ============================================================
+
+function getPriceLabel(
+  product: Product,
+): string {
+  if (
+    product.status ===
+    "sold-out"
+  ) {
+    return "Agotado";
+  }
+
+  const price =
+    getProductStartingPrice(
+      product,
+    );
+
+  if (
+    product.status ===
+      "available" &&
+    price !== null
+  ) {
+    return formatMXN(
+      price,
+    );
+  }
+
+  return "Próximamente";
+}
+
+// ============================================================
+// META
+// ============================================================
+
+function getProductMeta(
+  product: Product,
+): string {
+  switch (
+    product.category
+  ) {
+    case "shirt":
+      return "Ropa";
+
+    case "documentary-script":
+      return "Guión original";
+
+    case "documentary-prop":
+      return "Objeto de producción";
+
+    default:
+      return "ATB";
+  }
+}
+---
+
+<Layout>
+  <main
+    class="shop-page"
+    data-shop-page
+  >
+    <!-- ======================================================
+         HEADER
+    ======================================================= -->
+
+    <header class="shop-header">
+      <div class="shop-header-meta">
+        <span>
+          ATB SHOP
+        </span>
+
+        <span>
+          Tienda
+        </span>
+
+        <span>
+          {String(products.length).padStart(2, "0")}
+        </span>
+      </div>
+
+      <div class="shop-header-content">
+        <h1>
+          Objetos y ediciones de ATB.
+        </h1>
+
+        <p>
+          Ediciones, objetos y piezas relacionadas
+          con los proyectos de ATB.
+        </p>
+      </div>
+    </header>
+
+    <!-- ======================================================
+         PRODUCTS
+    ======================================================= -->
+
+    <section
+      class="product-grid"
+      aria-label="Productos"
+    >
+      {
+        products.map(
+          (
+            product,
+            index,
+          ) => {
+            const priceLabel =
+              getPriceLabel(
+                product,
+              );
+
+            const productMeta =
+              getProductMeta(
+                product,
+              );
+
+            const skus =
+              product.variants
+                .filter(
+                  (variant) =>
+                    variant.active,
+                )
+                .map(
+                  (variant) =>
+                    variant.sku,
+                )
+                .join(",");
+
+            return (
+              <article
+                class="product-card"
+                data-shop-product-card
+                data-product-status={product.status}
+                data-product-skus={skus}
+                data-product-name={product.name}
+              >
+                <!-- =========================================
+                     IMAGE
+                ========================================== -->
+
+                <a
+                  href={`/tienda/${product.slug}`}
+                  class="product-image-link"
+                  aria-label={product.name}
+                >
+                  <div class="product-image-wrapper">
+                    <div class="product-image-placeholder">
+                      ATB
+                    </div>
+
+                    <img
+                      src={product.thumbnail}
+                      alt={product.name}
+                      loading={
+                        index < 4
+                          ? "eager"
+                          : "lazy"
+                      }
+                      class="product-image"
+                      data-product-image
+                    />
+
+                    <div
+                      class="product-status-overlay"
+                      data-product-status-overlay
+                      hidden
+                    >
+                      AGOTADO
+                    </div>
+                  </div>
+                </a>
+
+                <!-- =========================================
+                     INFORMATION
+                ========================================== -->
+
+                <div class="product-info">
+                  <div class="product-info-top">
+                    <div>
+                      <p class="product-meta">
+                        {productMeta}
+                      </p>
+
+                      <h2>
+                        <a
+                          href={`/tienda/${product.slug}`}
+                        >
+                          {product.name}
+                        </a>
+                      </h2>
+
+                      {
+                        product.subtitle && (
+                          <p class="product-subtitle">
+                            {product.subtitle}
+                          </p>
+                        )
+                      }
+                    </div>
+
+                    <p class="product-price">
+                      {priceLabel}
+                    </p>
+                  </div>
+
+                  <!-- =======================================
+                       AVAILABILITY
+                  ======================================== -->
+
+                  <div class="product-info-bottom">
+                    <span
+                      class="availability"
+                      data-product-availability
+                    >
+                      {
+                        product.status ===
+                          "coming-soon"
+                          ? "Próximamente"
+                          : product.status ===
+                              "sold-out"
+                            ? "Agotado"
+                            : "Comprobando…"
+                      }
+                    </span>
+
+                    <a
+                      href={`/tienda/${product.slug}`}
+                      class="product-view-link"
+                    >
+                      Ver producto
+                    </a>
+                  </div>
+                </div>
+              </article>
+            );
+          },
+        )
+      }
+    </section>
+
+    <!-- ======================================================
+         INVENTORY CLIENT
+    ======================================================= -->
+
+    <script>
+      // ======================================================
+      // TYPES
+      // ======================================================
+
+      type InventoryItem = {
+        stock: number;
+
+        active: boolean;
+
+        available: boolean;
+
+        updatedAt?:
+          | string
+          | null;
+      };
+
+      type InventoryResponse = {
+        inventoryBySku?: Record<
+          string,
+          InventoryItem
+        >;
+
+        error?: string;
+      };
+
+      // ======================================================
+      // INITIALIZE
+      // ======================================================
+
+      function initializeShopPage(): void {
+        const page =
+          document.querySelector<HTMLElement>(
+            "[data-shop-page]",
+          );
+
+        if (!page) {
+          return;
+        }
+
+        if (
+          page.dataset
+            .inventoryInitialized ===
+          "true"
+        ) {
+          return;
+        }
+
+        page.dataset
+          .inventoryInitialized =
+          "true";
+
+        const cards =
+          page.querySelectorAll<HTMLElement>(
+            "[data-shop-product-card]",
+          );
+
+        if (
+          cards.length ===
+          0
+        ) {
+          return;
+        }
+
+        // ====================================================
+        // STATIC PRODUCTS
+        // ====================================================
+
+        cards.forEach(
+          (
+            card,
+          ) => {
+            const status =
+              card.dataset
+                .productStatus;
+
+            if (
+              status ===
+              "coming-soon"
+            ) {
+              updateCardAvailability(
+                card,
+                "Próximamente",
+                "coming-soon",
+              );
+            }
+
+            if (
+              status ===
+              "sold-out"
+            ) {
+              updateCardAvailability(
+                card,
+                "Agotado",
+                "sold-out",
+              );
+            }
+          },
+        );
+
+        // ====================================================
+        // LOAD INVENTORY
+        // ====================================================
+
+        void loadInventory();
+      }
+
+      // ======================================================
+      // UPDATE CARD
+      // ======================================================
+
+      function updateCardAvailability(
+        card: HTMLElement,
+        label: string,
+        state:
+          | "available"
+          | "last-unit"
+          | "sold-out"
+          | "coming-soon"
+          | "error",
+      ): void {
+        const availability =
+          card.querySelector<HTMLElement>(
+            "[data-product-availability]",
+          );
+
+        const overlay =
+          card.querySelector<HTMLElement>(
+            "[data-product-status-overlay]",
+          );
+
+        if (
+          availability
+        ) {
+          availability.textContent =
+            label;
+
+          availability.dataset.state =
+            state;
+        }
+
+        card.dataset
+          .availabilityState =
+          state;
+
+        if (
+          overlay
+        ) {
+          const soldOut =
+            state ===
+            "sold-out";
+
+          overlay.hidden =
+            !soldOut;
+        }
+
+        card.classList.toggle(
+          "is-sold-out",
+          state ===
+            "sold-out",
+        );
+      }
+
+      // ======================================================
+      // GET CARD SKUS
+      // ======================================================
+
+      function getCardSkus(
+        card:
+          HTMLElement,
+      ): string[] {
+        const raw =
+          card.dataset
+            .productSkus ??
+          "";
+
+        return raw
+          .split(
+            ",",
+          )
+          .map(
+            (
+              sku,
+            ) =>
+              sku.trim(),
+          )
+          .filter(
+            Boolean,
+          );
+      }
+
+      // ======================================================
+      // LOAD INVENTORY
+      // ======================================================
+
+      async function loadInventory(): Promise<void> {
+        const page =
+          document.querySelector<HTMLElement>(
+            "[data-shop-page]",
+          );
+
+        if (!page) {
+          return;
+        }
+
+        const cards =
+          Array.from(
+            page.querySelectorAll<HTMLElement>(
+              "[data-shop-product-card]",
+            ),
+          );
+
+        // ====================================================
+        // COLLECT AVAILABLE PRODUCT SKUS
+        // ====================================================
+
+        const skus =
+          new Set<string>();
+
+        cards.forEach(
+          (
+            card,
+          ) => {
+            if (
+              card.dataset
+                .productStatus !==
+              "available"
+            ) {
+              return;
+            }
+
+            getCardSkus(
+              card,
+            ).forEach(
+              (
+                sku,
+              ) => {
+                skus.add(
+                  sku,
+                );
+              },
+            );
+          },
+        );
+
+        if (
+          skus.size ===
+          0
+        ) {
+          return;
+        }
+
+        // ====================================================
+        // REQUEST
+        // ====================================================
+
+        try {
+          const params =
+            new URLSearchParams();
+
+          params.set(
+            "skus",
+            Array.from(
+              skus,
+            ).join(
+              ",",
+            ),
+          );
+
+          const response =
+            await fetch(
+              `/api/inventory?${params.toString()}`,
+              {
+                method:
+                  "GET",
+
+                headers: {
+                  Accept:
+                    "application/json",
+                },
+
+                cache:
+                  "no-store",
+              },
+            );
+
+          const data =
+            (await response.json()) as
+              InventoryResponse;
+
+          if (
+            !response.ok
+          ) {
+            throw new Error(
+              data.error ??
+                "No fue posible consultar inventario.",
+            );
+          }
+
+          const inventory =
+            data.inventoryBySku ??
+            {};
+
+          // ==================================================
+          // UPDATE CARDS
+          // ==================================================
+
+          cards.forEach(
+            (
+              card,
+            ) => {
+              if (
+                card.dataset
+                  .productStatus !==
+                "available"
+              ) {
+                return;
+              }
+
+              const productSkus =
+                getCardSkus(
+                  card,
+                );
+
+              if (
+                productSkus.length ===
+                0
+              ) {
+                updateCardAvailability(
+                  card,
+                  "No disponible",
+                  "error",
+                );
+
+                return;
+              }
+
+              // ==============================================
+              // TOTAL REAL STOCK
+              // ==============================================
+
+              let totalStock =
+                0;
+
+              let activeSkuCount =
+                0;
+
+              productSkus.forEach(
+                (
+                  sku,
+                ) => {
+                  const item =
+                    inventory[
+                      sku
+                    ];
+
+                  /*
+                    SKU faltante en Supabase:
+                    se considera no disponible.
+                  */
+
+                  if (
+                    !item ||
+                    !item.active
+                  ) {
+                    return;
+                  }
+
+                  activeSkuCount +=
+                    1;
+
+                  totalStock +=
+                    Math.max(
+                      0,
+                      item.stock,
+                    );
+                },
+              );
+
+              // ==============================================
+              // SOLD OUT
+              // ==============================================
+
+              if (
+                totalStock <=
+                0
+              ) {
+                updateCardAvailability(
+                  card,
+                  "Agotado",
+                  "sold-out",
+                );
+
+                return;
+              }
+
+              // ==============================================
+              // LAST UNIT
+              // ==============================================
+
+              if (
+                totalStock ===
+                1
+              ) {
+                updateCardAvailability(
+                  card,
+                  "Última unidad",
+                  "last-unit",
+                );
+
+                return;
+              }
+
+              // ==============================================
+              // AVAILABLE
+              // ==============================================
+
+              if (
+                activeSkuCount >
+                0
+              ) {
+                updateCardAvailability(
+                  card,
+                  "Disponible",
+                  "available",
+                );
+
+                return;
+              }
+
+              updateCardAvailability(
+                card,
+                "No disponible",
+                "error",
+              );
+            },
+          );
+        } catch (
+          error
+        ) {
+          console.error(
+            "[ATB Shop] Catalogue inventory error:",
+            error,
+          );
+
+          /*
+            Fallamos de forma segura:
+            jamás mostramos "Disponible"
+            si no pudimos verificar Supabase.
+          */
+
+          cards.forEach(
+            (
+              card,
+            ) => {
+              if (
+                card.dataset
+                  .productStatus !==
+                "available"
+              ) {
+                return;
+              }
+
+              updateCardAvailability(
+                card,
+                "Disponibilidad no verificada",
+                "error",
+              );
+            },
+          );
+        }
+      }
+
+      // ======================================================
+      // IMAGE FALLBACK
+      // ======================================================
+
+      function initializeImages(): void {
+        const images =
+          document.querySelectorAll<HTMLImageElement>(
+            "[data-product-image]",
+          );
+
+        images.forEach(
+          (
+            image,
+          ) => {
+            function handleError(): void {
+              image.style.display =
+                "none";
+            }
+
+            image.addEventListener(
+              "error",
+              handleError,
+            );
+
+            if (
+              image.complete &&
+              image.naturalWidth ===
+                0
+            ) {
+              handleError();
+            }
+          },
+        );
+      }
+
+      // ======================================================
+      // START
+      // ======================================================
+
+      initializeShopPage();
+
+      initializeImages();
+
+      document.addEventListener(
+        "astro:page-load",
+        () => {
+          initializeShopPage();
+
+          initializeImages();
+        },
+      );
+    </script>
+  </main>
+
+  <Footer />
+</Layout>
+
+<style>
+  /* ============================================================
+     PAGE
+  ============================================================ */
+
+  .shop-page {
+    min-height:
+      100vh;
+
+    padding-top:
+      5rem;
+
+    background:
+      #ffffff;
+
+    color:
+      #111111;
+  }
+
+  :global(
+    body:has(.shop-page)
+  ) {
+    background:
+      #ffffff;
+
+    scroll-snap-type:
+      none !important;
+  }
+
+  /* ============================================================
+     HEADER
+  ============================================================ */
+
+  .shop-header {
+    width:
+      min(
+        1440px,
+        calc(
+          100% - 5rem
+        )
+      );
+
+    margin:
+      0 auto;
+
+    padding:
+      3rem
+      0
+      4rem;
+
+    border-bottom:
+      1px solid
+      #dedede;
+  }
+
+  .shop-header-meta {
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr
+      1fr
+      auto;
+
+    gap:
+      1rem;
+
+    margin-bottom:
+      3rem;
+
+    color:
+      #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.56rem;
+
+    letter-spacing:
+      0.1em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .shop-header-meta
+    span:nth-child(2) {
+    text-align:
+      center;
+  }
+
+  .shop-header-content {
+    display:
+      grid;
+
+    grid-template-columns:
+      minmax(
+        0,
+        1.25fr
+      )
+      minmax(
+        250px,
+        0.75fr
+      );
+
+    align-items:
+      end;
+
+    gap:
+      4rem;
+  }
+
+  .shop-header h1 {
+    max-width:
+      900px;
+
+    margin:
+      0;
+
+    color:
+      #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        3.5rem,
+        7.5vw,
+        8rem
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      0.88;
+
+    letter-spacing:
+      -0.065em;
+  }
+
+  .shop-header-content p {
+    max-width:
+      390px;
+
+    margin:
+      0
+      0
+      0.5rem;
+
+    color:
+      #666666;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.76rem;
+
+    line-height:
+      1.65;
+  }
+
+  /* ============================================================
+     GRID
+  ============================================================ */
+
+  .product-grid {
+    display:
+      grid;
+
+    grid-template-columns:
+      repeat(
+        4,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    width:
+      min(
+        1440px,
+        calc(
+          100% - 5rem
+        )
+      );
+
+    margin:
+      0 auto;
+
+    padding-bottom:
+      8rem;
+  }
+
+  /* ============================================================
+     CARD
+  ============================================================ */
+
+  .product-card {
+    min-width:
+      0;
+
+    padding:
+      1.5rem
+      1.25rem
+      3rem;
+
+    border-right:
+      1px solid
+      #e3e3e3;
+
+    border-bottom:
+      1px solid
+      #e3e3e3;
+  }
+
+  .product-card:nth-child(
+    4n + 1
+  ) {
+    border-left:
+      1px solid
+      #e3e3e3;
+  }
+
+  /* ============================================================
+     IMAGE
+  ============================================================ */
+
+  .product-image-link {
+    display:
+      block;
+
+    color:
+      inherit;
+
+    text-decoration:
+      none;
+  }
+
+  .product-image-wrapper {
+    position:
+      relative;
+
+    aspect-ratio:
+      4 / 5;
+
+    overflow:
+      hidden;
+
+    background:
+      #f3f3f3;
+  }
+
+  .product-image-placeholder {
+    position:
+      absolute;
+
+    inset:
+      0;
+
+    display:
+      grid;
+
+    place-items:
+      center;
+
+    color:
+      #bcbcbc;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.58rem;
+
+    letter-spacing:
+      0.16em;
+  }
+
+  .product-image {
+    position:
+      absolute;
+
+    z-index:
+      1;
+
+    inset:
+      0;
+
+    width:
+      100%;
+
+    height:
+      100%;
+
+    object-fit:
+      cover;
+
+    transition:
+      transform
+      500ms
+      cubic-bezier(
+        0.22,
+        1,
+        0.36,
+        1
+      );
+  }
+
+  .product-card:hover
+    .product-image {
+    transform:
+      scale(
+        1.015
+      );
+  }
+
+  /* ============================================================
+     SOLD OUT OVERLAY
+  ============================================================ */
+
+  .product-status-overlay {
+    position:
+      absolute;
+
+    z-index:
+      2;
+
+    right:
+      0.7rem;
+
+    bottom:
+      0.7rem;
+
+    padding:
+      0.45rem
+      0.55rem;
+
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.94
+      );
+
+    color:
+      #111111;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+
+    letter-spacing:
+      0.1em;
+  }
+
+  .product-status-overlay[hidden] {
+    display:
+      none;
+  }
+
+  .product-card.is-sold-out
+    .product-image {
+    opacity:
+      0.5;
+  }
+
+  /* ============================================================
+     INFO
+  ============================================================ */
+
+  .product-info {
+    padding-top:
+      1rem;
+  }
+
+  .product-info-top {
+    display:
+      flex;
+
+    justify-content:
+      space-between;
+
+    align-items:
+      flex-start;
+
+    gap:
+      1.2rem;
+  }
+
+  .product-meta {
+    margin:
+      0
+      0
+      0.4rem;
+
+    color:
+      #999999;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.49rem;
+
+    letter-spacing:
+      0.09em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .product-info h2 {
+    margin:
+      0;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.78rem;
+
+    font-weight:
+      500;
+
+    line-height:
+      1.35;
+  }
+
+  .product-info h2 a {
+    color:
+      #111111;
+
+    text-decoration:
+      none;
+  }
+
+  .product-subtitle {
+    margin:
+      0.35rem
+      0
+      0;
+
+    color:
+      #888888;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.62rem;
+
+    line-height:
+      1.4;
+  }
+
+  .product-price {
+    flex-shrink:
+      0;
+
+    margin:
+      0;
+
+    color:
+      #444444;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.65rem;
+
+    white-space:
+      nowrap;
+  }
+
+  /* ============================================================
+     BOTTOM
+  ============================================================ */
+
+  .product-info-bottom {
+    display:
+      flex;
+
+    justify-content:
+      space-between;
+
+    align-items:
+      center;
+
+    gap:
+      1rem;
+
+    margin-top:
+      1.3rem;
+
+    padding-top:
+      0.8rem;
+
+    border-top:
+      1px solid
+      #ebebeb;
+  }
+
+  .availability {
+    color:
+      #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+
+    letter-spacing:
+      0.07em;
+
+    text-transform:
+      uppercase;
+  }
+
+  .availability[
+    data-state="available"
+  ] {
+    color:
+      #444444;
+  }
+
+  .availability[
+    data-state="last-unit"
+  ] {
+    color:
+      #222222;
+  }
+
+  .availability[
+    data-state="sold-out"
+  ] {
+    color:
+      #999999;
+  }
+
+  .availability[
+    data-state="error"
+  ] {
+    color:
+      #999999;
+  }
+
+  .product-view-link {
+    flex-shrink:
+      0;
+
+    color:
+      #555555;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.58rem;
+
+    text-decoration:
+      underline;
+
+    text-underline-offset:
+      0.18rem;
+  }
+
+  /* ============================================================
+     TABLET
+  ============================================================ */
+
+  @media (
+    max-width:
+      1050px
+  ) {
+    .shop-header,
+    .product-grid {
+      width:
+        calc(
+          100% - 2.5rem
+        );
+    }
+
+    .product-grid {
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(
+            0,
+            1fr
+          )
+        );
+    }
+
+    .product-card:nth-child(
+      4n + 1
+    ) {
+      border-left:
+        0;
+    }
+
+    .product-card:nth-child(
+      2n + 1
+    ) {
+      border-left:
+        1px solid
+        #e3e3e3;
+    }
+
+    .shop-header-content {
+      grid-template-columns:
+        1fr
+        0.6fr;
+
+      gap:
+        2rem;
+    }
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (
+    max-width:
+      600px
+  ) {
+    .shop-page {
+      padding-top:
+        4rem;
+    }
+
+    .shop-header,
+    .product-grid {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+    }
+
+    .shop-header {
+      padding:
+        2rem
+        0
+        3rem;
+    }
+
+    .shop-header-meta {
+      margin-bottom:
+        2rem;
+    }
+
+    .shop-header-content {
+      display:
+        block;
+    }
+
+    .shop-header h1 {
+      font-size:
+        clamp(
+          3.4rem,
+          16vw,
+          5.5rem
+        );
+    }
+
+    .shop-header-content p {
+      max-width:
+        310px;
+
+      margin-top:
+        1.8rem;
+    }
+
+    .product-grid {
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(
+            0,
+            1fr
+          )
+        );
+
+      padding-bottom:
+        5rem;
+    }
+
+    .product-card {
+      padding:
+        0.75rem
+        0.55rem
+        2rem;
+    }
+
+    .product-info-top {
+      display:
+        block;
+    }
+
+    .product-price {
+      margin-top:
+        0.55rem;
+    }
+
+    .product-info-bottom {
+      display:
+        block;
+    }
+
+    .product-view-link {
+      display:
+        inline-block;
+
+      margin-top:
+        0.55rem;
+    }
+
+    .product-status-overlay {
+      right:
+        0.45rem;
+
+      bottom:
+        0.45rem;
+
+      font-size:
+        0.44rem;
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .product-image {
+      transition-duration:
+        0.01ms !important;
+    }
+  }
+</style>

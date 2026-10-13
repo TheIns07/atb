@@ -1,0 +1,370 @@
+---
+const pathname = Astro.url.pathname;
+
+const shopActive =
+  pathname.startsWith("/tienda");
+---
+
+<header
+  class="site-navbar"
+  data-shop-navbar
+>
+  <nav
+    class="navbar-inner"
+    aria-label="Navegación principal"
+  >
+    <div class="navbar-links">
+
+      <!-- SHOP -->
+
+      <a
+        href="/tienda"
+        class:list={[
+          "navbar-link",
+          {
+            "is-active": shopActive,
+          },
+        ]}
+        aria-current={
+          shopActive
+            ? "page"
+            : undefined
+        }
+      >
+        SHOP
+      </a>
+
+      <!-- BAG -->
+
+      <button
+        type="button"
+        class="navbar-link bag-button"
+        data-bag-button
+        aria-label="Abrir bolsa, 0 artículos"
+      >
+        BAG (<span data-bag-count>0</span>)
+      </button>
+
+    </div>
+  </nav>
+</header>
+
+<script>
+  import {
+    CART_CHANGE_EVENT,
+    getCartCount,
+  } from "../lib/shop/cart";
+
+  function initializeNavbar(): void {
+    const navbar =
+      document.querySelector<HTMLElement>(
+        "[data-shop-navbar]",
+      );
+
+    if (!navbar) {
+      return;
+    }
+
+    if (
+      navbar.dataset.initialized ===
+      "true"
+    ) {
+      return;
+    }
+
+    navbar.dataset.initialized =
+      "true";
+
+    const bagButton =
+      navbar.querySelector<HTMLButtonElement>(
+        "[data-bag-button]",
+      );
+
+    const bagCount =
+      navbar.querySelector<HTMLElement>(
+        "[data-bag-count]",
+      );
+
+    if (
+      !bagButton ||
+      !bagCount
+    ) {
+      return;
+    }
+
+    // ======================================================
+    // UPDATE COUNT
+    // ======================================================
+
+    function updateBagCount(): void {
+      const count =
+        getCartCount();
+
+      bagCount.textContent =
+        String(count);
+
+      bagButton.setAttribute(
+        "aria-label",
+        `Abrir bolsa, ${count} ${
+          count === 1
+            ? "artículo"
+            : "artículos"
+        }`,
+      );
+    }
+
+    // ======================================================
+    // OPEN CART
+    // ======================================================
+
+    bagButton.addEventListener(
+      "click",
+      () => {
+        window.dispatchEvent(
+          new CustomEvent(
+            "atb:cart-open",
+          ),
+        );
+      },
+    );
+
+    // ======================================================
+    // CART CHANGES
+    // ======================================================
+
+    window.addEventListener(
+      CART_CHANGE_EVENT,
+      updateBagCount,
+    );
+
+    /*
+      Si cambia el carrito desde otra pestaña.
+    */
+
+    window.addEventListener(
+      "storage",
+      (
+        event: StorageEvent,
+      ) => {
+        if (
+          event.key ===
+          "atb-shop-cart"
+        ) {
+          updateBagCount();
+        }
+      },
+    );
+
+    // ======================================================
+    // INITIAL
+    // ======================================================
+
+    updateBagCount();
+  }
+
+  initializeNavbar();
+
+  document.addEventListener(
+    "astro:page-load",
+    initializeNavbar,
+  );
+</script>
+
+<style>
+  /* ============================================================
+     NAVBAR
+  ============================================================ */
+
+  .site-navbar {
+    position: fixed;
+
+    z-index: 1000;
+
+    top: 0;
+    right: 0;
+    left: 0;
+
+    width: 100%;
+
+    color: #ffffff;
+
+    mix-blend-mode: difference;
+
+    pointer-events: none;
+  }
+
+  .navbar-inner {
+    display: flex;
+
+    justify-content: flex-end;
+
+    align-items: center;
+
+    width:
+      min(
+        1440px,
+        calc(100% - 5rem)
+      );
+
+    height: 4.5rem;
+
+    margin: 0 auto;
+
+    pointer-events: none;
+  }
+
+  /* ============================================================
+     LINKS
+  ============================================================ */
+
+  .navbar-links {
+    display: flex;
+
+    align-items: center;
+
+    gap: 1.6rem;
+
+    pointer-events: auto;
+  }
+
+  .navbar-link {
+    position: relative;
+
+    display: inline-flex;
+
+    align-items: center;
+
+    padding:
+      0.3rem
+      0;
+
+    border: 0;
+
+    background: transparent;
+
+    color: inherit;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size: 0.59rem;
+
+    font-weight: 400;
+
+    line-height: 1;
+
+    letter-spacing: 0.13em;
+
+    text-decoration: none;
+
+    opacity: 0.62;
+
+    cursor: pointer;
+
+    transition:
+      opacity
+      160ms ease;
+  }
+
+  .navbar-link:hover,
+  .navbar-link:focus-visible,
+  .navbar-link.is-active {
+    opacity: 1;
+  }
+
+  .navbar-link:focus-visible {
+    outline: none;
+  }
+
+  /* ============================================================
+     UNDERLINE
+  ============================================================ */
+
+  .navbar-link::after {
+    content: "";
+
+    position: absolute;
+
+    right: 0;
+    bottom: 0;
+    left: 0;
+
+    height: 1px;
+
+    background: currentColor;
+
+    transform:
+      scaleX(0);
+
+    transform-origin:
+      right center;
+
+    transition:
+      transform
+      180ms ease;
+  }
+
+  .navbar-link:hover::after,
+  .navbar-link:focus-visible::after,
+  .navbar-link.is-active::after {
+    transform:
+      scaleX(1);
+
+    transform-origin:
+      left center;
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (
+    max-width: 1000px
+  ) {
+    .navbar-inner {
+      width:
+        calc(
+          100% - 2.5rem
+        );
+    }
+  }
+
+  @media (
+    max-width: 600px
+  ) {
+    .navbar-inner {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+
+      height: 3.75rem;
+    }
+
+    .navbar-links {
+      gap: 1.1rem;
+    }
+
+    .navbar-link {
+      font-size: 0.53rem;
+
+      letter-spacing: 0.1em;
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+    reduce
+  ) {
+    .navbar-link,
+    .navbar-link::after {
+      transition-duration:
+        0.01ms !important;
+    }
+  }
+</style>

@@ -6,15 +6,20 @@ import Tiktok from '../components/Tiktok.astro';
 import Footer from '../components/Footer.astro';
 import Least from '../components/Least.astro';
 import Space from '../components/Space.astro';
-import VaporwaveHero from '../components/VaporwaveHero.astro';
-
+import VaporwaveHeroSimple from '../components/VaporwaveHeroSimple.astro';
+import ShopPreview from '../components/shop/ShopPreview.astro';
 ---
+
 <Layout>
-  <VaporwaveHero/>
-  <Hero />
-  <Space/>
-  <Youtube />
-  <Tiktok />
-  <Least />
+  <main>
+    <VaporwaveHeroSimple />
+    <Hero />
+    <Space />
+    <Youtube />
+    <Tiktok />
+    <ShopPreview />
+    <Least />
+  </main>
+
   <Footer />
 </Layout>
