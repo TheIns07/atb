@@ -1,7 +1,3 @@
----
-const documentaryUrl = "https://www.youtube.com/";
----
-
 <section id="vaporwave-hero" class="vaporwave-root">
   <canvas id="vaporwave-webgl" class="vaporwave-canvas" aria-hidden="true"
   ></canvas>
@@ -24,31 +20,13 @@ const documentaryUrl = "https://www.youtube.com/";
   <div class="screen-noise"></div>
 
   <!-- =====================================================
-       LANDING
-  ====================================================== -->
-
-  <div id="vaporwave-content" class="vaporwave-landing">
-    <div class="landing-inner">
-      <h1 class="landing-title">VAPORWAVE</h1>
-
-      <p class="landing-subtitle">LA HISTORIA NO CONTADA</p>
-
-      <div class="landing-actions">
-        <button id="vaporwave-enter" type="button" class="landing-button">
-          ENTRAR A LA EXPERIENCIA
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =====================================================
        LOADING
   ====================================================== -->
 
   <div
     id="experience-loader"
-    class="experience-loader hidden"
-    aria-hidden="true"
+    class="experience-loader is-visible"
+    aria-hidden="false"
   >
     <div class="loader-white"></div>
 
@@ -273,8 +251,6 @@ const documentaryUrl = "https://www.youtube.com/";
       throw new Error("No se encontró #vaporwave-webgl.");
     }
 
-    const landing = document.getElementById("vaporwave-content");
-
     const loaderOverlay = document.getElementById("experience-loader");
 
     const loaderProgress = document.getElementById("experience-load-progress");
@@ -336,7 +312,6 @@ const documentaryUrl = "https://www.youtube.com/";
     const heatwaveOverlay = document.getElementById("building-heatwave");
 
     if (
-      !landing ||
       !loaderOverlay ||
       !loaderProgress ||
       !ui ||
@@ -411,700 +386,667 @@ const documentaryUrl = "https://www.youtube.com/";
       | "commodore"
       | "amphitheatre";
 
-      const albums: AlbumDescriptor[] = [
-  {
-    key: "2009-memory-vague",
-    title: "Memory Vague",
-    artist: "Oneohtrix Point Never",
-    year: 2009,
-    image:
-      "/images/vaporwave/albums/2009-memory-vague.avif",
-    summary:
-      "Un archivo audiovisual construido con televisión, internet y música procesada. Sus imágenes y sonidos funcionan como recuerdos digitales deteriorados, anticipando parte del lenguaje que después adoptaría el vaporwave.",
-    press:
-      "Una pieza temprana donde distintos momentos de la obra de Daniel Lopatin parecen cruzarse dentro de una memoria mediática fragmentada.",
-    source: "FACT MAGAZINE",
-    youtubeId: "G1flq8LKkzk",
-    palette: {
-      surfaceA: "#46638f",
-      surfaceB: "#2e4467",
-      horizon: "#90a7d2",
-      glowA: "#f9a85d",
-      glowB: "#8ab4ff",
-      glowC: "#f06fa3",
-    },
-  },
+    const albums: AlbumDescriptor[] = [
+      {
+        key: "2009-memory-vague",
+        title: "Memory Vague",
+        artist: "Oneohtrix Point Never",
+        year: 2009,
+        image: "/images/vaporwave/albums/2009-memory-vague.avif",
+        summary:
+          "Un archivo audiovisual construido con televisión, internet y música procesada. Sus imágenes y sonidos funcionan como recuerdos digitales deteriorados, anticipando parte del lenguaje que después adoptaría el vaporwave.",
+        press:
+          "Una pieza temprana donde distintos momentos de la obra de Daniel Lopatin parecen cruzarse dentro de una memoria mediática fragmentada.",
+        source: "FACT MAGAZINE",
+        youtubeId: "G1flq8LKkzk",
+        palette: {
+          surfaceA: "#46638f",
+          surfaceB: "#2e4467",
+          horizon: "#90a7d2",
+          glowA: "#f9a85d",
+          glowB: "#8ab4ff",
+          glowC: "#f06fa3",
+        },
+      },
 
-  {
-    key: "2010-eccojams",
-    title: "Chuck Person's Eccojams Vol. 1",
-    artist: "Chuck Person",
-    year: 2010,
-    image:
-      "/images/vaporwave/albums/2010-eccojams.avif",
-    summary:
-      "Fragmentos de canciones populares son ralentizados, repetidos y deformados hasta quedar suspendidos entre reconocimiento y extrañeza.",
-    press:
-      "La repetición convierte canciones familiares en recuerdos emocionalmente ambiguos y establece uno de los antecedentes fundamentales del vaporwave.",
-    source: "CRITICAL RECEPTION",
-    youtubeId: "unN7QvSWSTo",
-    palette: {
-      surfaceA: "#274e7a",
-      surfaceB: "#152d46",
-      horizon: "#7db6de",
-      glowA: "#ffef89",
-      glowB: "#51a6e3",
-      glowC: "#6ef1d6",
-    },
-  },
+      {
+        key: "2010-eccojams",
+        title: "Chuck Person's Eccojams Vol. 1",
+        artist: "Chuck Person",
+        year: 2010,
+        image: "/images/vaporwave/albums/2010-eccojams.avif",
+        summary:
+          "Fragmentos de canciones populares son ralentizados, repetidos y deformados hasta quedar suspendidos entre reconocimiento y extrañeza.",
+        press:
+          "La repetición convierte canciones familiares en recuerdos emocionalmente ambiguos y establece uno de los antecedentes fundamentales del vaporwave.",
+        source: "CRITICAL RECEPTION",
+        youtubeId: "unN7QvSWSTo",
+        palette: {
+          surfaceA: "#274e7a",
+          surfaceB: "#152d46",
+          horizon: "#7db6de",
+          glowA: "#ffef89",
+          glowB: "#51a6e3",
+          glowC: "#6ef1d6",
+        },
+      },
 
-  {
-    key: "2010-holograms",
-    title: "Holograms",
-    artist: "骨架的",
-    year: 2010,
-    image:
-      "/images/vaporwave/albums/2010-holograms.avif",
-    summary:
-      "Loops breves, ambient digital y recuerdos desdibujados aparecen en uno de los documentos tempranos del lenguaje que terminaría asociándose al vaporwave.",
-    press:
-      "La música parece existir como un recuerdo incompleto: pequeños fragmentos ambientales suspendidos entre familiaridad y abstracción.",
-    source: "SCENE ARCHIVE",
-    youtubeId: "8RGLbFS1Y5I",
-    palette: {
-      surfaceA: "#9aa9c4",
-      surfaceB: "#596983",
-      horizon: "#d7e2f4",
-      glowA: "#dce8ff",
-      glowB: "#99b8ff",
-      glowC: "#a9efe0",
-    },
-  },
+      {
+        key: "2010-holograms",
+        title: "Holograms",
+        artist: "骨架的",
+        year: 2010,
+        image: "/images/vaporwave/albums/2010-holograms.avif",
+        summary:
+          "Loops breves, ambient digital y recuerdos desdibujados aparecen en uno de los documentos tempranos del lenguaje que terminaría asociándose al vaporwave.",
+        press:
+          "La música parece existir como un recuerdo incompleto: pequeños fragmentos ambientales suspendidos entre familiaridad y abstracción.",
+        source: "SCENE ARCHIVE",
+        youtubeId: "8RGLbFS1Y5I",
+        palette: {
+          surfaceA: "#9aa9c4",
+          surfaceB: "#596983",
+          horizon: "#d7e2f4",
+          glowA: "#dce8ff",
+          glowB: "#99b8ff",
+          glowC: "#a9efe0",
+        },
+      },
 
-  {
-    key: "2011-initiation-tape-part-one",
-    title: "Initiation Tape - Part One",
-    artist: "New Dreams Ltd.",
-    year: 2011,
-    image:
-      "/images/vaporwave/albums/2011-initiation-tape-part-one.avif",
-    summary:
-      "Memoria digital, ambient y collage aparecen dentro de una experiencia que parece provenir de un software, una cinta de iniciación o un sistema abandonado.",
-    press:
-      "Una pieza temprana de Vektroid que ayuda a documentar la transición desde los experimentos hipnagógicos hacia un lenguaje claramente vaporwave.",
-    source: "NEW DREAMS LTD.",
-    youtubeId: "VLEFlIFKSo8",
-    palette: {
-      surfaceA: "#8287b2",
-      surfaceB: "#494c77",
-      horizon: "#c5c7ef",
-      glowA: "#b8a4ff",
-      glowB: "#72b5ff",
-      glowC: "#dcb5ff",
-    },
-  },
+      {
+        key: "2011-initiation-tape-part-one",
+        title: "Initiation Tape - Part One",
+        artist: "New Dreams Ltd.",
+        year: 2011,
+        image: "/images/vaporwave/albums/2011-initiation-tape-part-one.avif",
+        summary:
+          "Memoria digital, ambient y collage aparecen dentro de una experiencia que parece provenir de un software, una cinta de iniciación o un sistema abandonado.",
+        press:
+          "Una pieza temprana de Vektroid que ayuda a documentar la transición desde los experimentos hipnagógicos hacia un lenguaje claramente vaporwave.",
+        source: "NEW DREAMS LTD.",
+        youtubeId: "VLEFlIFKSo8",
+        palette: {
+          surfaceA: "#8287b2",
+          surfaceB: "#494c77",
+          horizon: "#c5c7ef",
+          glowA: "#b8a4ff",
+          glowB: "#72b5ff",
+          glowC: "#dcb5ff",
+        },
+      },
 
-  {
-    key: "2011-neo-cali",
-    title: "Neo Cali",
-    artist: "Vektroid",
-    year: 2011,
-    image:
-      "/images/vaporwave/albums/2011-neo-cali.avif",
-    summary:
-      "Electrónica tropical, interfaces y espacios digitales imaginarios convergen en una visión temprana de los mundos artificiales que atravesarían posteriormente el vaporwave.",
-    press:
-      "Una obra situada todavía cerca del chillwave, pero ya profundamente interesada en software, espacios virtuales y memorias digitales.",
-    source: "VEKTROID",
-    youtubeId: "kqzPIwnrclY",
-    palette: {
-      surfaceA: "#54a7ad",
-      surfaceB: "#286b76",
-      horizon: "#a4e6df",
-      glowA: "#ff8fbb",
-      glowB: "#66e2dd",
-      glowC: "#f4cf72",
-    },
-  },
+      {
+        key: "2011-neo-cali",
+        title: "Neo Cali",
+        artist: "Vektroid",
+        year: 2011,
+        image: "/images/vaporwave/albums/2011-neo-cali.avif",
+        summary:
+          "Electrónica tropical, interfaces y espacios digitales imaginarios convergen en una visión temprana de los mundos artificiales que atravesarían posteriormente el vaporwave.",
+        press:
+          "Una obra situada todavía cerca del chillwave, pero ya profundamente interesada en software, espacios virtuales y memorias digitales.",
+        source: "VEKTROID",
+        youtubeId: "kqzPIwnrclY",
+        palette: {
+          surfaceA: "#54a7ad",
+          surfaceB: "#286b76",
+          horizon: "#a4e6df",
+          glowA: "#ff8fbb",
+          glowB: "#66e2dd",
+          glowC: "#f4cf72",
+        },
+      },
 
-  {
-    key: "2011-far-side-virtual",
-    title: "Far Side Virtual",
-    artist: "James Ferraro",
-    year: 2011,
-    image:
-      "/images/vaporwave/albums/2011-far-side-virtual.avif",
-    summary:
-      "Interfaz, jingles corporativos, dispositivos y promesas tecnológicas son empujados hacia una visión entre satírica y futurista.",
-    press:
-      "Más que nostalgia pura, propone una crítica sonora del optimismo tecnológico y la vida mediada por interfaces.",
-    source: "WIRE",
-    youtubeId: "pd-uSm8ittU",
-    palette: {
-      surfaceA: "#b8bfcf",
-      surfaceB: "#79839a",
-      horizon: "#e5ecff",
-      glowA: "#8fd0ff",
-      glowB: "#f86ca6",
-      glowC: "#7f90ff",
-    },
-  },
+      {
+        key: "2011-far-side-virtual",
+        title: "Far Side Virtual",
+        artist: "James Ferraro",
+        year: 2011,
+        image: "/images/vaporwave/albums/2011-far-side-virtual.avif",
+        summary:
+          "Interfaz, jingles corporativos, dispositivos y promesas tecnológicas son empujados hacia una visión entre satírica y futurista.",
+        press:
+          "Más que nostalgia pura, propone una crítica sonora del optimismo tecnológico y la vida mediada por interfaces.",
+        source: "WIRE",
+        youtubeId: "pd-uSm8ittU",
+        palette: {
+          surfaceA: "#b8bfcf",
+          surfaceB: "#79839a",
+          horizon: "#e5ecff",
+          glowA: "#8fd0ff",
+          glowB: "#f86ca6",
+          glowC: "#7f90ff",
+        },
+      },
 
-  {
-    key: "2011-floral-shoppe",
-    title: "Floral Shoppe",
-    artist: "Macintosh Plus",
-    year: 2011,
-    image:
-      "/images/vaporwave/albums/2011-floral-shoppe.avif",
-    summary:
-      "Sampleo ralentizado, caracteres japoneses, cultura de consumo y escultura clásica convergen en la obra que terminaría convirtiéndose en la imagen más reconocible del vaporwave.",
-    press:
-      "Una obra central para entender cómo el género convirtió nostalgia digital, repetición y aislamiento en un lenguaje propio.",
-    source: "PITCHFORK",
-    youtubeId: "cCq0P509UL4",
-    palette: {
-      surfaceA: "#ef8ab5",
-      surfaceB: "#d15b8a",
-      horizon: "#ffd3e4",
-      glowA: "#ff9ad9",
-      glowB: "#7de6d3",
-      glowC: "#f6a15c",
-    },
-  },
+      {
+        key: "2011-floral-shoppe",
+        title: "Floral Shoppe",
+        artist: "Macintosh Plus",
+        year: 2011,
+        image: "/images/vaporwave/albums/2011-floral-shoppe.avif",
+        summary:
+          "Sampleo ralentizado, caracteres japoneses, cultura de consumo y escultura clásica convergen en la obra que terminaría convirtiéndose en la imagen más reconocible del vaporwave.",
+        press:
+          "Una obra central para entender cómo el género convirtió nostalgia digital, repetición y aislamiento en un lenguaje propio.",
+        source: "PITCHFORK",
+        youtubeId: "cCq0P509UL4",
+        palette: {
+          surfaceA: "#ef8ab5",
+          surfaceB: "#d15b8a",
+          horizon: "#ffd3e4",
+          glowA: "#ff9ad9",
+          glowB: "#7de6d3",
+          glowC: "#f6a15c",
+        },
+      },
 
-  {
-    key: "2012-deep-fantasy",
-    title: "Deep Fantasy",
-    artist: "Surfing",
-    year: 2012,
-    image:
-      "/images/vaporwave/albums/2012-deep-fantasy.avif",
-    summary:
-      "Voces, instrumentos, samples y una producción bañada en nostalgia tropical amplían el vaporwave temprano hacia una forma más melódica y humana.",
-    press:
-      "Una pieza singular dentro de la escena temprana: vaporwave, pop psicodélico y una calidez casi playera conviven dentro del mismo paisaje.",
-    source: "SURFING",
-    youtubeId: "sPRa6IDMxD8",
-    palette: {
-      surfaceA: "#5993ad",
-      surfaceB: "#365d78",
-      horizon: "#b9dce4",
-      glowA: "#f193ac",
-      glowB: "#70d5e1",
-      glowC: "#f2c370",
-    },
-  },
+      {
+        key: "2012-deep-fantasy",
+        title: "Deep Fantasy",
+        artist: "Surfing",
+        year: 2012,
+        image: "/images/vaporwave/albums/2012-deep-fantasy.avif",
+        summary:
+          "Voces, instrumentos, samples y una producción bañada en nostalgia tropical amplían el vaporwave temprano hacia una forma más melódica y humana.",
+        press:
+          "Una pieza singular dentro de la escena temprana: vaporwave, pop psicodélico y una calidez casi playera conviven dentro del mismo paisaje.",
+        source: "SURFING",
+        youtubeId: "sPRa6IDMxD8",
+        palette: {
+          surfaceA: "#5993ad",
+          surfaceB: "#365d78",
+          horizon: "#b9dce4",
+          glowA: "#f193ac",
+          glowB: "#70d5e1",
+          glowC: "#f2c370",
+        },
+      },
 
-  {
-    key: "2012-blank-banshee",
-    title: "Blank Banshee 0",
-    artist: "Blank Banshee",
-    year: 2012,
-    image:
-      "/images/vaporwave/albums/2012-blank-banshee.avif",
-    summary:
-      "El género abandona parte de su quietud. Trap, samples digitales, videojuegos y bajos más agresivos transforman la estética en algo mucho más físico.",
-    press:
-      "Club music, synthpop azucarado y referencias digitales conviven con una inmediatez que explica el culto posterior alrededor del disco.",
-    source: "BANDCAMP DAILY",
-    youtubeId: "8oBbJg_PqbU",
-    palette: {
-      surfaceA: "#55a5f0",
-      surfaceB: "#7a4dff",
-      horizon: "#9ce0ff",
-      glowA: "#9f73ff",
-      glowB: "#38c5ff",
-      glowC: "#ff73d2",
-    },
-  },
+      {
+        key: "2012-blank-banshee",
+        title: "Blank Banshee 0",
+        artist: "Blank Banshee",
+        year: 2012,
+        image: "/images/vaporwave/albums/2012-blank-banshee.avif",
+        summary:
+          "El género abandona parte de su quietud. Trap, samples digitales, videojuegos y bajos más agresivos transforman la estética en algo mucho más físico.",
+        press:
+          "Club music, synthpop azucarado y referencias digitales conviven con una inmediatez que explica el culto posterior alrededor del disco.",
+        source: "BANDCAMP DAILY",
+        youtubeId: "8oBbJg_PqbU",
+        palette: {
+          surfaceA: "#55a5f0",
+          surfaceB: "#7a4dff",
+          horizon: "#9ce0ff",
+          glowA: "#9f73ff",
+          glowB: "#38c5ff",
+          glowC: "#ff73d2",
+        },
+      },
 
-  {
-    key: "2012-redefining-the-workplace",
-    title: "Redefining the Workplace",
-    artist: "Internet Club",
-    year: 2012,
-    image:
-      "/images/vaporwave/albums/2012-redefining-the-workplace.avif",
-    summary:
-      "Lenguaje corporativo, productividad, oficinas y residuos del internet temprano convierten al entorno empresarial en una arquitectura sonora absurda.",
-    press:
-      "La oficina digital aparece como simulacro: limpia, eficiente y completamente deshumanizada.",
-    source: "SCENE ARCHIVE",
-    youtubeId: "OAs6Y5jjXrA",
-    palette: {
-      surfaceA: "#76899b",
-      surfaceB: "#445360",
-      horizon: "#c5d3da",
-      glowA: "#b2d7e8",
-      glowB: "#75a8c3",
-      glowC: "#d3e9b5",
-    },
-  },
+      {
+        key: "2012-redefining-the-workplace",
+        title: "Redefining the Workplace",
+        artist: "Internet Club",
+        year: 2012,
+        image: "/images/vaporwave/albums/2012-redefining-the-workplace.avif",
+        summary:
+          "Lenguaje corporativo, productividad, oficinas y residuos del internet temprano convierten al entorno empresarial en una arquitectura sonora absurda.",
+        press:
+          "La oficina digital aparece como simulacro: limpia, eficiente y completamente deshumanizada.",
+        source: "SCENE ARCHIVE",
+        youtubeId: "OAs6Y5jjXrA",
+        palette: {
+          surfaceA: "#76899b",
+          surfaceB: "#445360",
+          horizon: "#c5d3da",
+          glowA: "#b2d7e8",
+          glowB: "#75a8c3",
+          glowC: "#d3e9b5",
+        },
+      },
 
-  {
-    key: "2013-late-night-delight",
-    title: "Late Night Delight",
-    artist: "Luxury Elite // Saint Pepsi",
-    year: 2013,
-    image:
-      "/images/vaporwave/albums/2013-late-night-delight.avif",
-    summary:
-      "Lujo, televisión nocturna, disco y sampleo nostálgico convergen en una de las colaboraciones más recordadas de la primera escena vaporwave.",
-    press:
-      "Una transición natural entre el vaporwave clásico y el impulso más luminoso que posteriormente definiría gran parte del future funk.",
-    source: "SCENE ARCHIVE",
-    youtubeId: "MT01gsqbX7c",
-    palette: {
-      surfaceA: "#70445d",
-      surfaceB: "#3c2637",
-      horizon: "#be8199",
-      glowA: "#ff9db4",
-      glowB: "#efc86a",
-      glowC: "#8879dd",
-    },
-  },
+      {
+        key: "2013-late-night-delight",
+        title: "Late Night Delight",
+        artist: "Luxury Elite // Saint Pepsi",
+        year: 2013,
+        image: "/images/vaporwave/albums/2013-late-night-delight.avif",
+        summary:
+          "Lujo, televisión nocturna, disco y sampleo nostálgico convergen en una de las colaboraciones más recordadas de la primera escena vaporwave.",
+        press:
+          "Una transición natural entre el vaporwave clásico y el impulso más luminoso que posteriormente definiría gran parte del future funk.",
+        source: "SCENE ARCHIVE",
+        youtubeId: "MT01gsqbX7c",
+        palette: {
+          surfaceA: "#70445d",
+          surfaceB: "#3c2637",
+          horizon: "#be8199",
+          glowA: "#ff9db4",
+          glowB: "#efc86a",
+          glowC: "#8879dd",
+        },
+      },
 
-  {
-    key: "2013-home",
-    title: "HOME™",
-    artist: "PrismCorp Virtual Enterprises",
-    year: 2013,
-    image:
-      "/images/vaporwave/albums/2013-home.avif",
-    summary:
-      "MIDI, música corporativa, software y arquitectura doméstica imaginaria convierten la experiencia de escuchar en la visita a un catálogo digital.",
-    press:
-      "Una representación especialmente clara del optimismo artificial de los CD-ROM, demostraciones comerciales y espacios virtuales de los noventa.",
-    source: "PRISMCORP",
-    youtubeId: "hjbZyXod3mc",
-    palette: {
-      surfaceA: "#a0b7aa",
-      surfaceB: "#667f75",
-      horizon: "#d8e6d7",
-      glowA: "#e8d7aa",
-      glowB: "#8dc7bd",
-      glowC: "#a6b9ff",
-    },
-  },
+      {
+        key: "2013-home",
+        title: "HOME™",
+        artist: "PrismCorp Virtual Enterprises",
+        year: 2013,
+        image: "/images/vaporwave/albums/2013-home.avif",
+        summary:
+          "MIDI, música corporativa, software y arquitectura doméstica imaginaria convierten la experiencia de escuchar en la visita a un catálogo digital.",
+        press:
+          "Una representación especialmente clara del optimismo artificial de los CD-ROM, demostraciones comerciales y espacios virtuales de los noventa.",
+        source: "PRISMCORP",
+        youtubeId: "hjbZyXod3mc",
+        palette: {
+          surfaceA: "#a0b7aa",
+          surfaceB: "#667f75",
+          horizon: "#d8e6d7",
+          glowA: "#e8d7aa",
+          glowB: "#8dc7bd",
+          glowC: "#a6b9ff",
+        },
+      },
 
-  {
-    key: "2013-hit-vibes",
-    title: "Hit Vibes",
-    artist: "Saint Pepsi",
-    year: 2013,
-    image:
-      "/images/vaporwave/albums/2013-hit-vibes.avif",
-    summary:
-      "Una derivación más luminosa, rítmica y festiva. El sample pop se convierte en una experiencia de celebración digital.",
-    press:
-      "El disco ayudó a consolidar el lado más accesible y bailable de la escena, con una sensibilidad pop inmediata.",
-    source: "TINY MIX TAPES",
-    youtubeId: "3r2zleGxv7w",
-    palette: {
-      surfaceA: "#c4b9a7",
-      surfaceB: "#9b9082",
-      horizon: "#e9ddd0",
-      glowA: "#ef7070",
-      glowB: "#f4d768",
-      glowC: "#7f8fff",
-    },
-  },
+      {
+        key: "2013-hit-vibes",
+        title: "Hit Vibes",
+        artist: "Saint Pepsi",
+        year: 2013,
+        image: "/images/vaporwave/albums/2013-hit-vibes.avif",
+        summary:
+          "Una derivación más luminosa, rítmica y festiva. El sample pop se convierte en una experiencia de celebración digital.",
+        press:
+          "El disco ayudó a consolidar el lado más accesible y bailable de la escena, con una sensibilidad pop inmediata.",
+        source: "TINY MIX TAPES",
+        youtubeId: "3r2zleGxv7w",
+        palette: {
+          surfaceA: "#c4b9a7",
+          surfaceB: "#9b9082",
+          horizon: "#e9ddd0",
+          glowA: "#ef7070",
+          glowB: "#f4d768",
+          glowC: "#7f8fff",
+        },
+      },
 
-  {
-    key: "2014-palm-mall",
-    title: "Palm Mall",
-    artist: "猫 シ Corp.",
-    year: 2014,
-    image:
-      "/images/vaporwave/albums/2014-palm-mall.avif",
-    summary:
-      "El mallsoft lleva la nostalgia comercial hacia espacios vacíos, pasillos en silencio y arquitectura transformada en memoria afectiva.",
-    press:
-      "Un hito del mallsoft: ambiental, espacioso y obsesionado con el eco emocional de los espacios de consumo.",
-    source: "BANDCAMP DAILY",
-    youtubeId: "kovd7OzcU9s",
-    palette: {
-      surfaceA: "#b8d6f0",
-      surfaceB: "#95b8d6",
-      horizon: "#d9ecff",
-      glowA: "#f7f7ff",
-      glowB: "#86b7ff",
-      glowC: "#9de9da",
-    },
-  },
+      {
+        key: "2014-palm-mall",
+        title: "Palm Mall",
+        artist: "猫 シ Corp.",
+        year: 2014,
+        image: "/images/vaporwave/albums/2014-palm-mall.avif",
+        summary:
+          "El mallsoft lleva la nostalgia comercial hacia espacios vacíos, pasillos en silencio y arquitectura transformada en memoria afectiva.",
+        press:
+          "Un hito del mallsoft: ambiental, espacioso y obsesionado con el eco emocional de los espacios de consumo.",
+        source: "BANDCAMP DAILY",
+        youtubeId: "kovd7OzcU9s",
+        palette: {
+          surfaceA: "#b8d6f0",
+          surfaceB: "#95b8d6",
+          horizon: "#d9ecff",
+          glowA: "#f7f7ff",
+          glowB: "#86b7ff",
+          glowC: "#9de9da",
+        },
+      },
 
-  {
-    key: "2014-virtua-zip",
-    title: "virtua.zip",
-    artist: "ESPRIT 空想",
-    year: 2014,
-    image:
-      "/images/vaporwave/albums/2014-virtua-zip.avif",
-    summary:
-      "Producción original, síntesis brillante y referencias vaporwave muestran que el género podía conservar su identidad sin depender completamente del sample.",
-    press:
-      "Un punto importante en la transición desde el collage hacia composiciones originales construidas con el mismo imaginario digital.",
-    source: "ESPRIT 空想",
-    youtubeId: "9_RMPEz49Yk",
-    palette: {
-      surfaceA: "#5db8c9",
-      surfaceB: "#347a8d",
-      horizon: "#a8e5ef",
-      glowA: "#ff7ea8",
-      glowB: "#73e3e8",
-      glowC: "#ffe086",
-    },
-  },
+      {
+        key: "2014-virtua-zip",
+        title: "virtua.zip",
+        artist: "ESPRIT 空想",
+        year: 2014,
+        image: "/images/vaporwave/albums/2014-virtua-zip.avif",
+        summary:
+          "Producción original, síntesis brillante y referencias vaporwave muestran que el género podía conservar su identidad sin depender completamente del sample.",
+        press:
+          "Un punto importante en la transición desde el collage hacia composiciones originales construidas con el mismo imaginario digital.",
+        source: "ESPRIT 空想",
+        youtubeId: "9_RMPEz49Yk",
+        palette: {
+          surfaceA: "#5db8c9",
+          surfaceB: "#347a8d",
+          horizon: "#a8e5ef",
+          glowA: "#ff7ea8",
+          glowB: "#73e3e8",
+          glowC: "#ffe086",
+        },
+      },
 
-  {
-    key: "2015-birth-of-a-new-day",
-    title: "Birth of a New Day",
-    artist: "2814",
-    year: 2015,
-    image:
-      "/images/vaporwave/albums/2015-birth-of-a-new-day.avif",
-    summary:
-      "Dreampunk, ciudad nocturna y contemplación. El vaporwave se vuelve más expansivo y cinematográfico sin perder su sensación de distancia emocional.",
-    press:
-      "Un clásico moderno que funde ambient, cyberpunk y melancolía urbana en un paisaje suspendido entre sueño y deriva.",
-    source: "RESIDENT ADVISOR",
-    youtubeId: "F9L4q-0Pi4E",
-    palette: {
-      surfaceA: "#6d4ca7",
-      surfaceB: "#402760",
-      horizon: "#ad87ff",
-      glowA: "#ea62db",
-      glowB: "#7f9dff",
-      glowC: "#8e59ff",
-    },
-  },
+      {
+        key: "2015-birth-of-a-new-day",
+        title: "Birth of a New Day",
+        artist: "2814",
+        year: 2015,
+        image: "/images/vaporwave/albums/2015-birth-of-a-new-day.avif",
+        summary:
+          "Dreampunk, ciudad nocturna y contemplación. El vaporwave se vuelve más expansivo y cinematográfico sin perder su sensación de distancia emocional.",
+        press:
+          "Un clásico moderno que funde ambient, cyberpunk y melancolía urbana en un paisaje suspendido entre sueño y deriva.",
+        source: "RESIDENT ADVISOR",
+        youtubeId: "F9L4q-0Pi4E",
+        palette: {
+          surfaceA: "#6d4ca7",
+          surfaceB: "#402760",
+          horizon: "#ad87ff",
+          glowA: "#ea62db",
+          glowB: "#7f9dff",
+          glowC: "#8e59ff",
+        },
+      },
 
-  {
-    key: "2015-buy-now",
-    title: "BUY NOW",
-    artist: "Eyeliner",
-    year: 2015,
-    image:
-      "/images/vaporwave/albums/2015-buy-now.avif",
-    summary:
-      "Publicidad, música de consumo y melodías sintéticas exageradamente optimistas convierten el lenguaje comercial en un objeto pop autónomo.",
-    press:
-      "La artificialidad deja de ser solamente irónica y se convierte en una estética exuberante construida desde el lenguaje del consumo.",
-    source: "EYELINER",
-    youtubeId: "6tYpkyy7Ogs",
-    palette: {
-      surfaceA: "#d18c67",
-      surfaceB: "#8d5846",
-      horizon: "#f4c2a4",
-      glowA: "#ff9b72",
-      glowB: "#f7d86f",
-      glowC: "#8cb8ff",
-    },
-  },
+      {
+        key: "2015-buy-now",
+        title: "BUY NOW",
+        artist: "Eyeliner",
+        year: 2015,
+        image: "/images/vaporwave/albums/2015-buy-now.avif",
+        summary:
+          "Publicidad, música de consumo y melodías sintéticas exageradamente optimistas convierten el lenguaje comercial en un objeto pop autónomo.",
+        press:
+          "La artificialidad deja de ser solamente irónica y se convierte en una estética exuberante construida desde el lenguaje del consumo.",
+        source: "EYELINER",
+        youtubeId: "6tYpkyy7Ogs",
+        palette: {
+          surfaceA: "#d18c67",
+          surfaceB: "#8d5846",
+          horizon: "#f4c2a4",
+          glowA: "#ff9b72",
+          glowB: "#f7d86f",
+          glowC: "#8cb8ff",
+        },
+      },
 
-  {
-    key: "2015-ill-try-living-like-this",
-    title: "I'll Try Living Like This",
-    artist: "death's dynamic shroud",
-    year: 2015,
-    image:
-      "/images/vaporwave/albums/2015-ill-try-living-like-this.avif",
-    summary:
-      "K-pop, videojuegos, televisión y plunderphonics son destruidos y reconstruidos dentro de un collage emocional mucho más agresivo.",
-    press:
-      "El vaporwave empieza a escapar de sus fórmulas iniciales y el sample se convierte en material para una composición mucho más impredecible.",
-    source: "SCENE ARCHIVE",
-    youtubeId: "25YqRRvl9gk",
-    palette: {
-      surfaceA: "#60455f",
-      surfaceB: "#30283d",
-      horizon: "#a88ba8",
-      glowA: "#f06a84",
-      glowB: "#9b7fff",
-      glowC: "#e6bb72",
-    },
-  },
+      {
+        key: "2015-ill-try-living-like-this",
+        title: "I'll Try Living Like This",
+        artist: "death's dynamic shroud",
+        year: 2015,
+        image: "/images/vaporwave/albums/2015-ill-try-living-like-this.avif",
+        summary:
+          "K-pop, videojuegos, televisión y plunderphonics son destruidos y reconstruidos dentro de un collage emocional mucho más agresivo.",
+        press:
+          "El vaporwave empieza a escapar de sus fórmulas iniciales y el sample se convierte en material para una composición mucho más impredecible.",
+        source: "SCENE ARCHIVE",
+        youtubeId: "25YqRRvl9gk",
+        palette: {
+          surfaceA: "#60455f",
+          surfaceB: "#30283d",
+          horizon: "#a88ba8",
+          glowA: "#f06a84",
+          glowB: "#9b7fff",
+          glowC: "#e6bb72",
+        },
+      },
 
-  {
-    key: "2015-world-class",
-    title: "world class",
-    artist: "luxury elite",
-    year: 2015,
-    image:
-      "/images/vaporwave/albums/2015-world-class.avif",
-    summary:
-      "Smooth jazz, lujo corporativo y sampleo elegante construyen una fantasía de hoteles, boutiques y consumo sofisticado.",
-    press:
-      "El vaporwave transforma la música ambiental del lujo en una experiencia deliberadamente artificial, seductora y nostálgica.",
-    source: "LUXURY ELITE",
-    youtubeId: "VyXg-lp2N_g",
-    palette: {
-      surfaceA: "#b5a58a",
-      surfaceB: "#776856",
-      horizon: "#e5d8c3",
-      glowA: "#e8c585",
-      glowB: "#9db6d6",
-      glowC: "#d5a0c7",
-    },
-  },
+      {
+        key: "2015-world-class",
+        title: "world class",
+        artist: "luxury elite",
+        year: 2015,
+        image: "/images/vaporwave/albums/2015-world-class.avif",
+        summary:
+          "Smooth jazz, lujo corporativo y sampleo elegante construyen una fantasía de hoteles, boutiques y consumo sofisticado.",
+        press:
+          "El vaporwave transforma la música ambiental del lujo en una experiencia deliberadamente artificial, seductora y nostálgica.",
+        source: "LUXURY ELITE",
+        youtubeId: "VyXg-lp2N_g",
+        palette: {
+          surfaceA: "#b5a58a",
+          surfaceB: "#776856",
+          horizon: "#e5d8c3",
+          glowA: "#e8c585",
+          glowB: "#9db6d6",
+          glowC: "#d5a0c7",
+        },
+      },
 
-  {
-    key: "2015-antara-tsushin",
-    title: "アンタラ通信",
-    artist:
-      "t e l e p a t h テレパシー能力者",
-    year: 2015,
-    image:
-      "/images/vaporwave/albums/2015-antara-tsushin.avif",
-    summary:
-      "Loops prolongados, reverberación extrema y melodías que parecen deshacerse lentamente convierten la escucha en un espacio suspendido entre memoria, sueño y ciudad futura.",
-    press:
-      "Una obra central para entender el desarrollo de la estética atmosférica asociada posteriormente al slushwave y al dreampunk.",
-    source: "TELEPATH",
-    youtubeId: "sxARV7agQho",
-    palette: {
-      surfaceA: "#65778f",
-      surfaceB: "#38485e",
-      horizon: "#acbfd1",
-      glowA: "#d68fc4",
-      glowB: "#79a9d5",
-      glowC: "#95d6c7",
-    },
-  },
+      {
+        key: "2015-antara-tsushin",
+        title: "アンタラ通信",
+        artist: "t e l e p a t h テレパシー能力者",
+        year: 2015,
+        image: "/images/vaporwave/albums/2015-antara-tsushin.avif",
+        summary:
+          "Loops prolongados, reverberación extrema y melodías que parecen deshacerse lentamente convierten la escucha en un espacio suspendido entre memoria, sueño y ciudad futura.",
+        press:
+          "Una obra central para entender el desarrollo de la estética atmosférica asociada posteriormente al slushwave y al dreampunk.",
+        source: "TELEPATH",
+        youtubeId: "sxARV7agQho",
+        palette: {
+          surfaceA: "#65778f",
+          surfaceB: "#38485e",
+          horizon: "#acbfd1",
+          glowA: "#d68fc4",
+          glowB: "#79a9d5",
+          glowC: "#95d6c7",
+        },
+      },
 
-  {
-    key: "2016-news-at-11",
-    title: "News at 11",
-    artist: "猫 シ Corp.",
-    year: 2016,
-    image:
-      "/images/vaporwave/albums/2016-news-at-11.avif",
-    summary:
-      "La cultura televisiva y la memoria estadounidense son reconfiguradas desde una perspectiva fantasmagórica posterior al 11 de septiembre.",
-    press:
-      "Uno de los trabajos conceptuales más comentados del vaporwave, con una lectura histórica a través de las ruinas mediáticas.",
-    source: "THE QUIETUS",
-    youtubeId: "_CrWi_GatYQ",
-    palette: {
-      surfaceA: "#314a77",
-      surfaceB: "#18263f",
-      horizon: "#94b7ff",
-      glowA: "#ff6969",
-      glowB: "#5c8dff",
-      glowC: "#f2f2f2",
-    },
-  },
+      {
+        key: "2016-news-at-11",
+        title: "News at 11",
+        artist: "猫 シ Corp.",
+        year: 2016,
+        image: "/images/vaporwave/albums/2016-news-at-11.avif",
+        summary:
+          "La cultura televisiva y la memoria estadounidense son reconfiguradas desde una perspectiva fantasmagórica posterior al 11 de septiembre.",
+        press:
+          "Uno de los trabajos conceptuales más comentados del vaporwave, con una lectura histórica a través de las ruinas mediáticas.",
+        source: "THE QUIETUS",
+        youtubeId: "_CrWi_GatYQ",
+        palette: {
+          surfaceA: "#314a77",
+          surfaceB: "#18263f",
+          horizon: "#94b7ff",
+          glowA: "#ff6969",
+          glowB: "#5c8dff",
+          glowC: "#f2f2f2",
+        },
+      },
 
-  {
-    key: "2017-reflections",
-    title: "Reflections",
-    artist: "Windows96",
-    year: 2017,
-    image:
-      "/images/vaporwave/albums/2017-reflections.avif",
-    summary:
-      "Psicodelia digital, synthwave y vaporwave comienzan a mezclarse dentro de una producción más melódica y personal.",
-    press:
-      "Un puente entre la estética vapor y una electrónica de internet mucho más enfocada en composición, melodía y atmósfera.",
-    source: "WINDOWS96",
-    youtubeId: "NzTzGWWKevA",
-    palette: {
-      surfaceA: "#65704f",
-      surfaceB: "#3b4634",
-      horizon: "#aab38a",
-      glowA: "#a6cd68",
-      glowB: "#ca83e7",
-      glowC: "#e5c36c",
-    },
-  },
+      {
+        key: "2017-reflections",
+        title: "Reflections",
+        artist: "Windows96",
+        year: 2017,
+        image: "/images/vaporwave/albums/2017-reflections.avif",
+        summary:
+          "Psicodelia digital, synthwave y vaporwave comienzan a mezclarse dentro de una producción más melódica y personal.",
+        press:
+          "Un puente entre la estética vapor y una electrónica de internet mucho más enfocada en composición, melodía y atmósfera.",
+        source: "WINDOWS96",
+        youtubeId: "NzTzGWWKevA",
+        palette: {
+          surfaceA: "#65704f",
+          surfaceB: "#3b4634",
+          horizon: "#aab38a",
+          glowA: "#a6cd68",
+          glowB: "#ca83e7",
+          glowC: "#e5c36c",
+        },
+      },
 
-  {
-    key: "2017-200-electronica",
-    title: "200% Electronica",
-    artist: "ESPRIT 空想",
-    year: 2017,
-    image:
-      "/images/vaporwave/albums/2017-200-electronica.avif",
-    summary:
-      "El future funk y las variaciones más brillantes del género apuntan hacia la euforia, el diseño pulido y un hedonismo estilizado.",
-    press:
-      "Una muestra del giro más nítido, pop y hedonista del universo vapor, sin perder la exageración visual del movimiento.",
-    source: "BANDCAMP DAILY",
-    youtubeId: "S3kA2XJ3d8s",
-    palette: {
-      surfaceA: "#d88973",
-      surfaceB: "#8a4f42",
-      horizon: "#ffc9bc",
-      glowA: "#ff8f6a",
-      glowB: "#c57dff",
-      glowC: "#f5b372",
-    },
-  },
+      {
+        key: "2017-200-electronica",
+        title: "200% Electronica",
+        artist: "ESPRIT 空想",
+        year: 2017,
+        image: "/images/vaporwave/albums/2017-200-electronica.avif",
+        summary:
+          "El future funk y las variaciones más brillantes del género apuntan hacia la euforia, el diseño pulido y un hedonismo estilizado.",
+        press:
+          "Una muestra del giro más nítido, pop y hedonista del universo vapor, sin perder la exageración visual del movimiento.",
+        source: "BANDCAMP DAILY",
+        youtubeId: "S3kA2XJ3d8s",
+        palette: {
+          surfaceA: "#d88973",
+          surfaceB: "#8a4f42",
+          horizon: "#ffc9bc",
+          glowA: "#ff8f6a",
+          glowB: "#c57dff",
+          glowC: "#f5b372",
+        },
+      },
 
-  {
-    key: "2018-one-hundred-mornings",
-    title: "One Hundred Mornings",
-    artist: "Windows96",
-    year: 2018,
-    image:
-      "/images/vaporwave/albums/2018-one-hundred-mornings.avif",
-    summary:
-      "Paisajes digitales más suaves, contemplativos y melódicos. Un vaporwave de amanecer, neblina y plasticidad luminosa.",
-    press:
-      "Un disco muy querido por su capacidad para transformar un imaginario digital simple en una experiencia cálida y profundamente nostálgica.",
-    source: "COMMUNITY RECEPTION",
-    youtubeId: "rltpGg4my5E",
-    palette: {
-      surfaceA: "#8f8a2e",
-      surfaceB: "#56521d",
-      horizon: "#cbc76c",
-      glowA: "#c98b53",
-      glowB: "#a2c443",
-      glowC: "#b366ff",
-    },
-  },
+      {
+        key: "2018-one-hundred-mornings",
+        title: "One Hundred Mornings",
+        artist: "Windows96",
+        year: 2018,
+        image: "/images/vaporwave/albums/2018-one-hundred-mornings.avif",
+        summary:
+          "Paisajes digitales más suaves, contemplativos y melódicos. Un vaporwave de amanecer, neblina y plasticidad luminosa.",
+        press:
+          "Un disco muy querido por su capacidad para transformar un imaginario digital simple en una experiencia cálida y profundamente nostálgica.",
+        source: "COMMUNITY RECEPTION",
+        youtubeId: "rltpGg4my5E",
+        palette: {
+          surfaceA: "#8f8a2e",
+          surfaceB: "#56521d",
+          horizon: "#cbc76c",
+          glowA: "#c98b53",
+          glowB: "#a2c443",
+          glowC: "#b366ff",
+        },
+      },
 
-  {
-    key: "2019-building-a-better-world",
-    title: "Building a Better World",
-    artist:
-      "猫 シ Corp. & t e l e p a t h テレパシー能力者",
-    year: 2019,
-    image:
-      "/images/vaporwave/albums/2019-building-a-better-world.avif",
-    summary:
-      "Pads nebulosos, arquitectura utópica y ambientes urbanos presentan una visión del futuro simultáneamente optimista, artificial y distante.",
-    press:
-      "Mallsoft, dreampunk y ambient convergen en una ciudad idealizada que parece recordarse incluso antes de haber existido.",
-    source: "HIRAETH RECORDS",
-    youtubeId: "dFJwxtFfKf0",
-    palette: {
-      surfaceA: "#548e9f",
-      surfaceB: "#315767",
-      horizon: "#a4cad6",
-      glowA: "#7dd7df",
-      glowB: "#8da7ff",
-      glowC: "#d8ebdf",
-    },
-  },
+      {
+        key: "2019-building-a-better-world",
+        title: "Building a Better World",
+        artist: "猫 シ Corp. & t e l e p a t h テレパシー能力者",
+        year: 2019,
+        image: "/images/vaporwave/albums/2019-building-a-better-world.avif",
+        summary:
+          "Pads nebulosos, arquitectura utópica y ambientes urbanos presentan una visión del futuro simultáneamente optimista, artificial y distante.",
+        press:
+          "Mallsoft, dreampunk y ambient convergen en una ciudad idealizada que parece recordarse incluso antes de haber existido.",
+        source: "HIRAETH RECORDS",
+        youtubeId: "dFJwxtFfKf0",
+        palette: {
+          surfaceA: "#548e9f",
+          surfaceB: "#315767",
+          horizon: "#a4cad6",
+          glowA: "#7dd7df",
+          glowB: "#8da7ff",
+          glowC: "#d8ebdf",
+        },
+      },
 
-  {
-    key: "2019-sunday-television",
-    title: "Sunday Television",
-    artist: "猫 シ Corp.",
-    year: 2019,
-    image:
-      "/images/vaporwave/albums/2019-sunday-television.avif",
-    summary:
-      "Weather Channel, comerciales, identificadores televisivos y horarios de transmisión convierten una tarde ordinaria en memoria mediática.",
-    press:
-      "El signalwave utiliza la estructura de la televisión para transformar programación banal en una experiencia extrañamente íntima.",
-    source: "猫 シ Corp.",
-    youtubeId: "s-rbl0n3BUQ",
-    palette: {
-      surfaceA: "#557ca0",
-      surfaceB: "#304d6c",
-      horizon: "#a8c9e4",
-      glowA: "#ef9e61",
-      glowB: "#67bce5",
-      glowC: "#e6e3b8",
-    },
-  },
+      {
+        key: "2019-sunday-television",
+        title: "Sunday Television",
+        artist: "猫 シ Corp.",
+        year: 2019,
+        image: "/images/vaporwave/albums/2019-sunday-television.avif",
+        summary:
+          "Weather Channel, comerciales, identificadores televisivos y horarios de transmisión convierten una tarde ordinaria en memoria mediática.",
+        press:
+          "El signalwave utiliza la estructura de la televisión para transformar programación banal en una experiencia extrañamente íntima.",
+        source: "猫 シ Corp.",
+        youtubeId: "s-rbl0n3BUQ",
+        palette: {
+          surfaceA: "#557ca0",
+          surfaceB: "#304d6c",
+          horizon: "#a8c9e4",
+          glowA: "#ef9e61",
+          glowB: "#67bce5",
+          glowC: "#e6e3b8",
+        },
+      },
 
-  {
-    key: "2020-unka-ni-tadayou",
-    title: "雲海に漂う",
-    artist:
-      "desert sand feels warm at night",
-    year: 2020,
-    image:
-      "/images/vaporwave/albums/2020-unka-ni-tadayou.avif",
-    summary:
-      "Una sensibilidad más etérea y contemplativa: nubes, desierto, soledad y espiritualidad digital envuelven el paisaje.",
-    press:
-      "Ejemplo del lado más meditativo y expansivo del vaporwave contemporáneo, cercano al ambient y al slushwave.",
-    source: "AMBIENT BLOGS",
-    youtubeId: "0eSxsosJu18",
-    palette: {
-      surfaceA: "#9f7f4d",
-      surfaceB: "#604b30",
-      horizon: "#e8c88a",
-      glowA: "#f5b870",
-      glowB: "#d16cff",
-      glowC: "#82a9ff",
-    },
-  },
+      {
+        key: "2020-unka-ni-tadayou",
+        title: "雲海に漂う",
+        artist: "desert sand feels warm at night",
+        year: 2020,
+        image: "/images/vaporwave/albums/2020-unka-ni-tadayou.avif",
+        summary:
+          "Una sensibilidad más etérea y contemplativa: nubes, desierto, soledad y espiritualidad digital envuelven el paisaje.",
+        press:
+          "Ejemplo del lado más meditativo y expansivo del vaporwave contemporáneo, cercano al ambient y al slushwave.",
+        source: "AMBIENT BLOGS",
+        youtubeId: "0eSxsosJu18",
+        palette: {
+          surfaceA: "#9f7f4d",
+          surfaceB: "#604b30",
+          horizon: "#e8c88a",
+          glowA: "#f5b870",
+          glowB: "#d16cff",
+          glowC: "#82a9ff",
+        },
+      },
 
-  {
-    key: "2021-faith-in-persona",
-    title: "Faith in Persona",
-    artist: "death's dynamic shroud",
-    year: 2021,
-    image:
-      "/images/vaporwave/albums/2021-faith-in-persona.avif",
-    summary:
-      "El vaporwave llega a una dimensión más híbrida, hiperactiva y contemporánea. Fragmentación digital, pop espectral y dramatismo visual se entrelazan.",
-    press:
-      "Un trabajo maximalista, emocional y altamente texturizado que muestra la mutación del vaporwave en la década reciente.",
-    source: "MODERN ELECTRONIC PRESS",
-    youtubeId: "dG4TjovZ8h0",
-    palette: {
-      surfaceA: "#3a3a48",
-      surfaceB: "#1c1f2d",
-      horizon: "#9da3bf",
-      glowA: "#d4d4e7",
-      glowB: "#7285ff",
-      glowC: "#d0a674",
-    },
-  },
+      {
+        key: "2021-faith-in-persona",
+        title: "Faith in Persona",
+        artist: "death's dynamic shroud",
+        year: 2021,
+        image: "/images/vaporwave/albums/2021-faith-in-persona.avif",
+        summary:
+          "El vaporwave llega a una dimensión más híbrida, hiperactiva y contemporánea. Fragmentación digital, pop espectral y dramatismo visual se entrelazan.",
+        press:
+          "Un trabajo maximalista, emocional y altamente texturizado que muestra la mutación del vaporwave en la década reciente.",
+        source: "MODERN ELECTRONIC PRESS",
+        youtubeId: "dG4TjovZ8h0",
+        palette: {
+          surfaceA: "#3a3a48",
+          surfaceB: "#1c1f2d",
+          horizon: "#9da3bf",
+          glowA: "#d4d4e7",
+          glowB: "#7285ff",
+          glowC: "#d0a674",
+        },
+      },
 
-  {
-    key: "2022-darklife",
-    title: "Darklife",
-    artist: "death's dynamic shroud",
-    year: 2022,
-    image:
-      "/images/vaporwave/albums/2022-darklife.avif",
-    summary:
-      "La estética se vuelve más afilada, futurista y dramática. El género ya no es únicamente nostalgia: también es mutación, exceso y ruptura formal.",
-    press:
-      "Ambicioso y extenso, el disco sintetiza parte del legado vaporwave mientras lo proyecta hacia una sensibilidad más oscura y digital.",
-    source: "CONTEMPORARY REVIEW",
-    youtubeId: "q3xNwR5Y1YQ",
-    palette: {
-      surfaceA: "#1f2f43",
-      surfaceB: "#0c1523",
-      horizon: "#91b5ff",
-      glowA: "#ff656e",
-      glowB: "#51d9ff",
-      glowC: "#c08cff",
-    },
-  },
+      {
+        key: "2022-darklife",
+        title: "Darklife",
+        artist: "death's dynamic shroud",
+        year: 2022,
+        image: "/images/vaporwave/albums/2022-darklife.avif",
+        summary:
+          "La estética se vuelve más afilada, futurista y dramática. El género ya no es únicamente nostalgia: también es mutación, exceso y ruptura formal.",
+        press:
+          "Ambicioso y extenso, el disco sintetiza parte del legado vaporwave mientras lo proyecta hacia una sensibilidad más oscura y digital.",
+        source: "CONTEMPORARY REVIEW",
+        youtubeId: "q3xNwR5Y1YQ",
+        palette: {
+          surfaceA: "#1f2f43",
+          surfaceB: "#0c1523",
+          horizon: "#91b5ff",
+          glowA: "#ff656e",
+          glowB: "#51d9ff",
+          glowC: "#c08cff",
+        },
+      },
 
-  {
-    key: "2023-nuclear-snow",
-    title: "核雪",
-    artist: "CT57",
-    year: 2023,
-    image:
-      "/images/vaporwave/albums/2023-nuclear-snow.avif",
-    summary:
-      "Transmisiones interrumpidas, ruido ambiental y una narrativa de desastre nuclear convierten el signalwave en un paisaje helado de comunicaciones distantes.",
-    press:
-      "El lenguaje de la transmisión rota es llevado hacia una narrativa de aislamiento, contaminación y señales que parecen sobrevivir después de la catástrofe.",
-    source: "CT57",
-    youtubeId: "kjnZgfXf2Go",
-    palette: {
-      surfaceA: "#7d8790",
-      surfaceB: "#3e4952",
-      horizon: "#bbc6ce",
-      glowA: "#dce7eb",
-      glowB: "#7ea3b5",
-      glowC: "#b7ced5",
-    },
-  },
-];
+      {
+        key: "2023-nuclear-snow",
+        title: "核雪",
+        artist: "CT57",
+        year: 2023,
+        image: "/images/vaporwave/albums/2023-nuclear-snow.avif",
+        summary:
+          "Transmisiones interrumpidas, ruido ambiental y una narrativa de desastre nuclear convierten el signalwave en un paisaje helado de comunicaciones distantes.",
+        press:
+          "El lenguaje de la transmisión rota es llevado hacia una narrativa de aislamiento, contaminación y señales que parecen sobrevivir después de la catástrofe.",
+        source: "CT57",
+        youtubeId: "kjnZgfXf2Go",
+        palette: {
+          surfaceA: "#7d8790",
+          surfaceB: "#3e4952",
+          horizon: "#bbc6ce",
+          glowA: "#dce7eb",
+          glowB: "#7ea3b5",
+          glowC: "#b7ced5",
+        },
+      },
+    ];
 
     const loader = new GLTFLoader();
 
@@ -5308,20 +5250,11 @@ const documentaryUrl = "https://www.youtube.com/";
       playlistDock.classList.remove("is-visible", "awaiting-selection");
     }
 
-    /* ============================================================
-       EXPERIENCE DOM REFERENCES
-    ============================================================ */
-
-    const enterButton = document.getElementById("vaporwave-enter");
-
     const experienceWord = document.getElementById("experience-word");
 
-    if (
-      !(enterButton instanceof HTMLButtonElement) ||
-      !(experienceWord instanceof HTMLElement)
-    ) {
+    if (!(experienceWord instanceof HTMLElement)) {
       throw new Error(
-        "[Vaporwave] No se encontraron los controles de entrada.",
+        "[Vaporwave] No se encontró el loader de la experiencia.",
       );
     }
 
@@ -5380,15 +5313,16 @@ const documentaryUrl = "https://www.youtube.com/";
 
       noSignal.setAttribute("aria-hidden", "true");
 
-      loaderOverlay.classList.add("hidden");
+      /*
+       * Esta ruta entra directamente a la experiencia.
+       * El loader debe permanecer visible desde el primer frame,
+       * incluso antes de que Three.js termine de preparar la escena.
+       */
+      loaderOverlay.classList.remove("hidden");
 
-      loaderOverlay.classList.remove("is-visible");
+      loaderOverlay.classList.add("is-visible");
 
-      loaderOverlay.setAttribute("aria-hidden", "true");
-
-      landing.style.opacity = "1";
-
-      landing.style.pointerEvents = "auto";
+      loaderOverlay.setAttribute("aria-hidden", "false");
     }
 
     /* ============================================================
@@ -5438,9 +5372,9 @@ const documentaryUrl = "https://www.youtube.com/";
     async function showExperienceLoader(): Promise<void> {
       loaderOverlay.classList.remove("hidden");
 
-      loaderOverlay.setAttribute("aria-hidden", "false");
+      loaderOverlay.classList.add("is-visible");
 
-      loaderOverlay.classList.remove("is-visible");
+      loaderOverlay.setAttribute("aria-hidden", "false");
 
       experienceWord.textContent = "読み込み中";
 
@@ -5449,10 +5383,6 @@ const documentaryUrl = "https://www.youtube.com/";
       loadingProgressValue = 0;
 
       loaderProgress.textContent = "000";
-
-      requestAnimationFrame(() => {
-        loaderOverlay.classList.add("is-visible");
-      });
 
       animateLoadingProgress();
 
@@ -5568,13 +5498,6 @@ const documentaryUrl = "https://www.youtube.com/";
 
       cardGroup.visible = true;
 
-      landing.style.pointerEvents = "none";
-
-      /*
-       * LANDING FADE
-       */
-      landing.classList.add("is-leaving");
-
       await showExperienceLoader();
 
       try {
@@ -5589,10 +5512,6 @@ const documentaryUrl = "https://www.youtube.com/";
         }
 
         await hideExperienceLoader();
-
-        landing.style.opacity = "0";
-
-        landing.classList.remove("is-leaving");
 
         experienceActive = true;
 
@@ -5610,7 +5529,10 @@ const documentaryUrl = "https://www.youtube.com/";
          */
         beginBackgroundWorldLoading();
       } catch (error: unknown) {
-        console.error("[Vaporwave] Error preparando experiencia:", error);
+        console.error(
+          "[Vaporwave] Error preparando experiencia:",
+          error,
+        );
 
         isLoadingExperience = false;
 
@@ -5622,17 +5544,13 @@ const documentaryUrl = "https://www.youtube.com/";
 
         loaderOverlay.setAttribute("aria-hidden", "true");
 
-        landing.style.opacity = "1";
-
-        landing.style.pointerEvents = "auto";
-
-        landing.classList.remove("is-leaving");
+        /*
+         * Ya no existe una landing interna
+         * a la cual regresar.
+         */
+        window.location.href = "/";
       }
     }
-
-    enterButton.addEventListener("click", () => {
-      void enterExperience();
-    });
 
     /* ============================================================
        WORLD CLEANUP
@@ -5743,11 +5661,7 @@ const documentaryUrl = "https://www.youtube.com/";
 
         loaderOverlay.setAttribute("aria-hidden", "true");
 
-        landing.style.opacity = "1";
-
-        landing.style.pointerEvents = "auto";
-
-        landing.classList.remove("is-leaving");
+        window.location.href = "/";
 
         return;
       }
@@ -5793,13 +5707,10 @@ const documentaryUrl = "https://www.youtube.com/";
 
       canvas.classList.remove("is-leaving");
 
-      landing.style.opacity = "1";
-
-      landing.style.pointerEvents = "auto";
-
-      landing.classList.remove("is-leaving");
-
       resetArchiveInteraction();
+
+      window.location.href =
+        "/";
     }
 
     exitButton.addEventListener("click", () => {
@@ -5860,15 +5771,15 @@ const documentaryUrl = "https://www.youtube.com/";
        * La señal permanece brevemente.
        */
       window.setTimeout(() => {
-        void transitionNoSignalToLanding();
+        void transitionNoSignalToHome();
       }, 1450);
     }
 
     /* ============================================================
-       NO SIGNAL -> LANDING
+       NO SIGNAL -> HOME
     ============================================================ */
 
-    async function transitionNoSignalToLanding(): Promise<void> {
+    async function transitionNoSignalToHome(): Promise<void> {
       destroyYouTubePlayer();
 
       resetFeedbackLoop();
@@ -5881,15 +5792,6 @@ const documentaryUrl = "https://www.youtube.com/";
 
       canvas.style.opacity = "0";
 
-      landing.style.opacity = "1";
-
-      landing.style.pointerEvents = "auto";
-
-      landing.classList.remove("is-leaving");
-
-      /*
-       * Primero dejamos aparecer landing detrás.
-       */
       await wait(180);
 
       noSignal.classList.remove("is-visible");
@@ -5909,6 +5811,8 @@ const documentaryUrl = "https://www.youtube.com/";
       experienceActive = false;
 
       resetArchiveInteraction();
+
+      window.location.href = "/";
     }
 
     /* ============================================================
@@ -6139,10 +6043,15 @@ const documentaryUrl = "https://www.youtube.com/";
     /* ============================================================
        INITIAL STATE
     ============================================================ */
-
     resetExperienceUI();
 
     renderer.render(scene, camera);
+
+    /*
+     * La ruta /vaporwave/experiencia
+     * entra directamente al recorrido.
+     */
+    void enterExperience();
   }
 </script>
 
@@ -6552,131 +6461,6 @@ const documentaryUrl = "https://www.youtube.com/";
     50% {
       transform: translate(1px, -1px);
     }
-  }
-
-  /* ============================================================
-       LANDING
-    ============================================================ */
-
-  .vaporwave-landing {
-    position: absolute;
-
-    z-index: 20;
-
-    inset: 0;
-
-    display: grid;
-
-    place-items: center;
-
-    background: #000;
-
-    opacity: 1;
-
-    touch-action: pan-y pinch-zoom;
-
-    transition: opacity 0.6s ease;
-  }
-
-  .vaporwave-landing.is-leaving {
-    opacity: 0;
-  }
-
-  .landing-inner {
-    width: min(1120px, calc(100% - 3rem));
-
-    text-align: center;
-  }
-
-  .landing-title {
-    margin: 0;
-
-    color: #f0ece3;
-
-    font-family: "Gideon Roman", serif;
-
-    font-size: clamp(5rem, 12vw, 11rem);
-
-    font-weight: 400;
-
-    line-height: 0.82;
-
-    letter-spacing: -0.035em;
-  }
-
-  .landing-subtitle {
-    margin: 1.6rem 0 0;
-
-    color: rgba(240, 236, 227, 0.88);
-
-    font-family: "Gideon Roman", serif;
-
-    font-size: clamp(1.55rem, 3vw, 2.7rem);
-
-    font-weight: 400;
-
-    letter-spacing: 0.055em;
-  }
-
-  .landing-actions {
-    display: flex;
-
-    justify-content: center;
-    align-items: center;
-
-    gap: 1.5rem;
-
-    margin-top: 3.2rem;
-  }
-
-  .landing-button {
-    position: relative;
-
-    padding: 0.65rem 0;
-
-    border: 0;
-
-    background: transparent;
-
-    color: rgba(240, 236, 227, 0.55);
-
-    font-family: "IBM Plex Mono", monospace;
-
-    font-size: 0.68rem;
-
-    letter-spacing: 0.16em;
-
-    text-decoration: none;
-
-    cursor: pointer;
-
-    transition: color 0.2s ease;
-  }
-
-  .landing-button:hover {
-    color: #fff;
-  }
-
-  .landing-button::after {
-    content: "";
-
-    position: absolute;
-
-    left: 50%;
-    bottom: 0;
-
-    width: 0;
-    height: 1px;
-
-    background: #fff;
-
-    transform: translateX(-50%);
-
-    transition: width 0.25s ease;
-  }
-
-  .landing-button:hover::after {
-    width: 100%;
   }
 
   /* ============================================================
@@ -8099,42 +7883,6 @@ const documentaryUrl = "https://www.youtube.com/";
     }
 
     /* ==========================================================
-     LANDING
-  ========================================================== */
-
-    .landing-inner {
-      width: calc(100% - 1.5rem);
-
-      padding: 0 0.35rem;
-    }
-
-    .landing-title {
-      font-size: clamp(3.15rem, 13.3vw, 5rem);
-
-      line-height: 0.93;
-
-      letter-spacing: -0.045em;
-
-      white-space: nowrap;
-    }
-
-    .landing-subtitle {
-      margin-top: 1.3rem;
-
-      font-size: clamp(1.15rem, 5.3vw, 1.55rem);
-
-      letter-spacing: 0.035em;
-    }
-
-    .landing-actions {
-      margin-top: 2.8rem;
-
-      flex-direction: column;
-
-      gap: 0.65rem;
-    }
-
-    /* ==========================================================
      EXPERIENCE LOADER
   ========================================================== */
 
@@ -8558,9 +8306,6 @@ const documentaryUrl = "https://www.youtube.com/";
 ============================================================ */
 
   @media (max-width: 430px) {
-    .landing-title {
-      font-size: min(13.3vw, 4rem);
-    }
 
     .youtube-player-dock {
       width: calc(100vw - 1.4rem);
@@ -8658,7 +8403,6 @@ const documentaryUrl = "https://www.youtube.com/";
     .archive-playlist,
     .album-card,
     .vaporwave-canvas,
-    .vaporwave-landing,
     .experience-loader {
       transition-duration: 0.01ms !important;
     }
