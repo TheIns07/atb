@@ -10,44 +10,23 @@ import Footer from "../../components/Footer.astro";
   >
     <div class="cancel-container">
       <div class="cancel-content">
-
-        <!-- ==================================================
-             LABEL
-        =================================================== -->
-
-        <p class="cancel-label">
-          ATB SHOP
-        </p>
-
-        <!-- ==================================================
-             TITLE
-        =================================================== -->
-
         <h1
           data-cancel-title
         >
           Compra no completada.
         </h1>
 
-        <!-- ==================================================
-             DESCRIPTION
-        =================================================== -->
-
         <p
           class="cancel-description"
           data-cancel-description
         >
-          Estamos cerrando la sesión de pago y liberando
-          cualquier unidad que haya quedado reservada.
+          Estamos cerrando la sesión de pago y liberando cualquier unidad reservada.
         </p>
-
-        <!-- ==================================================
-             STATUS
-        =================================================== -->
 
         <div
           class="cancel-status"
           data-cancel-status
+          data-state="loading"
           aria-live="polite"
         >
           <span
@@ -63,10 +42,6 @@ import Footer from "../../components/Footer.astro";
           </p>
         </div>
 
-        <!-- ==================================================
-             ACTIONS
-        =================================================== -->
-
         <div class="cancel-actions">
           <button
             type="button"
@@ -79,7 +54,7 @@ import Footer from "../../components/Footer.astro";
 
           <a
             href="/tienda"
-            class="secondary-link"
+            class="secondary-link is-disabled"
             data-store-link
             aria-disabled="true"
           >
@@ -93,10 +68,6 @@ import Footer from "../../components/Footer.astro";
   <Footer />
 
   <script>
-    // ============================================================
-    // TYPES
-    // ============================================================
-
     type CancelCheckoutResponse = {
       success?: boolean;
 
@@ -115,16 +86,14 @@ import Footer from "../../components/Footer.astro";
       error?: string;
     };
 
-    // ============================================================
-    // UUID
-    // ============================================================
-
     function isUuid(
       value:
         | string
         | null,
     ): value is string {
-      if (!value) {
+      if (
+        !value
+      ) {
         return false;
       }
 
@@ -133,24 +102,17 @@ import Footer from "../../components/Footer.astro";
       );
     }
 
-    // ============================================================
-    // INITIALIZE
-    // ============================================================
-
     function initializeCancelPage(): void {
       const page =
         document.querySelector<HTMLElement>(
           "[data-cancel-page]",
         );
 
-      if (!page) {
+      if (
+        !page
+      ) {
         return;
       }
-
-      /*
-        Evita registrar listeners más de una vez
-        si Astro vuelve a disparar astro:page-load.
-      */
 
       if (
         page.dataset
@@ -163,10 +125,6 @@ import Footer from "../../components/Footer.astro";
       page.dataset
         .initialized =
         "true";
-
-      // ========================================================
-      // ELEMENTS
-      // ========================================================
 
       const title =
         page.querySelector<HTMLElement>(
@@ -215,10 +173,6 @@ import Footer from "../../components/Footer.astro";
         return;
       }
 
-      // ========================================================
-      // STATE HELPERS
-      // ========================================================
-
       function setStatus(
         state:
           | "loading"
@@ -226,13 +180,15 @@ import Footer from "../../components/Footer.astro";
           | "warning"
           | "error",
 
-        message: string,
+        message:
+          string,
       ): void {
+        statusContainer.dataset
+          .state =
+          state;
+
         statusMessage.textContent =
           message;
-
-        statusContainer.dataset.state =
-          state;
 
         statusIndicator.classList.remove(
           "is-loading",
@@ -273,9 +229,22 @@ import Footer from "../../components/Footer.astro";
         );
       }
 
-      // ========================================================
-      // OPEN CART
-      // ========================================================
+      function clearReservationFromUrl(): void {
+        const url =
+          new URL(
+            window.location.href,
+          );
+
+        url.searchParams.delete(
+          "reservation_id",
+        );
+
+        window.history.replaceState(
+          {},
+          "",
+          `${url.pathname}${url.search}${url.hash}`,
+        );
+      }
 
       openCartButton.addEventListener(
         "click",
@@ -294,10 +263,6 @@ import Footer from "../../components/Footer.astro";
         },
       );
 
-      // ========================================================
-      // STORE LINK PROTECTION
-      // ========================================================
-
       storeLink.addEventListener(
         "click",
         (
@@ -314,10 +279,6 @@ import Footer from "../../components/Footer.astro";
         },
       );
 
-      // ========================================================
-      // CANCEL RESERVATION
-      // ========================================================
-
       async function cancelReservation(): Promise<void> {
         disableActions();
 
@@ -332,7 +293,7 @@ import Footer from "../../components/Footer.astro";
           );
 
         // ======================================================
-        // LEGACY / DIRECT VISIT
+        // DIRECT VISIT
         // ======================================================
 
         if (
@@ -355,7 +316,7 @@ import Footer from "../../components/Footer.astro";
         }
 
         // ======================================================
-        // INVALID RESERVATION ID
+        // INVALID ID
         // ======================================================
 
         if (
@@ -380,7 +341,7 @@ import Footer from "../../components/Footer.astro";
         }
 
         // ======================================================
-        // REQUEST
+        // RELEASE
         // ======================================================
 
         setStatus(
@@ -428,7 +389,7 @@ import Footer from "../../components/Footer.astro";
           }
 
           // ====================================================
-          // SUCCESS
+          // RELEASED
           // ====================================================
 
           if (
@@ -454,7 +415,7 @@ import Footer from "../../components/Footer.astro";
             ) {
               setStatus(
                 "success",
-                "La sesión expiró y la unidad reservada volvió a estar disponible.",
+                "La sesión expiró y la unidad volvió a estar disponible.",
               );
             } else {
               setStatus(
@@ -463,13 +424,19 @@ import Footer from "../../components/Footer.astro";
               );
             }
 
+            /*
+             * Evitamos que al recargar la página
+             * vuelva a intentar cancelar la misma reserva.
+             */
+            clearReservationFromUrl();
+
             enableActions();
 
             return;
           }
 
           // ====================================================
-          // PAYMENT ALREADY COMPLETED
+          // ALREADY PAID
           // ====================================================
 
           if (
@@ -479,44 +446,42 @@ import Footer from "../../components/Footer.astro";
               "El pago ya fue completado.";
 
             description.textContent =
-              "La sesión de pago ya fue confirmada, por lo que no se liberó el inventario.";
+              "La compra ya fue confirmada. El inventario no fue liberado.";
 
             setStatus(
               "warning",
               "Tu compra ya fue procesada.",
             );
 
+            clearReservationFromUrl();
+
             enableActions();
 
             return;
           }
 
           // ====================================================
-          // ASYNC PAYMENT PENDING
+          // PAYMENT PENDING
           // ====================================================
 
           if (
             data.pending
           ) {
             title.textContent =
-              "Pago pendiente de confirmación.";
+              "Pago pendiente.";
 
             description.textContent =
-              "La sesión ya fue completada y estamos esperando la confirmación final del método de pago.";
+              "La sesión fue completada y estamos esperando la confirmación del método de pago.";
 
             setStatus(
               "warning",
-              "El inventario permanecerá reservado mientras se confirma el pago.",
+              "La unidad permanecerá reservada mientras se confirma el pago.",
             );
 
             enableActions();
 
             return;
           }
-
-          // ====================================================
-          // SERVER ERROR
-          // ====================================================
 
           throw new Error(
             data.error ??
@@ -545,12 +510,11 @@ import Footer from "../../components/Footer.astro";
           );
 
           /*
-            Permitimos volver a la bolsa.
-
-            El backend mantiene la protección:
-            una reserva que no pudo liberarse seguirá
-            bloqueada hasta que expire o pueda procesarse.
-          */
+           * NO quitamos reservation_id de la URL
+           * cuando falla.
+           *
+           * Así podemos recargar y volver a intentar.
+           */
 
           enableActions();
         }
@@ -558,10 +522,6 @@ import Footer from "../../components/Footer.astro";
 
       void cancelReservation();
     }
-
-    // ============================================================
-    // START
-    // ============================================================
 
     initializeCancelPage();
 
@@ -573,32 +533,37 @@ import Footer from "../../components/Footer.astro";
 </Layout>
 
 <style>
-  /* ============================================================
-     PAGE
-  ============================================================ */
-
   .cancel-page {
-    min-height: 100vh;
+    min-height:
+      100vh;
 
-    background: #ffffff;
+    background:
+      #ffffff;
 
-    color: #111111;
+    color:
+      #111111;
   }
 
   .cancel-container {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
     width:
       min(
         1440px,
-        calc(100% - 5rem)
+        calc(
+          100% - 5rem
+        )
       );
 
-    min-height: 100vh;
+    min-height:
+      100vh;
 
-    margin: 0 auto;
+    margin:
+      0 auto;
 
     padding:
       8rem
@@ -609,39 +574,16 @@ import Footer from "../../components/Footer.astro";
     width:
       min(
         100%,
-        680px
+        720px
       );
   }
 
-  /* ============================================================
-     LABEL
-  ============================================================ */
-
-  .cancel-label {
-    margin:
-      0
-      0
-      1.5rem;
-
-    color: #888888;
-
-    font-family:
-      "IBM Plex Mono",
-      monospace;
-
-    font-size: 0.6rem;
-
-    letter-spacing: 0.14em;
-  }
-
-  /* ============================================================
-     TITLE
-  ============================================================ */
-
   .cancel-content h1 {
-    margin: 0;
+    margin:
+      0;
 
-    color: #111111;
+    color:
+      #111111;
 
     font-family:
       "Inter",
@@ -651,57 +593,60 @@ import Footer from "../../components/Footer.astro";
       clamp(
         3rem,
         7vw,
-        6.5rem
+        7rem
       );
 
-    font-weight: 400;
+    font-weight:
+      400;
 
-    line-height: 0.95;
+    line-height:
+      0.92;
 
     letter-spacing:
-      -0.055em;
+      -0.06em;
   }
 
-  /* ============================================================
-     DESCRIPTION
-  ============================================================ */
-
   .cancel-description {
-    max-width: 500px;
+    max-width:
+      500px;
 
     margin:
-      2rem
+      2.2rem
       0
       0;
 
-    color: #666666;
+    color:
+      #666666;
 
     font-family:
       "Inter",
       sans-serif;
 
-    font-size: 0.82rem;
+    font-size:
+      0.82rem;
 
-    line-height: 1.65;
+    line-height:
+      1.65;
   }
 
-  /* ============================================================
-     STATUS
-  ============================================================ */
-
   .cancel-status {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    gap: 0.7rem;
+    gap:
+      0.75rem;
 
-    max-width: 520px;
+    max-width:
+      520px;
 
-    margin-top: 1.5rem;
+    margin-top:
+      1.75rem;
 
     padding:
-      0.9rem
+      0.95rem
       0;
 
     border-top:
@@ -714,24 +659,25 @@ import Footer from "../../components/Footer.astro";
   }
 
   .cancel-status p {
-    margin: 0;
+    margin:
+      0;
 
-    color: #777777;
+    color:
+      #777777;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.56rem;
+    font-size:
+      0.56rem;
 
-    line-height: 1.5;
+    line-height:
+      1.5;
 
-    letter-spacing: 0.02em;
+    letter-spacing:
+      0.02em;
   }
-
-  /* ============================================================
-     INDICATOR
-  ============================================================ */
 
   .status-indicator {
     flex:
@@ -739,12 +685,17 @@ import Footer from "../../components/Footer.astro";
       0
       auto;
 
-    width: 7px;
-    height: 7px;
+    width:
+      7px;
 
-    border-radius: 50%;
+    height:
+      7px;
 
-    background: #999999;
+    border-radius:
+      50%;
+
+    background:
+      #999999;
   }
 
   .status-indicator.is-loading {
@@ -756,70 +707,80 @@ import Footer from "../../components/Footer.astro";
   }
 
   .status-indicator.is-success {
-    background: #111111;
+    background:
+      #111111;
   }
 
   .status-indicator.is-warning {
-    background: #888888;
+    background:
+      #888888;
   }
 
   .status-indicator.is-error {
-    background: #8e2e2e;
+    background:
+      #8e2e2e;
   }
 
   .cancel-status[
     data-state="error"
   ] p {
-    color: #8e2e2e;
+    color:
+      #8e2e2e;
   }
 
   @keyframes cancelPulse {
     0%,
     100% {
-      opacity: 0.3;
+      opacity:
+        0.3;
 
       transform:
-        scale(0.8);
+        scale(
+          0.8
+        );
     }
 
     50% {
-      opacity: 1;
+      opacity:
+        1;
 
       transform:
-        scale(1);
+        scale(
+          1
+        );
     }
   }
 
-  /* ============================================================
-     ACTIONS
-  ============================================================ */
-
   .cancel-actions {
-    display: flex;
+    display:
+      flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    flex-wrap: wrap;
+    flex-wrap:
+      wrap;
 
     gap:
       1rem
       1.5rem;
 
-    margin-top: 3rem;
+    margin-top:
+      3rem;
   }
 
-  /* ============================================================
-     PRIMARY BUTTON
-  ============================================================ */
-
   .primary-button {
-    display: inline-flex;
+    display:
+      inline-flex;
 
-    align-items: center;
+    align-items:
+      center;
 
-    justify-content: center;
+    justify-content:
+      center;
 
-    min-width: 170px;
+    min-width:
+      170px;
 
     padding:
       0.95rem
@@ -842,9 +803,11 @@ import Footer from "../../components/Footer.astro";
     font-size:
       0.7rem;
 
-    font-weight: 500;
+    font-weight:
+      500;
 
-    cursor: pointer;
+    cursor:
+      pointer;
 
     transition:
       background
@@ -875,12 +838,9 @@ import Footer from "../../components/Footer.astro";
     color:
       #999999;
 
-    cursor: default;
+    cursor:
+      default;
   }
-
-  /* ============================================================
-     SECONDARY LINK
-  ============================================================ */
 
   .secondary-link {
     color:
@@ -904,28 +864,23 @@ import Footer from "../../components/Footer.astro";
     color:
       #b0b0b0;
 
-    pointer-events: none;
+    pointer-events:
+      none;
   }
-
-  /* ============================================================
-     GLOBAL PAGE
-  ============================================================ */
 
   :global(
     body:has(.cancel-page)
   ) {
-    background: #ffffff;
+    background:
+      #ffffff;
 
     scroll-snap-type:
       none !important;
   }
 
-  /* ============================================================
-     TABLET
-  ============================================================ */
-
   @media (
-    max-width: 1000px
+    max-width:
+      1000px
   ) {
     .cancel-container {
       width:
@@ -935,12 +890,9 @@ import Footer from "../../components/Footer.astro";
     }
   }
 
-  /* ============================================================
-     MOBILE
-  ============================================================ */
-
   @media (
-    max-width: 600px
+    max-width:
+      600px
   ) {
     .cancel-container {
       width:
@@ -964,33 +916,36 @@ import Footer from "../../components/Footer.astro";
     }
 
     .cancel-description {
-      max-width: 340px;
+      max-width:
+        340px;
 
-      font-size: 0.76rem;
+      font-size:
+        0.76rem;
     }
 
     .cancel-status {
-      max-width: 100%;
+      max-width:
+        100%;
     }
 
     .cancel-actions {
-      align-items: stretch;
+      align-items:
+        stretch;
 
-      flex-direction: column;
+      flex-direction:
+        column;
     }
 
     .primary-button {
-      width: 100%;
+      width:
+        100%;
     }
 
     .secondary-link {
-      align-self: flex-start;
+      align-self:
+        flex-start;
     }
   }
-
-  /* ============================================================
-     REDUCED MOTION
-  ============================================================ */
 
   @media (
     prefers-reduced-motion:

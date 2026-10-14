@@ -9,25 +9,23 @@ import {
   type Product,
 } from "../../data/products";
 
-// ============================================================
-// PRODUCTS
-// ============================================================
-
 const products =
-  getActiveProducts();
-
-// ============================================================
-// PRICE
-// ============================================================
+  getActiveProducts().filter(
+    (product) =>
+      product.category ===
+        "documentary-script" ||
+      product.category ===
+        "documentary-prop",
+  );
 
 function getPriceLabel(
   product: Product,
-): string {
+): string | null {
   if (
     product.status ===
-    "sold-out"
+    "coming-soon"
   ) {
-    return "Agotado";
+    return null;
   }
 
   const price =
@@ -35,22 +33,10 @@ function getPriceLabel(
       product,
     );
 
-  if (
-    product.status ===
-      "available" &&
-    price !== null
-  ) {
-    return formatMXN(
-      price,
-    );
-  }
-
-  return "Próximamente";
+  return price !== null
+    ? formatMXN(price)
+    : null;
 }
-
-// ============================================================
-// META
-// ============================================================
 
 function getProductMeta(
   product: Product,
@@ -59,17 +45,37 @@ function getProductMeta(
     product.category
   ) {
     case "shirt":
-      return "Ropa";
+      return "ropa";
 
     case "documentary-script":
-      return "Guión original";
+      return "guion original";
 
     case "documentary-prop":
-      return "Objeto de producción";
+      return "objeto de producción";
 
     default:
-      return "ATB";
+      return "objeto";
   }
+}
+
+function getInitialStatus(
+  product: Product,
+): string {
+  if (
+    product.status ===
+    "coming-soon"
+  ) {
+    return "próximamente";
+  }
+
+  if (
+    product.status ===
+    "sold-out"
+  ) {
+    return "agotado";
+  }
+
+  return "comprobando…";
 }
 ---
 
@@ -78,495 +84,341 @@ function getProductMeta(
     class="shop-page"
     data-shop-page
   >
-    <!-- ======================================================
-         HEADER
-    ======================================================= -->
+    <div class="shop-shell">
 
-    <header class="shop-header">
-      <div class="shop-header-meta">
-        <span>
-          ATB SHOP
-        </span>
+      <!-- =========================================
+           HEADER
+      ========================================== -->
 
-        <span>
-          Tienda
-        </span>
-
-        <span>
-          {String(products.length).padStart(2, "0")}
-        </span>
-      </div>
-
-      <div class="shop-header-content">
+      <header class="shop-header">
         <h1>
-          Objetos y ediciones de ATB.
+          Tienda.
         </h1>
 
-        <p>
-          Ediciones, objetos y piezas relacionadas
-          con los proyectos de ATB.
-        </p>
-      </div>
-    </header>
+        <span class="shop-count">
+          {String(products.length).padStart(2, "0")}
+        </span>
+      </header>
 
-    <!-- ======================================================
-         PRODUCTS
-    ======================================================= -->
+      <!-- =========================================
+           FLOATING GALLERY
+      ========================================== -->
 
-    <section
-      class="product-grid"
-      aria-label="Productos"
-    >
-      {
-        products.map(
-          (
-            product,
-            index,
-          ) => {
-            const priceLabel =
-              getPriceLabel(
-                product,
-              );
-
-            const productMeta =
-              getProductMeta(
-                product,
-              );
-
-            const skus =
-              product.variants
-                .filter(
-                  (variant) =>
-                    variant.active,
-                )
-                .map(
-                  (variant) =>
-                    variant.sku,
-                )
-                .join(",");
-
-            return (
-              <article
-                class="product-card"
-                data-shop-product-card
-                data-product-status={product.status}
-                data-product-skus={skus}
-                data-product-name={product.name}
-              >
-                <!-- =========================================
-                     IMAGE
-                ========================================== -->
-
-                <a
-                  href={`/tienda/${product.slug}`}
-                  class="product-image-link"
-                  aria-label={product.name}
-                >
-                  <div class="product-image-wrapper">
-                    <div class="product-image-placeholder">
-                      ATB
-                    </div>
-
-                    <img
-                      src={product.thumbnail}
-                      alt={product.name}
-                      loading={
-                        index < 4
-                          ? "eager"
-                          : "lazy"
-                      }
-                      class="product-image"
-                      data-product-image
-                    />
-
-                    <div
-                      class="product-status-overlay"
-                      data-product-status-overlay
-                      hidden
-                    >
-                      AGOTADO
-                    </div>
-                  </div>
-                </a>
-
-                <!-- =========================================
-                     INFORMATION
-                ========================================== -->
-
-                <div class="product-info">
-                  <div class="product-info-top">
-                    <div>
-                      <p class="product-meta">
-                        {productMeta}
-                      </p>
-
-                      <h2>
-                        <a
-                          href={`/tienda/${product.slug}`}
-                        >
-                          {product.name}
-                        </a>
-                      </h2>
-
-                      {
-                        product.subtitle && (
-                          <p class="product-subtitle">
-                            {product.subtitle}
-                          </p>
-                        )
-                      }
-                    </div>
-
-                    <p class="product-price">
-                      {priceLabel}
-                    </p>
-                  </div>
-
-                  <!-- =======================================
-                       AVAILABILITY
-                  ======================================== -->
-
-                  <div class="product-info-bottom">
-                    <span
-                      class="availability"
-                      data-product-availability
-                    >
-                      {
-                        product.status ===
-                          "coming-soon"
-                          ? "Próximamente"
-                          : product.status ===
-                              "sold-out"
-                            ? "Agotado"
-                            : "Comprobando…"
-                      }
-                    </span>
-
-                    <a
-                      href={`/tienda/${product.slug}`}
-                      class="product-view-link"
-                    >
-                      Ver producto
-                    </a>
-                  </div>
-                </div>
-              </article>
-            );
-          },
-        )
-      }
-    </section>
-
-    <!-- ======================================================
-         INVENTORY CLIENT
-    ======================================================= -->
-
-    <script>
-      // ======================================================
-      // TYPES
-      // ======================================================
-
-      type InventoryItem = {
-        stock: number;
-
-        active: boolean;
-
-        available: boolean;
-
-        updatedAt?:
-          | string
-          | null;
-      };
-
-      type InventoryResponse = {
-        inventoryBySku?: Record<
-          string,
-          InventoryItem
-        >;
-
-        error?: string;
-      };
-
-      // ======================================================
-      // INITIALIZE
-      // ======================================================
-
-      function initializeShopPage(): void {
-        const page =
-          document.querySelector<HTMLElement>(
-            "[data-shop-page]",
-          );
-
-        if (!page) {
-          return;
-        }
-
-        if (
-          page.dataset
-            .inventoryInitialized ===
-          "true"
-        ) {
-          return;
-        }
-
-        page.dataset
-          .inventoryInitialized =
-          "true";
-
-        const cards =
-          page.querySelectorAll<HTMLElement>(
-            "[data-shop-product-card]",
-          );
-
-        if (
-          cards.length ===
-          0
-        ) {
-          return;
-        }
-
-        // ====================================================
-        // STATIC PRODUCTS
-        // ====================================================
-
-        cards.forEach(
-          (
-            card,
-          ) => {
-            const status =
-              card.dataset
-                .productStatus;
-
-            if (
-              status ===
-              "coming-soon"
-            ) {
-              updateCardAvailability(
-                card,
-                "Próximamente",
-                "coming-soon",
-              );
-            }
-
-            if (
-              status ===
-              "sold-out"
-            ) {
-              updateCardAvailability(
-                card,
-                "Agotado",
-                "sold-out",
-              );
-            }
-          },
-        );
-
-        // ====================================================
-        // LOAD INVENTORY
-        // ====================================================
-
-        void loadInventory();
-      }
-
-      // ======================================================
-      // UPDATE CARD
-      // ======================================================
-
-      function updateCardAvailability(
-        card: HTMLElement,
-        label: string,
-        state:
-          | "available"
-          | "last-unit"
-          | "sold-out"
-          | "coming-soon"
-          | "error",
-      ): void {
-        const availability =
-          card.querySelector<HTMLElement>(
-            "[data-product-availability]",
-          );
-
-        const overlay =
-          card.querySelector<HTMLElement>(
-            "[data-product-status-overlay]",
-          );
-
-        if (
-          availability
-        ) {
-          availability.textContent =
-            label;
-
-          availability.dataset.state =
-            state;
-        }
-
-        card.dataset
-          .availabilityState =
-          state;
-
-        if (
-          overlay
-        ) {
-          const soldOut =
-            state ===
-            "sold-out";
-
-          overlay.hidden =
-            !soldOut;
-        }
-
-        card.classList.toggle(
-          "is-sold-out",
-          state ===
-            "sold-out",
-        );
-      }
-
-      // ======================================================
-      // GET CARD SKUS
-      // ======================================================
-
-      function getCardSkus(
-        card:
-          HTMLElement,
-      ): string[] {
-        const raw =
-          card.dataset
-            .productSkus ??
-          "";
-
-        return raw
-          .split(
-            ",",
-          )
-          .map(
+      <section
+        class="floating-gallery"
+        aria-label="Productos"
+      >
+        {
+          products.map(
             (
-              sku,
-            ) =>
-              sku.trim(),
+              product,
+              index,
+            ) => {
+              const priceLabel =
+                getPriceLabel(
+                  product,
+                );
+
+              const productMeta =
+                getProductMeta(
+                  product,
+                );
+
+              const initialStatus =
+                getInitialStatus(
+                  product,
+                );
+
+              const skus =
+                product.variants
+                  .filter(
+                    (
+                      variant,
+                    ) =>
+                      variant.active,
+                  )
+                  .map(
+                    (
+                      variant,
+                    ) =>
+                      variant.sku,
+                  )
+                  .join(",");
+
+              const composition =
+                (index %
+                  6) +
+                1;
+
+              return (
+                <article
+                  class:list={[
+                    "product-piece",
+                    `product-piece--${composition}`,
+                    {
+                      "is-sold-out":
+                        product.status ===
+                        "sold-out",
+                    },
+                  ]}
+                  data-shop-product-card
+                  data-product-status={
+                    product.status
+                  }
+                  data-product-skus={
+                    skus
+                  }
+                  data-product-name={
+                    product.name
+                  }
+                >
+                  <a
+                    href={`/tienda/${product.slug}`}
+                    class="product-link"
+                    aria-label={`Abrir ${product.name}`}
+                  >
+                    <div class="image-shell">
+
+                      <!-- fallback -->
+
+                      <div class="image-placeholder">
+                        ATB
+                      </div>
+
+                      <!-- image -->
+
+                      <img
+                        src={
+                          product.thumbnail
+                        }
+                        alt={
+                          product.name
+                        }
+                        class="product-image"
+                        data-product-image
+                        loading={
+                          index < 4
+                            ? "eager"
+                            : "lazy"
+                        }
+                      />
+
+                      <!-- permanent sold-out badge -->
+
+                      <span
+                        class="status-badge"
+                        data-product-status-overlay
+                        hidden={
+                          product.status !==
+                          "sold-out"
+                        }
+                      >
+                        agotado
+                      </span>
+
+                      <!-- hover information -->
+
+                      <div class="product-hover">
+                        <div class="hover-meta">
+                          <span>
+                            {productMeta}
+                          </span>
+
+                          <span
+                            data-product-availability
+                          >
+                            {initialStatus}
+                          </span>
+                        </div>
+
+                        <div class="hover-main">
+                          <h2>
+                            {product.name}
+                          </h2>
+
+                          <span class="hover-arrow">
+                            ↗
+                          </span>
+                        </div>
+
+                        {
+                          priceLabel && (
+                            <div class="hover-price">
+                              {priceLabel}
+                            </div>
+                          )
+                        }
+                      </div>
+                    </div>
+                  </a>
+                </article>
+              );
+            },
           )
-          .filter(
-            Boolean,
+        }
+      </section>
+
+      <!-- =========================================
+           INVENTORY
+      ========================================== -->
+
+      <script>
+        type InventoryItem = {
+          stock: number;
+          active: boolean;
+          available: boolean;
+
+          updatedAt?:
+            | string
+            | null;
+        };
+
+        type InventoryResponse = {
+          inventoryBySku?: Record<
+            string,
+            InventoryItem
+          >;
+
+          error?: string;
+        };
+
+        function updateCardAvailability(
+          card: HTMLElement,
+          label: string,
+          state:
+            | "available"
+            | "last-unit"
+            | "sold-out"
+            | "coming-soon"
+            | "error",
+        ): void {
+          const availability =
+            card.querySelectorAll<HTMLElement>(
+              "[data-product-availability]",
+            );
+
+          const overlays =
+            card.querySelectorAll<HTMLElement>(
+              "[data-product-status-overlay]",
+            );
+
+          availability.forEach(
+            (
+              element,
+            ) => {
+              element.textContent =
+                label;
+
+              element.dataset.state =
+                state;
+            },
           );
-      }
 
-      // ======================================================
-      // LOAD INVENTORY
-      // ======================================================
-
-      async function loadInventory(): Promise<void> {
-        const page =
-          document.querySelector<HTMLElement>(
-            "[data-shop-page]",
+          overlays.forEach(
+            (
+              overlay,
+            ) => {
+              overlay.hidden =
+                state !==
+                "sold-out";
+            },
           );
 
-        if (!page) {
-          return;
+          card.dataset
+            .availabilityState =
+            state;
+
+          card.classList.toggle(
+            "is-sold-out",
+            state ===
+              "sold-out",
+          );
         }
 
-        const cards =
-          Array.from(
-            page.querySelectorAll<HTMLElement>(
-              "[data-shop-product-card]",
-            ),
-          );
+        function getCardSkus(
+          card: HTMLElement,
+        ): string[] {
+          const raw =
+            card.dataset
+              .productSkus ??
+            "";
 
-        // ====================================================
-        // COLLECT AVAILABLE PRODUCT SKUS
-        // ====================================================
-
-        const skus =
-          new Set<string>();
-
-        cards.forEach(
-          (
-            card,
-          ) => {
-            if (
-              card.dataset
-                .productStatus !==
-              "available"
-            ) {
-              return;
-            }
-
-            getCardSkus(
-              card,
-            ).forEach(
+          return raw
+            .split(",")
+            .map(
               (
                 sku,
-              ) => {
-                skus.add(
-                  sku,
-                );
-              },
-            );
-          },
-        );
-
-        if (
-          skus.size ===
-          0
-        ) {
-          return;
+              ) =>
+                sku.trim(),
+            )
+            .filter(Boolean);
         }
 
-        // ====================================================
-        // REQUEST
-        // ====================================================
-
-        try {
-          const params =
-            new URLSearchParams();
-
-          params.set(
-            "skus",
-            Array.from(
-              skus,
-            ).join(
-              ",",
-            ),
-          );
-
-          const response =
-            await fetch(
-              `/api/inventory?${params.toString()}`,
-              {
-                method:
-                  "GET",
-
-                headers: {
-                  Accept:
-                    "application/json",
-                },
-
-                cache:
-                  "no-store",
-              },
+        async function loadInventory(): Promise<void> {
+          const page =
+            document.querySelector<HTMLElement>(
+              "[data-shop-page]",
             );
-
-          const data =
-            (await response.json()) as
-              InventoryResponse;
 
           if (
-            !response.ok
+            !page
           ) {
-            throw new Error(
-              data.error ??
-                "No fue posible consultar inventario.",
-            );
+            return;
           }
 
-          const inventory =
-            data.inventoryBySku ??
-            {};
+          if (
+            page.dataset
+              .inventoryInitialized ===
+            "true"
+          ) {
+            return;
+          }
 
-          // ==================================================
-          // UPDATE CARDS
-          // ==================================================
+          page.dataset
+            .inventoryInitialized =
+            "true";
+
+          const cards =
+            Array.from(
+              page.querySelectorAll<HTMLElement>(
+                "[data-shop-product-card]",
+              ),
+            );
+
+          cards.forEach(
+            (
+              card,
+            ) => {
+              const status =
+                card.dataset
+                  .productStatus;
+
+              if (
+                status ===
+                "coming-soon"
+              ) {
+                updateCardAvailability(
+                  card,
+                  "próximamente",
+                  "coming-soon",
+                );
+              }
+
+              if (
+                status ===
+                "sold-out"
+              ) {
+                updateCardAvailability(
+                  card,
+                  "agotado",
+                  "sold-out",
+                );
+              }
+            },
+          );
+
+          const skus =
+            new Set<string>();
 
           cards.forEach(
             (
@@ -580,212 +432,269 @@ function getProductMeta(
                 return;
               }
 
-              const productSkus =
-                getCardSkus(
-                  card,
-                );
-
-              if (
-                productSkus.length ===
-                0
-              ) {
-                updateCardAvailability(
-                  card,
-                  "No disponible",
-                  "error",
-                );
-
-                return;
-              }
-
-              // ==============================================
-              // TOTAL REAL STOCK
-              // ==============================================
-
-              let totalStock =
-                0;
-
-              let activeSkuCount =
-                0;
-
-              productSkus.forEach(
+              getCardSkus(
+                card,
+              ).forEach(
                 (
                   sku,
                 ) => {
-                  const item =
-                    inventory[
-                      sku
-                    ];
+                  skus.add(
+                    sku,
+                  );
+                },
+              );
+            },
+          );
 
-                  /*
-                    SKU faltante en Supabase:
-                    se considera no disponible.
-                  */
+          if (
+            skus.size ===
+            0
+          ) {
+            return;
+          }
 
-                  if (
-                    !item ||
-                    !item.active
-                  ) {
-                    return;
-                  }
+          try {
+            const params =
+              new URLSearchParams();
 
-                  activeSkuCount +=
-                    1;
+            params.set(
+              "skus",
+              Array.from(
+                skus,
+              ).join(","),
+            );
 
-                  totalStock +=
-                    Math.max(
-                      0,
-                      item.stock,
-                    );
+            const response =
+              await fetch(
+                `/api/inventory?${params.toString()}`,
+                {
+                  method:
+                    "GET",
+
+                  headers: {
+                    Accept:
+                      "application/json",
+                  },
+
+                  cache:
+                    "no-store",
                 },
               );
 
-              // ==============================================
-              // SOLD OUT
-              // ==============================================
+            const data =
+              (await response.json()) as
+                InventoryResponse;
 
-              if (
-                totalStock <=
-                0
-              ) {
-                updateCardAvailability(
-                  card,
-                  "Agotado",
-                  "sold-out",
-                );
-
-                return;
-              }
-
-              // ==============================================
-              // LAST UNIT
-              // ==============================================
-
-              if (
-                totalStock ===
-                1
-              ) {
-                updateCardAvailability(
-                  card,
-                  "Última unidad",
-                  "last-unit",
-                );
-
-                return;
-              }
-
-              // ==============================================
-              // AVAILABLE
-              // ==============================================
-
-              if (
-                activeSkuCount >
-                0
-              ) {
-                updateCardAvailability(
-                  card,
-                  "Disponible",
-                  "available",
-                );
-
-                return;
-              }
-
-              updateCardAvailability(
-                card,
-                "No disponible",
-                "error",
+            if (
+              !response.ok
+            ) {
+              throw new Error(
+                data.error ??
+                  "No fue posible consultar inventario.",
               );
-            },
-          );
-        } catch (
-          error
-        ) {
-          console.error(
-            "[ATB Shop] Catalogue inventory error:",
-            error,
-          );
+            }
 
-          /*
-            Fallamos de forma segura:
-            jamás mostramos "Disponible"
-            si no pudimos verificar Supabase.
-          */
+            const inventory =
+              data.inventoryBySku ??
+              {};
 
-          cards.forEach(
+            cards.forEach(
+              (
+                card,
+              ) => {
+                if (
+                  card.dataset
+                    .productStatus !==
+                  "available"
+                ) {
+                  return;
+                }
+
+                const productSkus =
+                  getCardSkus(
+                    card,
+                  );
+
+                if (
+                  productSkus.length ===
+                  0
+                ) {
+                  updateCardAvailability(
+                    card,
+                    "no disponible",
+                    "error",
+                  );
+
+                  return;
+                }
+
+                let totalStock =
+                  0;
+
+                let activeSkuCount =
+                  0;
+
+                productSkus.forEach(
+                  (
+                    sku,
+                  ) => {
+                    const item =
+                      inventory[
+                        sku
+                      ];
+
+                    if (
+                      !item ||
+                      !item.active
+                    ) {
+                      return;
+                    }
+
+                    activeSkuCount +=
+                      1;
+
+                    totalStock +=
+                      Math.max(
+                        0,
+                        item.stock,
+                      );
+                  },
+                );
+
+                if (
+                  totalStock <=
+                  0
+                ) {
+                  updateCardAvailability(
+                    card,
+                    "agotado",
+                    "sold-out",
+                  );
+
+                  return;
+                }
+
+                if (
+                  totalStock ===
+                  1
+                ) {
+                  updateCardAvailability(
+                    card,
+                    "última unidad",
+                    "last-unit",
+                  );
+
+                  return;
+                }
+
+                if (
+                  activeSkuCount >
+                  0
+                ) {
+                  updateCardAvailability(
+                    card,
+                    "disponible",
+                    "available",
+                  );
+
+                  return;
+                }
+
+                updateCardAvailability(
+                  card,
+                  "no disponible",
+                  "error",
+                );
+              },
+            );
+          } catch (
+            error
+          ) {
+            console.error(
+              "[ATB Shop] Catalogue inventory error:",
+              error,
+            );
+
+            cards.forEach(
+              (
+                card,
+              ) => {
+                if (
+                  card.dataset
+                    .productStatus !==
+                  "available"
+                ) {
+                  return;
+                }
+
+                updateCardAvailability(
+                  card,
+                  "no disponible",
+                  "error",
+                );
+              },
+            );
+          }
+        }
+
+        function initializeImages(): void {
+          const images =
+            document.querySelectorAll<HTMLImageElement>(
+              "[data-product-image]",
+            );
+
+          images.forEach(
             (
-              card,
+              image,
             ) => {
               if (
-                card.dataset
-                  .productStatus !==
-                "available"
+                image.dataset
+                  .fallbackInitialized ===
+                "true"
               ) {
                 return;
               }
 
-              updateCardAvailability(
-                card,
-                "Disponibilidad no verificada",
+              image.dataset
+                .fallbackInitialized =
+                "true";
+
+              const handleError =
+                (): void => {
+                  image.style.display =
+                    "none";
+                };
+
+              image.addEventListener(
                 "error",
+                handleError,
               );
+
+              if (
+                image.complete &&
+                image.naturalWidth ===
+                  0
+              ) {
+                handleError();
+              }
             },
           );
         }
-      }
 
-      // ======================================================
-      // IMAGE FALLBACK
-      // ======================================================
-
-      function initializeImages(): void {
-        const images =
-          document.querySelectorAll<HTMLImageElement>(
-            "[data-product-image]",
-          );
-
-        images.forEach(
-          (
-            image,
-          ) => {
-            function handleError(): void {
-              image.style.display =
-                "none";
-            }
-
-            image.addEventListener(
-              "error",
-              handleError,
-            );
-
-            if (
-              image.complete &&
-              image.naturalWidth ===
-                0
-            ) {
-              handleError();
-            }
-          },
-        );
-      }
-
-      // ======================================================
-      // START
-      // ======================================================
-
-      initializeShopPage();
-
-      initializeImages();
-
-      document.addEventListener(
-        "astro:page-load",
-        () => {
-          initializeShopPage();
+        function initializeShop(): void {
+          void loadInventory();
 
           initializeImages();
-        },
-      );
-    </script>
+        }
+
+        initializeShop();
+
+        document.addEventListener(
+          "astro:page-load",
+          initializeShop,
+        );
+      </script>
+    </div>
   </main>
 
   <Footer />
@@ -800,8 +709,10 @@ function getProductMeta(
     min-height:
       100vh;
 
-    padding-top:
-      5rem;
+    padding:
+      7rem
+      0
+      12rem;
 
     background:
       #ffffff;
@@ -820,14 +731,10 @@ function getProductMeta(
       none !important;
   }
 
-  /* ============================================================
-     HEADER
-  ============================================================ */
-
-  .shop-header {
+  .shop-shell {
     width:
       min(
-        1440px,
+        1500px,
         calc(
           100% - 5rem
         )
@@ -835,80 +742,29 @@ function getProductMeta(
 
     margin:
       0 auto;
-
-    padding:
-      3rem
-      0
-      4rem;
-
-    border-bottom:
-      1px solid
-      #dedede;
   }
 
-  .shop-header-meta {
+  /* ============================================================
+     HEADER
+  ============================================================ */
+
+  .shop-header {
     display:
-      grid;
+      flex;
 
-    grid-template-columns:
-      1fr
-      1fr
-      auto;
-
-    gap:
-      1rem;
-
-    margin-bottom:
-      3rem;
-
-    color:
-      #777777;
-
-    font-family:
-      "IBM Plex Mono",
-      monospace;
-
-    font-size:
-      0.56rem;
-
-    letter-spacing:
-      0.1em;
-
-    text-transform:
-      uppercase;
-  }
-
-  .shop-header-meta
-    span:nth-child(2) {
-    text-align:
-      center;
-  }
-
-  .shop-header-content {
-    display:
-      grid;
-
-    grid-template-columns:
-      minmax(
-        0,
-        1.25fr
-      )
-      minmax(
-        250px,
-        0.75fr
-      );
+    justify-content:
+      space-between;
 
     align-items:
-      end;
+      flex-end;
 
-    gap:
-      4rem;
+    padding:
+      2rem
+      0
+      9rem;
   }
 
   .shop-header h1 {
-    max-width:
-      900px;
-
     margin:
       0;
 
@@ -921,111 +777,125 @@ function getProductMeta(
 
     font-size:
       clamp(
-        3.5rem,
-        7.5vw,
-        8rem
+        5rem,
+        10vw,
+        11rem
       );
 
     font-weight:
       400;
 
     line-height:
-      0.88;
+      0.8;
 
     letter-spacing:
-      -0.065em;
+      -0.075em;
   }
 
-  .shop-header-content p {
-    max-width:
-      390px;
-
-    margin:
-      0
-      0
+  .shop-count {
+    margin-bottom:
       0.5rem;
 
     color:
-      #666666;
+      #999999;
 
     font-family:
-      "Inter",
-      sans-serif;
+      "IBM Plex Mono",
+      monospace;
 
     font-size:
-      0.76rem;
+      0.5rem;
 
-    line-height:
-      1.65;
+    letter-spacing:
+      0.08em;
   }
 
   /* ============================================================
-     GRID
+     FLOATING GALLERY
   ============================================================ */
 
-  .product-grid {
+  .floating-gallery {
     display:
       grid;
 
     grid-template-columns:
       repeat(
-        4,
+        12,
         minmax(
           0,
           1fr
         )
       );
 
-    width:
-      min(
-        1440px,
-        calc(
-          100% - 5rem
-        )
-      );
+    column-gap:
+      1.5rem;
 
-    margin:
-      0 auto;
-
-    padding-bottom:
+    row-gap:
       8rem;
+
+    align-items:
+      start;
   }
 
-  /* ============================================================
-     CARD
-  ============================================================ */
-
-  .product-card {
+  .product-piece {
     min-width:
       0;
-
-    padding:
-      1.5rem
-      1.25rem
-      3rem;
-
-    border-right:
-      1px solid
-      #e3e3e3;
-
-    border-bottom:
-      1px solid
-      #e3e3e3;
-  }
-
-  .product-card:nth-child(
-    4n + 1
-  ) {
-    border-left:
-      1px solid
-      #e3e3e3;
   }
 
   /* ============================================================
-     IMAGE
+     ASYMMETRIC COMPOSITION
   ============================================================ */
 
-  .product-image-link {
+  .product-piece--1 {
+    grid-column:
+      1 / 5;
+  }
+
+  .product-piece--2 {
+    grid-column:
+      6 / 10;
+
+    margin-top:
+      7rem;
+  }
+
+  .product-piece--3 {
+    grid-column:
+      10 / 13;
+
+    margin-top:
+      1.5rem;
+  }
+
+  .product-piece--4 {
+    grid-column:
+      2 / 6;
+
+    margin-top:
+      3rem;
+  }
+
+  .product-piece--5 {
+    grid-column:
+      7 / 12;
+
+    margin-top:
+      -1rem;
+  }
+
+  .product-piece--6 {
+    grid-column:
+      1 / 4;
+
+    margin-top:
+      5rem;
+  }
+
+  /* ============================================================
+     LINK
+  ============================================================ */
+
+  .product-link {
     display:
       block;
 
@@ -1034,14 +904,27 @@ function getProductMeta(
 
     text-decoration:
       none;
+
+    outline:
+      none;
   }
 
-  .product-image-wrapper {
+  .product-link:focus-visible {
+    outline:
+      1px solid
+      #777777;
+
+    outline-offset:
+      5px;
+  }
+
+  /* ============================================================
+     IMAGE
+  ============================================================ */
+
+  .image-shell {
     position:
       relative;
-
-    aspect-ratio:
-      4 / 5;
 
     overflow:
       hidden;
@@ -1050,7 +933,43 @@ function getProductMeta(
       #f3f3f3;
   }
 
-  .product-image-placeholder {
+  .product-piece--1
+    .image-shell {
+    aspect-ratio:
+      4 / 5;
+  }
+
+  .product-piece--2
+    .image-shell {
+    aspect-ratio:
+      1 / 1.15;
+  }
+
+  .product-piece--3
+    .image-shell {
+    aspect-ratio:
+      4 / 5.4;
+  }
+
+  .product-piece--4
+    .image-shell {
+    aspect-ratio:
+      1 / 1.1;
+  }
+
+  .product-piece--5
+    .image-shell {
+    aspect-ratio:
+      5 / 4;
+  }
+
+  .product-piece--6
+    .image-shell {
+    aspect-ratio:
+      4 / 5;
+  }
+
+  .image-placeholder {
     position:
       absolute;
 
@@ -1064,28 +983,28 @@ function getProductMeta(
       center;
 
     color:
-      #bcbcbc;
+      #c1c1c1;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
     font-size:
-      0.58rem;
+      0.52rem;
 
     letter-spacing:
-      0.16em;
+      0.14em;
   }
 
   .product-image {
     position:
-      absolute;
+      relative;
 
     z-index:
       1;
 
-    inset:
-      0;
+    display:
+      block;
 
     width:
       100%;
@@ -1098,39 +1017,34 @@ function getProductMeta(
 
     transition:
       transform
-      500ms
-      cubic-bezier(
-        0.22,
-        1,
-        0.36,
-        1
-      );
-  }
-
-  .product-card:hover
-    .product-image {
-    transform:
-      scale(
-        1.015
-      );
+        700ms
+        cubic-bezier(
+          0.22,
+          1,
+          0.36,
+          1
+        ),
+      filter
+        500ms
+        ease;
   }
 
   /* ============================================================
-     SOLD OUT OVERLAY
+     SOLD OUT
   ============================================================ */
 
-  .product-status-overlay {
+  .status-badge {
     position:
       absolute;
 
     z-index:
-      2;
+      4;
+
+    top:
+      0.8rem;
 
     right:
-      0.7rem;
-
-    bottom:
-      0.7rem;
+      0.8rem;
 
     padding:
       0.45rem
@@ -1141,7 +1055,7 @@ function getProductMeta(
         255,
         255,
         255,
-        0.94
+        0.95
       );
 
     color:
@@ -1152,229 +1066,261 @@ function getProductMeta(
       monospace;
 
     font-size:
-      0.5rem;
+      0.47rem;
 
     letter-spacing:
-      0.1em;
+      0.06em;
+
+    text-transform:
+      lowercase;
   }
 
-  .product-status-overlay[hidden] {
+  .status-badge[
+    hidden
+  ] {
     display:
       none;
   }
 
-  .product-card.is-sold-out
+  .product-piece.is-sold-out
     .product-image {
+    filter:
+      grayscale(
+        0.25
+      );
+
     opacity:
-      0.5;
+      0.62;
   }
 
   /* ============================================================
-     INFO
+     HOVER INFORMATION
   ============================================================ */
 
-  .product-info {
-    padding-top:
-      1rem;
+  .product-hover {
+    position:
+      absolute;
+
+    z-index:
+      3;
+
+    right:
+      0.75rem;
+
+    bottom:
+      0.75rem;
+
+    left:
+      0.75rem;
+
+    padding:
+      1rem
+      1.05rem;
+
+    background:
+      rgba(
+        255,
+        255,
+        255,
+        0.96
+      );
+
+    backdrop-filter:
+      blur(
+        10px
+      );
+
+    opacity:
+      0;
+
+    transform:
+      translateY(
+        8px
+      );
+
+    transition:
+      opacity
+        300ms ease,
+      transform
+        400ms
+        cubic-bezier(
+          0.22,
+          1,
+          0.36,
+          1
+        );
   }
 
-  .product-info-top {
+  .hover-meta {
     display:
       flex;
 
     justify-content:
       space-between;
 
-    align-items:
-      flex-start;
-
     gap:
-      1.2rem;
-  }
+      1rem;
 
-  .product-meta {
-    margin:
-      0
-      0
-      0.4rem;
+    margin-bottom:
+      0.75rem;
 
     color:
-      #999999;
+      #838383;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
     font-size:
-      0.49rem;
+      0.45rem;
+
+    line-height:
+      1.3;
 
     letter-spacing:
-      0.09em;
+      0.05em;
 
     text-transform:
-      uppercase;
+      lowercase;
   }
 
-  .product-info h2 {
+  .hover-main {
+    display:
+      grid;
+
+    grid-template-columns:
+      minmax(
+        0,
+        1fr
+      )
+      auto;
+
+    gap:
+      1rem;
+
+    align-items:
+      start;
+  }
+
+  .hover-main h2 {
     margin:
       0;
+
+    color:
+      #111111;
 
     font-family:
       "Inter",
       sans-serif;
 
     font-size:
-      0.78rem;
+      clamp(
+        0.9rem,
+        1.25vw,
+        1.2rem
+      );
 
     font-weight:
       500;
 
     line-height:
-      1.35;
+      1.2;
+
+    letter-spacing:
+      -0.025em;
   }
 
-  .product-info h2 a {
+  .hover-arrow {
     color:
-      #111111;
-
-    text-decoration:
-      none;
-  }
-
-  .product-subtitle {
-    margin:
-      0.35rem
-      0
-      0;
-
-    color:
-      #888888;
-
-    font-family:
-      "Inter",
-      sans-serif;
-
-    font-size:
-      0.62rem;
-
-    line-height:
-      1.4;
-  }
-
-  .product-price {
-    flex-shrink:
-      0;
-
-    margin:
-      0;
-
-    color:
-      #444444;
-
-    font-family:
-      "Inter",
-      sans-serif;
-
-    font-size:
-      0.65rem;
-
-    white-space:
-      nowrap;
-  }
-
-  /* ============================================================
-     BOTTOM
-  ============================================================ */
-
-  .product-info-bottom {
-    display:
-      flex;
-
-    justify-content:
-      space-between;
-
-    align-items:
-      center;
-
-    gap:
-      1rem;
-
-    margin-top:
-      1.3rem;
-
-    padding-top:
-      0.8rem;
-
-    border-top:
-      1px solid
-      #ebebeb;
-  }
-
-  .availability {
-    color:
-      #777777;
+      #555555;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
     font-size:
-      0.5rem;
-
-    letter-spacing:
-      0.07em;
-
-    text-transform:
-      uppercase;
+      0.65rem;
   }
 
-  .availability[
+  .hover-price {
+    margin-top:
+      1.1rem;
+
+    padding-top:
+      0.75rem;
+
+    border-top:
+      1px solid
+      #dddddd;
+
+    color:
+      #333333;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.55rem;
+  }
+
+  /* ============================================================
+     HOVER
+  ============================================================ */
+
+  @media (
+    hover: hover
+  ) and (
+    pointer: fine
+  ) {
+    .product-link:hover
+      .product-image {
+      transform:
+        scale(
+          1.025
+        );
+    }
+
+    .product-link:hover
+      .product-hover,
+    .product-link:focus-visible
+      .product-hover {
+      opacity:
+        1;
+
+      transform:
+        translateY(
+          0
+        );
+    }
+  }
+
+  /* ============================================================
+     STATES
+  ============================================================ */
+
+  [data-product-availability][
     data-state="available"
   ] {
     color:
       #444444;
   }
 
-  .availability[
+  [data-product-availability][
     data-state="last-unit"
   ] {
     color:
       #222222;
   }
 
-  .availability[
+  [data-product-availability][
     data-state="sold-out"
-  ] {
-    color:
-      #999999;
-  }
-
-  .availability[
+  ],
+  [data-product-availability][
     data-state="error"
   ] {
     color:
       #999999;
-  }
-
-  .product-view-link {
-    flex-shrink:
-      0;
-
-    color:
-      #555555;
-
-    font-family:
-      "Inter",
-      sans-serif;
-
-    font-size:
-      0.58rem;
-
-    text-decoration:
-      underline;
-
-    text-underline-offset:
-      0.18rem;
   }
 
   /* ============================================================
@@ -1385,47 +1331,70 @@ function getProductMeta(
     max-width:
       1050px
   ) {
-    .shop-header,
-    .product-grid {
+    .shop-shell {
       width:
         calc(
           100% - 2.5rem
         );
     }
 
-    .product-grid {
+    .floating-gallery {
       grid-template-columns:
         repeat(
-          2,
+          8,
           minmax(
             0,
             1fr
           )
         );
+
+      row-gap:
+        5rem;
     }
 
-    .product-card:nth-child(
-      4n + 1
-    ) {
-      border-left:
+    .product-piece--1 {
+      grid-column:
+        1 / 5;
+    }
+
+    .product-piece--2 {
+      grid-column:
+        5 / 9;
+
+      margin-top:
+        4rem;
+    }
+
+    .product-piece--3 {
+      grid-column:
+        2 / 5;
+
+      margin-top:
         0;
     }
 
-    .product-card:nth-child(
-      2n + 1
-    ) {
-      border-left:
-        1px solid
-        #e3e3e3;
+    .product-piece--4 {
+      grid-column:
+        5 / 9;
+
+      margin-top:
+        3rem;
     }
 
-    .shop-header-content {
-      grid-template-columns:
-        1fr
-        0.6fr;
+    .product-piece--5 {
+      grid-column:
+        1 / 6;
 
-      gap:
-        2rem;
+      margin-top:
+        0;
+    }
+
+    .product-piece--6 {
+      grid-column:
+        6 / 9;
+
+      margin-top:
+        4rem;
     }
   }
 
@@ -1435,15 +1404,16 @@ function getProductMeta(
 
   @media (
     max-width:
-      600px
+      700px
   ) {
     .shop-page {
-      padding-top:
-        4rem;
+      padding:
+        5rem
+        0
+        7rem;
     }
 
-    .shop-header,
-    .product-grid {
+    .shop-shell {
       width:
         calc(
           100% - 1.5rem
@@ -1454,37 +1424,15 @@ function getProductMeta(
       padding:
         2rem
         0
-        3rem;
-    }
-
-    .shop-header-meta {
-      margin-bottom:
-        2rem;
-    }
-
-    .shop-header-content {
-      display:
-        block;
+        5rem;
     }
 
     .shop-header h1 {
       font-size:
-        clamp(
-          3.4rem,
-          16vw,
-          5.5rem
-        );
+        22vw;
     }
 
-    .shop-header-content p {
-      max-width:
-        310px;
-
-      margin-top:
-        1.8rem;
-    }
-
-    .product-grid {
+    .floating-gallery {
       grid-template-columns:
         repeat(
           2,
@@ -1494,49 +1442,136 @@ function getProductMeta(
           )
         );
 
-      padding-bottom:
-        5rem;
+      gap:
+        3.5rem
+        0.85rem;
     }
 
-    .product-card {
-      padding:
-        0.75rem
-        0.55rem
-        2rem;
-    }
-
-    .product-info-top {
-      display:
-        block;
-    }
-
-    .product-price {
-      margin-top:
-        0.55rem;
-    }
-
-    .product-info-bottom {
-      display:
-        block;
-    }
-
-    .product-view-link {
-      display:
-        inline-block;
+    .product-piece,
+    .product-piece--1,
+    .product-piece--2,
+    .product-piece--3,
+    .product-piece--4,
+    .product-piece--5,
+    .product-piece--6 {
+      grid-column:
+        auto;
 
       margin-top:
-        0.55rem;
+        0;
     }
 
-    .product-status-overlay {
+    .product-piece:nth-child(
+      3n + 2
+    ) {
+      transform:
+        translateY(
+          2.5rem
+        );
+    }
+
+    .product-piece--1
+      .image-shell,
+    .product-piece--2
+      .image-shell,
+    .product-piece--3
+      .image-shell,
+    .product-piece--4
+      .image-shell,
+    .product-piece--5
+      .image-shell,
+    .product-piece--6
+      .image-shell {
+      aspect-ratio:
+        4 / 5;
+    }
+
+    /*
+      En móvil la información deja de
+      ser hover y forma parte de la pieza.
+    */
+
+    .image-shell {
+      overflow:
+        visible;
+    }
+
+    .product-hover {
+      position:
+        relative;
+
       right:
-        0.45rem;
+        auto;
 
       bottom:
-        0.45rem;
+        auto;
+
+      left:
+        auto;
+
+      margin-top:
+        0.8rem;
+
+      padding:
+        0;
+
+      background:
+        transparent;
+
+      backdrop-filter:
+        none;
+
+      opacity:
+        1;
+
+      transform:
+        none;
+    }
+
+    .hover-meta {
+      margin-bottom:
+        0.5rem;
 
       font-size:
-        0.44rem;
+        0.42rem;
+    }
+
+    .hover-main h2 {
+      font-size:
+        0.82rem;
+
+      line-height:
+        1.3;
+    }
+
+    .hover-arrow {
+      font-size:
+        0.55rem;
+    }
+
+    .hover-price {
+      margin-top:
+        0.7rem;
+
+      padding-top:
+        0;
+
+      border-top:
+        0;
+
+      font-size:
+        0.48rem;
+    }
+
+    .status-badge {
+      top:
+        0.55rem;
+
+      right:
+        0.55rem;
+
+      font-size:
+        0.42rem;
     }
   }
 
@@ -1548,7 +1583,8 @@ function getProductMeta(
     prefers-reduced-motion:
       reduce
   ) {
-    .product-image {
+    .product-image,
+    .product-hover {
       transition-duration:
         0.01ms !important;
     }

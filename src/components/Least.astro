@@ -6,7 +6,11 @@ const works = [
       "Documental acerca del estilo de estética degradada inspirada en el vaporwave",
     image: "/images/Signalwave.jpg",
     link: "https://youtu.be/lH1kehduaes",
-    stats: { views: "1.7k", likes: "133", duration: "33min" }
+    stats: {
+      views: "1.7k",
+      likes: "133",
+      duration: "33 min",
+    },
   },
   {
     title: "Kraftwerk | Inicios de la Electrónica Moderna",
@@ -14,7 +18,11 @@ const works = [
       "Película donde se comenta la carrera de Kraftwerk canción por canción",
     image: "/images/kraftwerk.jpg",
     link: "https://youtu.be/mJOw439YJNI",
-    stats: { views: "337k", likes: "9.7k", duration: "92min" }
+    stats: {
+      views: "337k",
+      likes: "9.7k",
+      duration: "92 min",
+    },
   },
   {
     title: "Una Breve Historia del Álbum Conceptual",
@@ -22,15 +30,24 @@ const works = [
       "Entendimiento del concepto en la música a lo largo de la historia",
     image: "/images/concept.png",
     link: "https://youtu.be/4i0i8vqY6RQ",
-    stats: { views: "1.3k", likes: "77", duration: "18min" }
+    stats: {
+      views: "1.3k",
+      likes: "77",
+      duration: "18 min",
+    },
   },
   {
-    title: "El Peligro de la Estética Liminal: Hauntología y la Lenta Cancelación del Futuro",
+    title:
+      "El Peligro de la Estética Liminal: Hauntología y la Lenta Cancelación del Futuro",
     description:
       "Entendimiento de cómo los espacios liminales definen nuestro sentir actual",
     image: "/images/liminal.jpg",
     link: "https://youtu.be/KI3dAr2Yc_k",
-    stats: { views: "2.9k", likes: "297", duration: "16min" }
+    stats: {
+      views: "2.9k",
+      likes: "297",
+      duration: "16 min",
+    },
   },
   {
     title: "Nipper: El Perro Icónico",
@@ -38,7 +55,11 @@ const works = [
       "Historia de Nipper, la mascota de RCA presente en numerosos dispositivos",
     image: "/images/nipper.png",
     link: "https://youtu.be/jhZn5LIUj4k",
-    stats: { views: "8k", likes: "275", duration: "5min" }
+    stats: {
+      views: "8k",
+      likes: "275",
+      duration: "5 min",
+    },
   },
   {
     title: "La Música de Huesos (URSS)",
@@ -46,118 +67,1775 @@ const works = [
       "Historia de los vinilos de radiografías con música occidental, producidos en la Unión Soviética",
     image: "/images/bones.png",
     link: "https://youtu.be/4i0i8vqY6RQ",
-    stats: { views: "1.1k", likes: "48", duration: "7min" }
+    stats: {
+      views: "1.1k",
+      likes: "48",
+      duration: "7 min",
+    },
   },
 ];
 
 const futureWorks = [
   {
     title: "Vaporwave: La historia no contada",
-    description: "Reboot del documental del 2016",
-    progress: 70
+    description:
+      "Reboot del documental del 2016",
+    progress: 70,
   },
 ];
 ---
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-  const cards = document.querySelectorAll<HTMLElement>(".work-card");
 
-  cards.forEach((card) => {
-    let tapped = false;
+<section
+  class="portfolio"
+  data-portfolio
+>
+  <div class="portfolio-shell">
 
-    card.addEventListener("click", (e) => {
-      if (window.innerWidth < 768) {
-        if (!tapped) {
-          e.preventDefault(); 
-          tapped = true;
-          card.classList.add("hover"); 
-          setTimeout(() => (tapped = false), 8000); 
-        } else {
-          const link = card.dataset.link; 
-          if (link) window.open(link, "_blank");
-        }
-      }
-    });
-  });
-});
+    <!-- ======================================================
+         TOP BAR
+    ======================================================= -->
 
-</script>
+    <div class="topbar">
+      <div class="topbar-group">
+        <span class="leader"></span>
 
-
-<section class="bg-white text-black py-12 px-6 helvetica">  
-  <div class="max-w-6xl mx-auto text-center mb-6">
-    <h2 class="text-4xl md:text-5xl font-bold mb-4">Portafolio</h2>
-    <p class="text-lg opacity-80">
-      Proyectos que forman parte de la historia de ATB como referencias
-    </p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-    {works.map((work) => (
-      <a
-        href={work.link}
-        class="relative group overflow-hidden rounded-xl shadow-lg work-card"
-        target="_blank"
-        data-link={work.link}
-      >
-      <img
-        src={work.image}
-        alt={work.title}
-        class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-125"
-      />
-        <div class="absolute inset-0 bg-white/95 opacity-0 group-hover:opacity-100 transition duration-500 flex flex-col items-center justify-center text-center p-6">
-          <h3 class="text-xl font-bold mb-2">{work.title}</h3>
-          <p class="text-sm text-gray-700 mb-4">{work.description}</p>
-          <div class="flex space-x-6 text-sm text-gray-700">
-            <!-- stats -->
-            <div class="flex items-center space-x-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <span>{work.stats.views}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 18.657l-6.828-6.829a4 4 0 010-5.656z"/>
-              </svg>
-              <span>{work.stats.likes}</span>
-            </div>
-            <div class="flex items-center space-x-1">
-              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>{work.stats.duration}</span>
-            </div>
-          </div>
-        </div>
-      </a>
-    ))}
-  </div>
-</section>
-
-<section class="bg-white text-black py-12 px-6 helvetica">
-  <div class="max-w-6xl mx-auto text-center mb-6">
-    <h2 class="text-4xl md:text-5xl font-bold mb-4">En progreso</h2>
-    <p class="text-lg opacity-80">
-      Proyectos en desarrollo por el equipo de ATB a un futuro cercano
-    </p>
-  </div>
-
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-    {futureWorks.map((fw) => (
-      <div class="p-6 border rounded-xl bg-gray-50 hover:bg-gray-100 transition flex flex-col">
-        <h3 class="text-xl font-semibold mb-2">{fw.title}</h3>
-        <p class="text-sm text-gray-700 mb-4">{fw.description}</p>
-        <!-- Barra de progreso -->
-        <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-          <div
-            class="bg-black h-3 rounded-full transition-all duration-700"
-            style={`width: ${fw.progress}%`}
-          ></div>
-        </div>
-        <span class="text-xs text-gray-600 mt-2 text-right">{fw.progress}%</span>
+        <span>
+          archivo audiovisual
+        </span>
       </div>
-    ))}
+
+      <div class="topbar-group topbar-right">
+
+        <span class="leader"></span>
+      </div>
+    </div>
+
+    <!-- ======================================================
+         HEADER
+    ======================================================= -->
+
+    <header class="portfolio-header">
+      <div class="header-main">
+        <h2>
+          Portafolio
+          <br />
+          audiovisual.
+        </h2>
+      </div>
+
+      <div class="header-copy">
+        <p>
+          Documentales, piezas y ensayos audiovisuales que
+          forman parte del archivo de ATB.
+        </p>
+      </div>
+    </header>
+
+    <!-- ======================================================
+         ARCHIVE
+    ======================================================= -->
+
+    <section class="archive-section">
+      <div class="section-line">
+      </div>
+
+      <div class="archive-list">
+        {
+          works.map(
+            (
+              work,
+              index,
+            ) => {
+              const number =
+                String(
+                  index + 1,
+                ).padStart(
+                  2,
+                  "0",
+                );
+
+              const panelId =
+                `work-panel-${index}`;
+
+              return (
+                <article
+                  class:list={[
+                    "archive-item",
+                    {
+                      "is-open":
+                        index === 0,
+                    },
+                  ]}
+                  data-work-item
+                >
+                  <!-- =========================================
+                       ROW
+                  ========================================== -->
+
+                  <button
+                    type="button"
+                    class="archive-row"
+                    data-work-toggle
+                    aria-expanded={
+                      index === 0
+                        ? "true"
+                        : "false"
+                    }
+                    aria-controls={
+                      panelId
+                    }
+                  >
+                    <span class="archive-number">
+                      {number}
+                    </span>
+
+                    <span class="archive-title">
+                      {work.title}
+                    </span>
+
+                    <span class="archive-type">
+                      documental
+                    </span>
+
+                    <span class="archive-duration">
+                      {work.stats.duration}
+                    </span>
+
+                    <span
+                      class="archive-toggle"
+                      aria-hidden="true"
+                    >
+                      <span class="toggle-closed">
+                        +
+                      </span>
+
+                      <span class="toggle-open">
+                        −
+                      </span>
+                    </span>
+                  </button>
+
+                  <!-- =========================================
+                       EXPANDED INFORMATION
+                  ========================================== -->
+
+                  <div
+                    id={panelId}
+                    class="archive-detail"
+                    data-work-detail
+                    hidden={
+                      index !== 0
+                    }
+                  >
+                    <div class="detail-inner">
+
+                      <!-- IMAGE -->
+
+                      <a
+                        href={work.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="detail-image-link"
+                        aria-label={`Ver ${work.title} en YouTube`}
+                      >
+                        <div class="detail-image-shell">
+                          <img
+                            src={work.image}
+                            alt={work.title}
+                            class="detail-image"
+                            loading={
+                              index === 0
+                                ? "eager"
+                                : "lazy"
+                            }
+                          />
+
+                          <span class="detail-image-number">
+                            {number}
+                          </span>
+
+                          <span class="detail-image-open">
+                            ↗
+                          </span>
+                        </div>
+                      </a>
+
+                      <!-- INFORMATION -->
+
+                      <div class="detail-copy">
+                        <div class="detail-meta">
+                          <span>
+                            documental
+                          </span>
+
+                          <span>
+                            youtube
+                          </span>
+                        </div>
+
+                        <h3>
+                          {work.title}
+                        </h3>
+
+                        <p class="detail-description">
+                          {work.description}
+                        </p>
+
+                        <div class="detail-stats">
+                          <div>
+                            <span class="stat-label">
+                              vistas
+                            </span>
+
+                            <span class="stat-value">
+                              {work.stats.views}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span class="stat-label">
+                              me gusta
+                            </span>
+
+                            <span class="stat-value">
+                              {work.stats.likes}
+                            </span>
+                          </div>
+
+                          <div>
+                            <span class="stat-label">
+                              duración
+                            </span>
+
+                            <span class="stat-value">
+                              {work.stats.duration}
+                            </span>
+                          </div>
+                        </div>
+
+                        <a
+                          href={work.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="watch-link"
+                        >
+                          ver documental ↗
+                        </a>
+                      </div>
+
+                    </div>
+                  </div>
+                </article>
+              );
+            },
+          )
+        }
+      </div>
+    </section>
+
+    <!-- ======================================================
+         IN PROGRESS
+    ======================================================= -->
+
+    <section class="future-section">
+      <div class="future-heading">
+        <div>
+          <span class="micro-label">
+            producción actual
+          </span>
+
+          <h2>
+            En progreso.
+          </h2>
+        </div>
+
+        <p>
+          Proyectos actualmente en desarrollo dentro
+          del archivo de ATB.
+        </p>
+      </div>
+
+      <div class="future-list">
+        {
+          futureWorks.map(
+            (
+              work,
+              index,
+            ) => (
+              <article class="future-row">
+                <span class="future-number">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+
+                <div class="future-project">
+                  <span class="micro-label">
+                    documental
+                  </span>
+
+                  <h3>
+                    {work.title}
+                  </h3>
+
+                  <p>
+                    {work.description}
+                  </p>
+                </div>
+
+                <div class="future-progress">
+                  <div class="progress-meta">
+                    <span>
+                      avance
+                    </span>
+
+                    <span>
+                      {work.progress}%
+                    </span>
+                  </div>
+
+                  <div class="progress-track">
+                    <div
+                      class="progress-fill"
+                      style={`width: ${work.progress}%`}
+                    ></div>
+                  </div>
+                </div>
+              </article>
+            ),
+          )
+        }
+      </div>
+    </section>
+
   </div>
+
+  <!-- ========================================================
+       INTERACTION
+  ========================================================= -->
+
+  <script>
+    function initializePortfolio(): void {
+      const portfolio =
+        document.querySelector<HTMLElement>(
+          "[data-portfolio]",
+        );
+
+      if (!portfolio) {
+        return;
+      }
+
+      if (
+        portfolio.dataset
+          .initialized ===
+        "true"
+      ) {
+        return;
+      }
+
+      portfolio.dataset
+        .initialized =
+        "true";
+
+      const items =
+        Array.from(
+          portfolio.querySelectorAll<HTMLElement>(
+            "[data-work-item]",
+          ),
+        );
+
+      items.forEach(
+        (
+          item,
+        ) => {
+          const button =
+            item.querySelector<HTMLButtonElement>(
+              "[data-work-toggle]",
+            );
+
+          const detail =
+            item.querySelector<HTMLElement>(
+              "[data-work-detail]",
+            );
+
+          if (
+            !button ||
+            !detail
+          ) {
+            return;
+          }
+
+          button.addEventListener(
+            "click",
+            () => {
+              const isOpen =
+                item.classList.contains(
+                  "is-open",
+                );
+
+              /*
+                Close every item first.
+                This keeps the archive concise.
+              */
+
+              items.forEach(
+                (
+                  otherItem,
+                ) => {
+                  const otherButton =
+                    otherItem.querySelector<HTMLButtonElement>(
+                      "[data-work-toggle]",
+                    );
+
+                  const otherDetail =
+                    otherItem.querySelector<HTMLElement>(
+                      "[data-work-detail]",
+                    );
+
+                  otherItem.classList.remove(
+                    "is-open",
+                  );
+
+                  if (
+                    otherButton
+                  ) {
+                    otherButton.setAttribute(
+                      "aria-expanded",
+                      "false",
+                    );
+                  }
+
+                  if (
+                    otherDetail
+                  ) {
+                    otherDetail.hidden =
+                      true;
+                  }
+                },
+              );
+
+              /*
+                Clicking the already-open
+                item closes it.
+              */
+
+              if (
+                isOpen
+              ) {
+                return;
+              }
+
+              item.classList.add(
+                "is-open",
+              );
+
+              button.setAttribute(
+                "aria-expanded",
+                "true",
+              );
+
+              detail.hidden =
+                false;
+            },
+          );
+        },
+      );
+    }
+
+    initializePortfolio();
+
+    document.addEventListener(
+      "astro:page-load",
+      initializePortfolio,
+    );
+  </script>
 </section>
+
+<style>
+  /* ============================================================
+     ROOT
+  ============================================================ */
+
+  .portfolio {
+    width:
+      100%;
+
+    padding:
+      2rem
+      0
+      9rem;
+
+    background:
+      #ffffff;
+
+    color:
+      #111111;
+  }
+
+  .portfolio-shell {
+    width:
+      min(
+        1440px,
+        calc(
+          100% - 5rem
+        )
+      );
+
+    margin:
+      0 auto;
+  }
+
+  /* ============================================================
+     TOP BAR
+  ============================================================ */
+
+  .topbar {
+    display:
+      grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+
+    gap:
+      4rem;
+
+    padding-bottom:
+      1rem;
+
+    border-bottom:
+      1px solid
+      #dddddd;
+
+    color:
+      #858585;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+
+    line-height:
+      1;
+
+    letter-spacing:
+      0.07em;
+
+    text-transform:
+      lowercase;
+  }
+
+  .topbar-group {
+    display:
+      flex;
+
+    align-items:
+      center;
+
+    min-width:
+      0;
+  }
+
+  .topbar-right {
+    text-align:
+      right;
+  }
+
+  .leader {
+    flex:
+      1;
+
+    min-width:
+      2rem;
+
+    margin:
+      0
+      0.7rem;
+
+    border-bottom:
+      1px dotted
+      #bebebe;
+
+    transform:
+      translateY(
+        -1px
+      );
+  }
+
+  /* ============================================================
+     HEADER
+  ============================================================ */
+
+  .portfolio-header {
+    display:
+      grid;
+
+    grid-template-columns:
+      minmax(
+        0,
+        1.25fr
+      )
+      minmax(
+        280px,
+        0.55fr
+      );
+
+    align-items:
+      end;
+
+    gap:
+      clamp(
+        3rem,
+        8vw,
+        9rem
+      );
+
+    padding:
+      8rem
+      0
+      7rem;
+  }
+
+  .micro-label {
+    color:
+      #8e8e8e;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+
+    line-height:
+      1.3;
+
+    letter-spacing:
+      0.07em;
+
+    text-transform:
+      lowercase;
+  }
+
+  .header-main h2 {
+    margin:
+      1rem
+      0
+      0;
+
+    color:
+      #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        4.5rem,
+        8vw,
+        9rem
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      0.84;
+
+    letter-spacing:
+      -0.07em;
+  }
+
+  .header-copy {
+    padding-bottom:
+      0.4rem;
+  }
+
+  .header-copy > p {
+    max-width:
+      390px;
+
+    margin:
+      0;
+
+    color:
+      #6e6e6e;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.74rem;
+
+    line-height:
+      1.7;
+  }
+
+  .header-meta {
+    display:
+      flex;
+
+    justify-content:
+      space-between;
+
+    gap:
+      2rem;
+
+    margin-top:
+      2rem;
+
+    padding-top:
+      0.8rem;
+
+    border-top:
+      1px solid
+      #e3e3e3;
+
+    color:
+      #8a8a8a;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.48rem;
+
+    letter-spacing:
+      0.05em;
+
+    text-transform:
+      lowercase;
+  }
+
+  /* ============================================================
+     SECTION LINE
+  ============================================================ */
+
+  .section-line {
+    display:
+      flex;
+
+    justify-content:
+      space-between;
+
+    align-items:
+      center;
+
+    padding:
+      0.9rem
+      0;
+
+    border-top:
+      1px solid
+      #dcdcdc;
+
+    border-bottom:
+      1px solid
+      #dcdcdc;
+
+    color:
+      #888888;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+
+    letter-spacing:
+      0.06em;
+
+    text-transform:
+      lowercase;
+  }
+
+  /* ============================================================
+     ARCHIVE
+  ============================================================ */
+
+  .archive-section {
+    margin-bottom:
+      9rem;
+  }
+
+  .archive-item {
+    border-bottom:
+      1px solid
+      #e2e2e2;
+  }
+
+  /* ============================================================
+     ROW
+  ============================================================ */
+
+  .archive-row {
+    display:
+      grid;
+
+    grid-template-columns:
+      55px
+      minmax(
+        0,
+        1fr
+      )
+      140px
+      80px
+      30px;
+
+    align-items:
+      center;
+
+    width:
+      100%;
+
+    min-height:
+      3.5rem;
+
+    padding:
+      0;
+
+    border:
+      0;
+
+    background:
+      transparent;
+
+    color:
+      #454545;
+
+    cursor:
+      pointer;
+
+    text-align:
+      left;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.54rem;
+
+    line-height:
+      1.25;
+
+    transition:
+      background
+        180ms ease,
+      color
+        180ms ease;
+  }
+
+  .archive-row:hover {
+    background:
+      #fafafa;
+
+    color:
+      #111111;
+  }
+
+  .archive-row:focus-visible {
+    outline:
+      1px solid
+      #888888;
+
+    outline-offset:
+      -1px;
+  }
+
+  .archive-number {
+    color:
+      #a0a0a0;
+  }
+
+  .archive-title {
+    overflow:
+      hidden;
+
+    padding-right:
+      2rem;
+
+    text-overflow:
+      ellipsis;
+
+    white-space:
+      nowrap;
+  }
+
+  .archive-type,
+  .archive-duration {
+    color:
+      #868686;
+
+    text-align:
+      right;
+
+    text-transform:
+      lowercase;
+  }
+
+  .archive-toggle {
+    text-align:
+      right;
+
+    color:
+      #888888;
+
+    font-size:
+      0.72rem;
+  }
+
+  .toggle-open {
+    display:
+      none;
+  }
+
+  .archive-item.is-open
+    .toggle-closed {
+    display:
+      none;
+  }
+
+  .archive-item.is-open
+    .toggle-open {
+    display:
+      inline;
+  }
+
+  /* ============================================================
+     DETAIL
+  ============================================================ */
+
+  .archive-detail {
+    overflow:
+      hidden;
+  }
+
+  .archive-detail[hidden] {
+    display:
+      none;
+  }
+
+  .detail-inner {
+    display:
+      grid;
+
+    grid-template-columns:
+      minmax(
+        0,
+        0.9fr
+      )
+      minmax(
+        300px,
+        1.1fr
+      );
+
+    gap:
+      clamp(
+        3rem,
+        7vw,
+        8rem
+      );
+
+    padding:
+      2.5rem
+      55px
+      4rem;
+  }
+
+  /* ============================================================
+     DETAIL IMAGE
+  ============================================================ */
+
+  .detail-image-link {
+    display:
+      block;
+
+    align-self:
+      start;
+
+    color:
+      inherit;
+
+    text-decoration:
+      none;
+  }
+
+  .detail-image-shell {
+    position:
+      relative;
+
+    width:
+      100%;
+
+    aspect-ratio:
+      16 / 10;
+
+    overflow:
+      hidden;
+
+    background:
+      #f3f3f3;
+  }
+
+  .detail-image {
+    display:
+      block;
+
+    width:
+      100%;
+
+    height:
+      100%;
+
+    object-fit:
+      cover;
+
+    transition:
+      transform
+        650ms
+        cubic-bezier(
+          0.22,
+          1,
+          0.36,
+          1
+        );
+  }
+
+  .detail-image-link:hover
+    .detail-image {
+    transform:
+      scale(
+        1.018
+      );
+  }
+
+  .detail-image-number,
+  .detail-image-open {
+    position:
+      absolute;
+
+    z-index:
+      2;
+
+    top:
+      0.8rem;
+
+    color:
+      #ffffff;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.48rem;
+
+    letter-spacing:
+      0.06em;
+
+    mix-blend-mode:
+      difference;
+  }
+
+  .detail-image-number {
+    left:
+      0.8rem;
+  }
+
+  .detail-image-open {
+    right:
+      0.8rem;
+  }
+
+  /* ============================================================
+     DETAIL COPY
+  ============================================================ */
+
+  .detail-copy {
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    align-items:
+      flex-start;
+
+    padding:
+      0.2rem
+      0;
+  }
+
+  .detail-meta {
+    display:
+      flex;
+
+    gap:
+      0.65rem;
+
+    color:
+      #919191;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.48rem;
+
+    letter-spacing:
+      0.06em;
+
+    text-transform:
+      lowercase;
+  }
+
+  .detail-meta
+    span + span::before {
+    content:
+      "/";
+
+    margin-right:
+      0.65rem;
+
+    color:
+      #c0c0c0;
+  }
+
+  .detail-copy h3 {
+    max-width:
+      640px;
+
+    margin:
+      1.2rem
+      0
+      0;
+
+    color:
+      #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        1.7rem,
+        2.8vw,
+        3rem
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      1;
+
+    letter-spacing:
+      -0.045em;
+  }
+
+  .detail-description {
+    max-width:
+      510px;
+
+    margin:
+      1.6rem
+      0
+      0;
+
+    color:
+      #666666;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.75rem;
+
+    line-height:
+      1.7;
+  }
+
+  /* ============================================================
+     STATS
+  ============================================================ */
+
+  .detail-stats {
+    display:
+      grid;
+
+    grid-template-columns:
+      repeat(
+        3,
+        minmax(
+          0,
+          1fr
+        )
+      );
+
+    width:
+      100%;
+
+    max-width:
+      510px;
+
+    margin-top:
+      2.7rem;
+
+    border-top:
+      1px solid
+      #dddddd;
+
+    border-bottom:
+      1px solid
+      #dddddd;
+  }
+
+  .detail-stats > div {
+    display:
+      flex;
+
+    flex-direction:
+      column;
+
+    gap:
+      0.5rem;
+
+    padding:
+      0.85rem
+      0;
+
+    border-right:
+      1px solid
+      #e3e3e3;
+  }
+
+  .detail-stats > div:not(
+    :first-child
+  ) {
+    padding-left:
+      1rem;
+  }
+
+  .detail-stats > div:last-child {
+    border-right:
+      0;
+  }
+
+  .stat-label {
+    color:
+      #999999;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.46rem;
+
+    letter-spacing:
+      0.05em;
+
+    text-transform:
+      lowercase;
+  }
+
+  .stat-value {
+    color:
+      #333333;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.58rem;
+  }
+
+  /* ============================================================
+     WATCH
+  ============================================================ */
+
+  .watch-link {
+    display:
+      inline-block;
+
+    margin-top:
+      2.5rem;
+
+    color:
+      #111111;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.54rem;
+
+    letter-spacing:
+      0.04em;
+
+    text-decoration:
+      none;
+
+    text-transform:
+      lowercase;
+  }
+
+  .watch-link::after {
+    content:
+      "";
+
+    display:
+      block;
+
+    width:
+      100%;
+
+    height:
+      1px;
+
+    margin-top:
+      0.28rem;
+
+    background:
+      #111111;
+
+    transform:
+      scaleX(
+        0
+      );
+
+    transform-origin:
+      right;
+
+    transition:
+      transform
+        250ms ease;
+  }
+
+  .watch-link:hover::after {
+    transform:
+      scaleX(
+        1
+      );
+
+    transform-origin:
+      left;
+  }
+
+  /* ============================================================
+     FUTURE
+  ============================================================ */
+
+  .future-section {
+    border-top:
+      1px solid
+      #dcdcdc;
+  }
+
+  .future-heading {
+    display:
+      grid;
+
+    grid-template-columns:
+      minmax(
+        0,
+        1fr
+      )
+      320px;
+
+    align-items:
+      end;
+
+    gap:
+      4rem;
+
+    padding:
+      4.5rem
+      0
+      3rem;
+  }
+
+  .future-heading h2 {
+    margin:
+      0.65rem
+      0
+      0;
+
+    color:
+      #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      clamp(
+        3.5rem,
+        6vw,
+        6.5rem
+      );
+
+    font-weight:
+      400;
+
+    line-height:
+      0.88;
+
+    letter-spacing:
+      -0.065em;
+  }
+
+  .future-heading > p {
+    margin:
+      0;
+
+    color:
+      #727272;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.7rem;
+
+    line-height:
+      1.65;
+  }
+
+  .future-list {
+    border-top:
+      1px solid
+      #dddddd;
+  }
+
+  .future-row {
+    display:
+      grid;
+
+    grid-template-columns:
+      60px
+      minmax(
+        0,
+        1fr
+      )
+      minmax(
+        240px,
+        0.45fr
+      );
+
+    gap:
+      2rem;
+
+    align-items:
+      end;
+
+    padding:
+      2rem
+      0;
+
+    border-bottom:
+      1px solid
+      #dddddd;
+  }
+
+  .future-number {
+    align-self:
+      start;
+
+    color:
+      #999999;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.5rem;
+  }
+
+  .future-project h3 {
+    margin:
+      0.45rem
+      0
+      0;
+
+    color:
+      #111111;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      1.35rem;
+
+    font-weight:
+      500;
+
+    letter-spacing:
+      -0.025em;
+  }
+
+  .future-project p {
+    margin:
+      0.6rem
+      0
+      0;
+
+    color:
+      #777777;
+
+    font-family:
+      "Inter",
+      sans-serif;
+
+    font-size:
+      0.68rem;
+
+    line-height:
+      1.5;
+  }
+
+  .progress-meta {
+    display:
+      flex;
+
+    justify-content:
+      space-between;
+
+    margin-bottom:
+      0.7rem;
+
+    color:
+      #777777;
+
+    font-family:
+      "IBM Plex Mono",
+      monospace;
+
+    font-size:
+      0.48rem;
+
+    text-transform:
+      lowercase;
+  }
+
+  .progress-track {
+    width:
+      100%;
+
+    height:
+      1px;
+
+    background:
+      #d7d7d7;
+  }
+
+  .progress-fill {
+    height:
+      100%;
+
+    background:
+      #111111;
+  }
+
+  /* ============================================================
+     TABLET
+  ============================================================ */
+
+  @media (
+    max-width:
+      1050px
+  ) {
+    .portfolio-shell {
+      width:
+        calc(
+          100% - 2.5rem
+        );
+    }
+
+    .portfolio-header {
+      gap:
+        3rem;
+    }
+
+    .detail-inner {
+      gap:
+        3rem;
+
+      padding-right:
+        30px;
+
+      padding-left:
+        30px;
+    }
+  }
+
+  /* ============================================================
+     MOBILE
+  ============================================================ */
+
+  @media (
+    max-width:
+      700px
+  ) {
+    .portfolio {
+      padding:
+        1rem
+        0
+        6rem;
+    }
+
+    .portfolio-shell {
+      width:
+        calc(
+          100% - 1.5rem
+        );
+    }
+
+    .topbar {
+      grid-template-columns:
+        1fr;
+    }
+
+    .topbar-right {
+      display:
+        none;
+    }
+
+    .portfolio-header {
+      grid-template-columns:
+        1fr;
+
+      gap:
+        2.5rem;
+
+      padding:
+        5rem
+        0;
+    }
+
+    .header-main h2 {
+      font-size:
+        17vw;
+    }
+
+    .archive-row {
+      grid-template-columns:
+        32px
+        minmax(
+          0,
+          1fr
+        )
+        55px
+        22px;
+
+      min-height:
+        4rem;
+
+      font-size:
+        0.49rem;
+    }
+
+    .archive-type {
+      display:
+        none;
+    }
+
+    .archive-title {
+      padding-right:
+        0.75rem;
+
+      white-space:
+        normal;
+
+      line-height:
+        1.35;
+    }
+
+    .detail-inner {
+      grid-template-columns:
+        1fr;
+
+      gap:
+        2rem;
+
+      padding:
+        1.5rem
+        0
+        3rem;
+    }
+
+    .detail-copy h3 {
+      font-size:
+        2rem;
+    }
+
+    .detail-description {
+      max-width:
+        100%;
+    }
+
+    .detail-stats {
+      max-width:
+        100%;
+    }
+
+    .future-heading {
+      grid-template-columns:
+        1fr;
+
+      gap:
+        1.5rem;
+
+      padding-top:
+        3rem;
+    }
+
+    .future-row {
+      grid-template-columns:
+        35px
+        minmax(
+          0,
+          1fr
+        );
+
+      gap:
+        1rem;
+    }
+
+    .future-progress {
+      grid-column:
+        2;
+
+      margin-top:
+        1.2rem;
+    }
+  }
+
+  /* ============================================================
+     REDUCED MOTION
+  ============================================================ */
+
+  @media (
+    prefers-reduced-motion:
+      reduce
+  ) {
+    .detail-image,
+    .watch-link::after {
+      transition-duration:
+        0.01ms !important;
+    }
+  }
+</style>

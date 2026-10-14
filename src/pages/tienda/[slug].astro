@@ -104,7 +104,7 @@ function getCategoryLabel(): string {
     return "Objeto de producción";
   }
 
-  return "ATB Shop";
+  return "";
 }
 
 const categoryLabel =
@@ -161,10 +161,6 @@ const initialSize =
       >
         ← Tienda
       </a>
-
-      <span class="product-counter">
-        ATB SHOP
-      </span>
     </div>
 
     <!-- ======================================================
@@ -317,25 +313,6 @@ const initialSize =
           <p class="product-description">
             {product.description}
           </p>
-
-          <!-- ================================================
-               UNIQUE PIECE
-          ================================================= -->
-
-          {
-            isUnique && (
-              <div class="unique-piece-note">
-                <span>
-                  PIEZA ÚNICA
-                </span>
-
-                <p>
-                  Existe una sola unidad de esta pieza.
-                  Una vez vendida quedará marcada como agotada.
-                </p>
-              </div>
-            )
-          }
 
           <!-- ================================================
                COLORS

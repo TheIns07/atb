@@ -749,10 +749,40 @@ function getShippingAmount(
     return stripeShipping;
   }
 
+  /*
+   * Compatibilidad con el checkout actual.
+   */
+  const currentMetadata =
+    parseMetadataInteger(
+      session.metadata
+        ?.shipping_amount_cents,
+    );
+
+  if (
+    currentMetadata !==
+    null
+  ) {
+    return currentMetadata;
+  }
+
+  /*
+   * Compatibilidad con sesiones antiguas.
+   */
   return parseMetadataInteger(
     session.metadata
       ?.expected_shipping,
   );
+}
+
+function getExpectedShippingCountry(
+  session:
+    Stripe.Checkout.Session,
+): string | null {
+  return getString(
+    session.metadata
+      ?.shipping_country,
+  )?.toUpperCase() ??
+    null;
 }
 
 // ============================================================
@@ -797,16 +827,27 @@ function getShippingMethodName(
       session,
     );
 
+  const country =
+    getExpectedShippingCountry(
+      session,
+    );
+
   if (
     method ===
       "free" ||
     amountShipping ===
       0
   ) {
-    return "Envío estándar gratuito";
+    return country ===
+      "MX"
+      ? "Envío nacional gratuito"
+      : "Envío internacional gratuito";
   }
 
-  return "Envío estándar";
+  return country ===
+    "MX"
+    ? "Envío nacional"
+    : "Envío internacional";
 }
 
 // ============================================================
@@ -893,15 +934,54 @@ async function updateOrderShippingData(
   // COUNTRY
   // ========================================================
 
-  if (
-    country &&
-    country !==
-      "MX"
-  ) {
-    throw new Error(
-      `País de envío inesperado: ${country}.`,
-    );
-  }
+// ========================================================
+// COUNTRY
+// ========================================================
+
+const expectedCountry =
+  getExpectedShippingCountry(
+    session,
+  );
+
+const supportedCountries = [
+  "MX",
+  "US",
+  "CA",
+  "ES",
+];
+
+if (
+  !country
+) {
+  throw new Error(
+    `Checkout ${session.id} no contiene país de envío.`,
+  );
+}
+
+if (
+  !supportedCountries.includes(
+    country,
+  )
+) {
+  throw new Error(
+    `País de envío no soportado: ${country}.`,
+  );
+}
+
+/*
+ * La dirección escrita en Stripe tiene que coincidir
+ * con el país para el que calculamos el envío.
+ */
+
+if (
+  expectedCountry &&
+  country !==
+    expectedCountry
+) {
+  throw new Error(
+    `El país de envío no coincide. Esperado ${expectedCountry}, Stripe ${country}.`,
+  );
+}
 
   // ========================================================
   // ADDRESS
@@ -1663,22 +1743,42 @@ async function processPaidCheckout(
   // ========================================================
 
   const expectedSubtotal =
-    parseMetadataInteger(
-      session.metadata
-        ?.expected_subtotal,
-    );
+  parseMetadataInteger(
+    session.metadata
+      ?.subtotal_cents,
+  ) ??
+  parseMetadataInteger(
+    session.metadata
+      ?.expected_subtotal,
+  );
 
-  const expectedShipping =
-    parseMetadataInteger(
-      session.metadata
-        ?.expected_shipping,
-    );
+const expectedShipping =
+  parseMetadataInteger(
+    session.metadata
+      ?.shipping_amount_cents,
+  ) ??
+  parseMetadataInteger(
+    session.metadata
+      ?.expected_shipping,
+  );
 
-  const expectedTotal =
-    parseMetadataInteger(
-      session.metadata
-        ?.expected_total,
-    );
+const legacyExpectedTotal =
+  parseMetadataInteger(
+    session.metadata
+      ?.expected_total,
+  );
+
+const expectedTotal =
+  legacyExpectedTotal ??
+  (
+    expectedSubtotal !==
+      null &&
+    expectedShipping !==
+      null
+      ? expectedSubtotal +
+        expectedShipping
+      : null
+  );
 
   if (
     expectedSubtotal !==
@@ -1712,6 +1812,17 @@ async function processPaidCheckout(
       `Total no coincide. Esperado ${expectedTotal}, Stripe ${amountTotal}.`,
     );
   }
+
+  if (
+    amountSubtotal +
+      amountShipping !==
+    amountTotal
+  ) {
+    throw new Error(
+      `El total de Stripe no coincide: subtotal ${amountSubtotal} + envío ${amountShipping} != total ${amountTotal}.`,
+    );
+  }
+
 
   // ========================================================
   // CURRENCY

@@ -1,15 +1,15 @@
 // ============================================================
 // ATB SHOP
-// Catálogo central
+// CATÁLOGO CENTRAL
 //
 // IMPORTANTE:
-// Los precios están expresados en CENTAVOS.
+// Todos los precios están expresados en CENTAVOS.
 //
-// 100     = $1 MXN
-// 1000    = $10 MXN
-// 45000   = $450 MXN
-// 65000   = $650 MXN
-// 85000   = $850 MXN
+// 100   = $1 MXN
+// 1000  = $10 MXN
+// 50000 = $500 MXN
+// 55000 = $550 MXN
+// 80000 = $800 MXN
 // ============================================================
 
 // ============================================================
@@ -29,6 +29,45 @@ export type ProductStatus =
 export type InventoryMode =
   | "variants"
   | "single-item";
+
+// ============================================================
+// SHIPPING
+// ============================================================
+
+export type ProductShippingProfile =
+  | "document"
+  | "small-parcel"
+  | "apparel"
+  | "large-parcel";
+
+export type ProductShipping = {
+  /**
+   * Perfil usado para calcular el tipo de envío.
+   */
+  profile: ProductShippingProfile;
+
+  /**
+   * Peso TOTAL ya empacado.
+   *
+   * Se expresa en gramos.
+   *
+   * 0 = pendiente de medir.
+   */
+  weightGrams: number;
+
+  /**
+   * Dimensiones EXTERIORES del paquete.
+   *
+   * Se expresan en centímetros.
+   *
+   * 0 = pendiente de medir.
+   */
+  lengthCm: number;
+
+  widthCm: number;
+
+  heightCm: number;
+};
 
 // ============================================================
 // COLOR
@@ -56,33 +95,29 @@ export type ProductVariant = {
   /**
    * Precio expresado en centavos.
    *
-   * Ejemplo:
-   *
-   * 45000 = $450 MXN
+   * 50000 = $500 MXN
    *
    * null = precio aún no definido.
    */
   price: number | null;
 
   /**
-   * Inventario disponible.
+   * Inventario definido en catálogo.
+   *
+   * El inventario real puede ser validado
+   * posteriormente contra Supabase.
    */
   stock: number;
 
   /**
    * Permite desactivar una variante
-   * sin eliminarla del catálogo.
+   * sin eliminarla.
    */
   active: boolean;
 
   /**
-   * Opcional.
-   *
-   * Más adelante podríamos utilizar
-   * Stripe Price IDs persistentes.
-   *
-   * Actualmente checkout.ts utiliza
-   * price_data directamente.
+   * Reservado para Stripe Price IDs
+   * persistentes en el futuro.
    */
   stripePriceId?: string;
 };
@@ -140,6 +175,12 @@ export type Product = {
 
   variants: ProductVariant[];
 
+  /**
+   * Información física utilizada
+   * para calcular envío.
+   */
+  shipping: ProductShipping;
+
   inventoryMode: InventoryMode;
 
   documentaryInfo?: DocumentaryInfo;
@@ -167,31 +208,21 @@ export type Product = {
 // ============================================================
 
 /**
- * PRODUCTO TEMPORAL DE PRUEBA
+ * PRECIO TEMPORAL DE PRUEBA
  *
- * 100 = $1 MXN
- *
- * NOTA:
- * Stripe no permitirá completar un cargo de
- * $1 MXN porque su mínimo para MXN es mayor.
- *
- * Para probar Stripe Checkout realmente:
- *
- * const TEST_PRICE = 1000;
- *
- * Eso equivale a $10 MXN.
+ * 1000 = $10 MXN
  */
 const TEST_PRICE =
   1000;
 
 const CASSETTE_PRICE =
-  45000;
+  50000;
 
 const SCRIPT_PRICE =
-  65000;
+  45000;
 
 const CAMCORDER_PRICE =
-  85000;
+  80000;
 
 // ============================================================
 // SHIRT SIZES
@@ -285,30 +316,39 @@ function createUniqueVariant(
 
 const shirtOneColors:
   ProductColor[] = [
-  {
-    id: "petroleo",
+    {
+      id:
+        "petroleo",
 
-    name: "Petróleo",
+      name:
+        "Petróleo",
 
-    hex: "#173B40",
-  },
+      hex:
+        "#173B40",
+    },
 
-  {
-    id: "arena",
+    {
+      id:
+        "arena",
 
-    name: "Arena",
+      name:
+        "Arena",
 
-    hex: "#E7DDC8",
-  },
+      hex:
+        "#E7DDC8",
+    },
 
-  {
-    id: "arcilla",
+    {
+      id:
+        "arcilla",
 
-    name: "Arcilla",
+      name:
+        "Arcilla",
 
-    hex: "#8B5942",
-  },
-];
+      hex:
+        "#8B5942",
+    },
+  ];
 
 // ============================================================
 // SHIRT 02 COLORS
@@ -316,30 +356,39 @@ const shirtOneColors:
 
 const shirtTwoColors:
   ProductColor[] = [
-  {
-    id: "arena",
+    {
+      id:
+        "arena",
 
-    name: "Arena",
+      name:
+        "Arena",
 
-    hex: "#DFCFAD",
-  },
+      hex:
+        "#DFCFAD",
+    },
 
-  {
-    id: "carbon",
+    {
+      id:
+        "carbon",
 
-    name: "Carbón",
+      name:
+        "Carbón",
 
-    hex: "#282725",
-  },
+      hex:
+        "#282725",
+    },
 
-  {
-    id: "arcilla",
+    {
+      id:
+        "arcilla",
 
-    name: "Arcilla",
+      name:
+        "Arcilla",
 
-    hex: "#985943",
-  },
-];
+      hex:
+        "#985943",
+    },
+  ];
 
 // ============================================================
 // PRODUCTS
@@ -348,643 +397,738 @@ const shirtTwoColors:
 export const products:
   Product[] = [
 
-  // ==========================================================
-  // 01
-  // CAMISA 01
-  //
-  // PRODUCTO TEMPORAL DE PRUEBA
-  // $1 MXN
-  // ==========================================================
+    // ========================================================
+    // 01
+    // CAMISA 01
+    // ========================================================
 
-  {
-    id:
-      "shirt-01",
+    {
+      id:
+        "shirt-01",
 
-    slug:
-      "camisa-01",
+      slug:
+        "camisa-01",
 
-    name:
-      "Camisa 01",
+      name:
+        "Camisa 01",
 
-    subtitle:
-      "ATB Collection",
+      subtitle:
+        "ATB Collection",
 
-    collection:
-      "ATB Shop",
+      collection:
+        "ATB Shop",
 
-    category:
-      "shirt",
+      category:
+        "shirt",
 
-    description:
-      "Primera pieza de la colección de ropa de ATB.",
+      description:
+        "Primera pieza de la colección de ropa de ATB.",
 
-    story:
-      "Una pieza desarrollada como parte de la primera colección física de ATB. Actualmente se encuentra habilitada con un precio temporal para probar el flujo de la tienda.",
+      story:
+        "Una pieza desarrollada como parte de la primera colección física de ATB. Actualmente se encuentra habilitada con un precio temporal para probar el flujo de la tienda.",
 
-    thumbnail:
-      "/images/shop/shirt-01/cover.webp",
+      thumbnail:
+        "/images/shop/shirt-01/cover.webp",
 
-    images: [
-      "/images/shop/shirt-01/front.webp",
+      images: [
+        "/images/shop/shirt-01/front.webp",
+        "/images/shop/shirt-01/back.webp",
+        "/images/shop/shirt-01/detail.webp",
+      ],
 
-      "/images/shop/shirt-01/back.webp",
+      colors:
+        shirtOneColors,
 
-      "/images/shop/shirt-01/detail.webp",
-    ],
+      sizes:
+        STANDARD_SHIRT_SIZES,
 
-    colors:
-      shirtOneColors,
+      variants:
+        createShirtVariants({
+          productCode:
+            "ATB-SHIRT01",
 
-    sizes:
-      STANDARD_SHIRT_SIZES,
+          colors:
+            shirtOneColors,
 
-    variants:
-      createShirtVariants({
-        productCode:
-          "ATB-SHIRT01",
+          sizes:
+            STANDARD_SHIRT_SIZES,
 
-        colors:
-          shirtOneColors,
+          price:
+            TEST_PRICE,
 
-        sizes:
-          STANDARD_SHIRT_SIZES,
+          stockPerVariant:
+            3,
+        }),
 
-        // $1 MXN
-        price:
-          TEST_PRICE,
+      shipping: {
+        profile:
+          "apparel",
 
-        // Stock temporal para pruebas.
-        stockPerVariant:
-          3,
-      }),
-
-    inventoryMode:
-      "variants",
-
-    status:
-      "available",
-
-    featured:
-      true,
-
-    active:
-      true,
-
-    order:
-      1,
-  },
-
-  // ==========================================================
-  // 02
-  // CAMISA 02
-  //
-  // PRECIO PENDIENTE
-  // ==========================================================
-
-  {
-    id:
-      "shirt-02",
-
-    slug:
-      "camisa-02",
-
-    name:
-      "Camisa 02",
-
-    subtitle:
-      "ATB Collection",
-
-    collection:
-      "ATB Shop",
-
-    category:
-      "shirt",
-
-    description:
-      "Segunda pieza de la colección de ropa de ATB.",
-
-    story:
-      "Segunda pieza desarrollada para la colección física de ATB. El precio definitivo se incorporará posteriormente.",
-
-    thumbnail:
-      "/images/shop/shirt-02/cover.webp",
-
-    images: [
-      "/images/shop/shirt-02/front.webp",
-
-      "/images/shop/shirt-02/back.webp",
-
-      "/images/shop/shirt-02/detail.webp",
-    ],
-
-    colors:
-      shirtTwoColors,
-
-    sizes:
-      STANDARD_SHIRT_SIZES,
-
-    variants:
-      createShirtVariants({
-        productCode:
-          "ATB-SHIRT02",
-
-        colors:
-          shirtTwoColors,
-
-        sizes:
-          STANDARD_SHIRT_SIZES,
-
-        price:
-          null,
-
-        stockPerVariant:
+        weightGrams:
           0,
-      }),
 
-    inventoryMode:
-      "variants",
+        lengthCm:
+          0,
 
-    status:
-      "coming-soon",
+        widthCm:
+          0,
 
-    featured:
-      true,
+        heightCm:
+          0,
+      },
 
-    active:
-      true,
+      inventoryMode:
+        "variants",
 
-    order:
-      2,
-  },
+      status:
+        "available",
 
-  // ==========================================================
-  // 03
-  // CASSETTE DOCUMENTAL 01
-  //
-  // $450 MXN
-  // ==========================================================
-
-  {
-    id:
-      "vaporwave-cassette-01",
-
-    slug:
-      "cassette-documental-vaporwave-01",
-
-    name:
-      "Cassette — Documental 01",
-
-    subtitle:
-      "Objeto utilizado en producción",
-
-    collection:
-      "Archivo ATB",
-
-    category:
-      "documentary-prop",
-
-    description:
-      "Cassette utilizado físicamente durante la producción del documental de vaporwave.",
-
-    story:
-      "Pieza original utilizada durante la realización del documental. Se conserva como objeto físico vinculado directamente a la producción audiovisual de ATB.",
-
-    thumbnail:
-      "/images/shop/cassette-01/cover.webp",
-
-    images: [
-      "/images/shop/cassette-01/front.webp",
-
-      "/images/shop/cassette-01/back.webp",
-
-      "/images/shop/cassette-01/detail.webp",
-    ],
-
-    variants: [
-      createUniqueVariant(
-        "ATB-VAPOR-CASSETTE-01",
-
-        CASSETTE_PRICE,
-      ),
-    ],
-
-    inventoryMode:
-      "single-item",
-
-    documentaryInfo: {
-      documentary:
-        "vaporwave",
-
-      usedInProduction:
+      featured:
         true,
 
-      uniquePiece:
+      active:
         true,
+
+      order:
+        1,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 02
+    // CAMISA 02
+    // ========================================================
 
-    featured:
-      true,
+    {
+      id:
+        "shirt-02",
 
-    active:
-      true,
+      slug:
+        "camisa-02",
 
-    order:
-      3,
-  },
+      name:
+        "Camisa 02",
 
-  // ==========================================================
-  // 04
-  // CASSETTE DOCUMENTAL 02
-  //
-  // $450 MXN
-  // ==========================================================
+      subtitle:
+        "ATB Collection",
 
-  {
-    id:
-      "vaporwave-cassette-02",
+      collection:
+        "ATB Shop",
 
-    slug:
-      "cassette-documental-vaporwave-02",
+      category:
+        "shirt",
 
-    name:
-      "Cassette — Documental 02",
+      description:
+        "Segunda pieza de la colección de ropa de ATB.",
 
-    subtitle:
-      "Objeto utilizado en producción",
+      story:
+        "Segunda pieza desarrollada para la colección física de ATB. El precio definitivo se incorporará posteriormente.",
 
-    collection:
-      "Archivo ATB",
+      thumbnail:
+        "/images/shop/shirt-02/cover.webp",
 
-    category:
-      "documentary-prop",
+      images: [
+        "/images/shop/shirt-02/front.webp",
+        "/images/shop/shirt-02/back.webp",
+        "/images/shop/shirt-02/detail.webp",
+      ],
 
-    description:
-      "Segundo cassette utilizado físicamente durante la producción del documental de vaporwave.",
+      colors:
+        shirtTwoColors,
 
-    story:
-      "Una pieza individual procedente de la producción del documental de vaporwave de ATB. No se trata de una reproducción comercial del objeto utilizado durante la filmación.",
+      sizes:
+        STANDARD_SHIRT_SIZES,
 
-    thumbnail:
-      "/images/shop/cassette-02/cover.webp",
+      variants:
+        createShirtVariants({
+          productCode:
+            "ATB-SHIRT02",
 
-    images: [
-      "/images/shop/cassette-02/front.webp",
+          colors:
+            shirtTwoColors,
 
-      "/images/shop/cassette-02/back.webp",
+          sizes:
+            STANDARD_SHIRT_SIZES,
 
-      "/images/shop/cassette-02/detail.webp",
-    ],
+          price:
+            null,
 
-    variants: [
-      createUniqueVariant(
-        "ATB-VAPOR-CASSETTE-02",
+          stockPerVariant:
+            0,
+        }),
 
-        CASSETTE_PRICE,
-      ),
-    ],
+      shipping: {
+        profile:
+          "apparel",
 
-    inventoryMode:
-      "single-item",
+        weightGrams:
+          0,
 
-    documentaryInfo: {
-      documentary:
-        "vaporwave",
+        lengthCm:
+          0,
 
-      usedInProduction:
+        widthCm:
+          0,
+
+        heightCm:
+          0,
+      },
+
+      inventoryMode:
+        "variants",
+
+      status:
+        "coming-soon",
+
+      featured:
         true,
 
-      uniquePiece:
+      active:
         true,
+
+      order:
+        2,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 03
+    // CASSETTE DOCUMENTAL 01
+    // ========================================================
 
-    featured:
-      false,
+    {
+      id:
+        "vaporwave-cassette-01",
 
-    active:
-      true,
+      slug:
+        "cassette-documental-vaporwave-01",
 
-    order:
-      4,
-  },
+      name:
+        "Cassette — Documental Vaporwave",
 
-  // ==========================================================
-  // 05
-  // GUIÓN VAPORWAVE
-  //
-  // $650 MXN
-  // ==========================================================
+      subtitle:
+        "Objeto utilizado en producción",
 
-  {
-    id:
-      "script-vaporwave",
+      collection:
+        "Archivo ATB",
 
-    slug:
-      "guion-documental-vaporwave",
+      category:
+        "documentary-prop",
 
-    name:
-      "Guión oficial — Vaporwave",
+      description:
+        "Cassette Scotch T-120 en un empaque de Sony T-120 de 260 metros (1988-1992).",
 
-    subtitle:
-      "Original con anotaciones",
+      story:
+        "Pieza importada desde Sheffield, Inglaterra, en donde uno de los colaboradores la trajo para poder regrabar algún metraje en calidad reducida, siendo readaptado su uso para una idea conceptual dentro del documental. Utilizado físicamente durante la producción del documental de vaporwave, así como en el documental del Signalwave (2021).",
 
-    collection:
-      "Archivo ATB",
+      thumbnail:
+        "/images/shop/cassette-01/cover.webp",
 
-    category:
-      "documentary-script",
+      images: [
+        "/images/shop/cassette-01/front.webp",
+        "/images/shop/cassette-01/back.webp",
+        "/images/shop/cassette-01/detail.webp",
+      ],
 
-    description:
-      "Guión físico oficial utilizado durante la producción del documental sobre vaporwave, conservando sus anotaciones.",
+      variants: [
+        createUniqueVariant(
+          "ATB-VAPOR-CASSETTE-01",
+          CASSETTE_PRICE,
+        ),
+      ],
 
-    story:
-      "Documento de producción asociado directamente a la realización de La historia no contada del vaporwave. Incluye las marcas, notas y anotaciones realizadas durante el proceso creativo y de producción.",
+      shipping: {
+        profile:
+          "small-parcel",
 
-    thumbnail:
-      "/images/shop/script-vaporwave/cover.webp",
+        weightGrams:
+          0,
 
-    images: [
-      "/images/shop/script-vaporwave/cover.webp",
+        lengthCm:
+          0,
 
-      "/images/shop/script-vaporwave/pages.webp",
+        widthCm:
+          0,
 
-      "/images/shop/script-vaporwave/detail.webp",
-    ],
+        heightCm:
+          0,
+      },
 
-    variants: [
-      createUniqueVariant(
-        "ATB-SCRIPT-VAPORWAVE",
+      inventoryMode:
+        "single-item",
 
-        SCRIPT_PRICE,
-      ),
-    ],
+      documentaryInfo: {
+        documentary:
+          "vaporwave",
 
-    inventoryMode:
-      "single-item",
+        usedInProduction:
+          true,
 
-    documentaryInfo: {
-      documentary:
-        "vaporwave",
+        uniquePiece:
+          true,
+      },
 
-      usedInProduction:
+      status:
+        "available",
+
+      featured:
         true,
 
-      uniquePiece:
+      active:
         true,
+
+      order:
+        3,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 04
+    // CASSETTE DOCUMENTAL 02
+    // ========================================================
 
-    featured:
-      true,
+    {
+      id:
+        "vaporwave-cassette-02",
 
-    active:
-      true,
+      slug:
+        "cassette-documental-vaporwave-02",
 
-    order:
-      5,
-  },
+      name:
+        "Cassette — Documental Vaporwave",
 
-  // ==========================================================
-  // 06
-  // GUIÓN PSICODELIA ESTÉTICA DE LOS 90
-  //
-  // $650 MXN
-  // ==========================================================
+      subtitle:
+        "Objeto utilizado en producción",
 
-  {
-    id:
-      "script-psychedelia-90s",
+      collection:
+        "Archivo ATB",
 
-    slug:
-      "guion-psicodelia-estetica-90s",
+      category:
+        "documentary-prop",
 
-    name:
-      "Guión oficial — Psicodelia estética de los 90's",
+      description:
+        "Video Cassette Sony Dynamicron L-500 de 150 metros grabado con una pelicula de Disney (1984-1985).",
 
-    subtitle:
-      "Original de producción",
+      story:
+        "Una pieza individual procedente de la producción del documental de vaporwave de ATB que vino desde Sonora en una tienda de garage perdida en medio del municipio de Nacozari, rescatada y llevada a la ciudad de Hermosillo para su envio posterior a los HQ de la ATB.",
 
-    collection:
-      "Archivo ATB",
+      thumbnail:
+        "/images/shop/cassette-02/cover.webp",
 
-    category:
-      "documentary-script",
+      images: [
+        "/images/shop/cassette-02/front.webp",
+        "/images/shop/cassette-02/back.webp",
+        "/images/shop/cassette-02/detail.webp",
+      ],
 
-    description:
-      "Guión oficial del documental dedicado a la psicodelia estética de los años noventa.",
+      variants: [
+        createUniqueVariant(
+          "ATB-VAPOR-CASSETTE-02",
+          CASSETTE_PRICE,
+        ),
+      ],
 
-    story:
-      "Documento físico perteneciente al proceso de investigación y producción del documental de ATB dedicado a la psicodelia estética de los años noventa.",
+      shipping: {
+        profile:
+          "small-parcel",
 
-    thumbnail:
-      "/images/shop/script-psychedelia/cover.webp",
+        weightGrams:
+          0,
 
-    images: [
-      "/images/shop/script-psychedelia/cover.webp",
+        lengthCm:
+          0,
 
-      "/images/shop/script-psychedelia/pages.webp",
+        widthCm:
+          0,
 
-      "/images/shop/script-psychedelia/detail.webp",
-    ],
+        heightCm:
+          0,
+      },
 
-    variants: [
-      createUniqueVariant(
-        "ATB-SCRIPT-PSYCHEDELIA90",
+      inventoryMode:
+        "single-item",
 
-        SCRIPT_PRICE,
-      ),
-    ],
+      documentaryInfo: {
+        documentary:
+          "vaporwave",
 
-    inventoryMode:
-      "single-item",
+        usedInProduction:
+          true,
 
-    documentaryInfo: {
-      documentary:
-        "psicodelia-90s",
+        uniquePiece:
+          true,
+      },
 
-      usedInProduction:
+      status:
+        "available",
+
+      featured:
+        false,
+
+      active:
         true,
 
-      uniquePiece:
-        true,
+      order:
+        4,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 05
+    // GUIÓN VAPORWAVE
+    // ========================================================
 
-    featured:
-      false,
+    {
+      id:
+        "script-vaporwave",
 
-    active:
-      true,
+      slug:
+        "guion-documental-vaporwave",
 
-    order:
-      6,
-  },
+      name:
+        "Guión oficial — Vaporwave",
 
-  // ==========================================================
-  // 07
-  // GUIÓN SIGNALWAVE
-  //
-  // $650 MXN
-  // ==========================================================
+      subtitle:
+        "Original con anotaciones",
 
-  {
-    id:
-      "script-signalwave",
+      collection:
+        "Archivo ATB",
 
-    slug:
-      "guion-documental-signalwave",
+      category:
+        "documentary-script",
 
-    name:
-      "Guión oficial — Signalwave",
+      description:
+        "Guión físico oficial utilizado durante la producción del documental sobre vaporwave, conservando sus anotaciones.",
 
-    subtitle:
-      "Original de producción",
+      story:
+        "Documento de producción asociado directamente a la realización de La historia no contada del vaporwave. Incluye las marcas, notas y anotaciones realizadas durante el proceso creativo y de producción.",
 
-    collection:
-      "Archivo ATB",
+      thumbnail:
+        "/images/shop/script-vaporwave/cover.webp",
 
-    category:
-      "documentary-script",
+      images: [
+        "/images/shop/script-vaporwave/cover.webp",
+        "/images/shop/script-vaporwave/pages.webp",
+        "/images/shop/script-vaporwave/detail.webp",
+      ],
 
-    description:
-      "Guión oficial utilizado durante la realización del documental dedicado al signalwave.",
+      variants: [
+        createUniqueVariant(
+          "ATB-SCRIPT-VAPORWAVE",
+          SCRIPT_PRICE,
+        ),
+      ],
 
-    story:
-      "Documento perteneciente a la producción del documental de ATB sobre signalwave, conservado como parte física del proceso creativo.",
+      shipping: {
+        profile:
+          "document",
 
-    thumbnail:
-      "/images/shop/script-signalwave/cover.webp",
+        weightGrams:
+          0,
 
-    images: [
-      "/images/shop/script-signalwave/cover.webp",
+        lengthCm:
+          0,
 
-      "/images/shop/script-signalwave/pages.webp",
+        widthCm:
+          0,
 
-      "/images/shop/script-signalwave/detail.webp",
-    ],
+        heightCm:
+          0,
+      },
 
-    variants: [
-      createUniqueVariant(
-        "ATB-SCRIPT-SIGNALWAVE",
+      inventoryMode:
+        "single-item",
 
-        SCRIPT_PRICE,
-      ),
-    ],
+      documentaryInfo: {
+        documentary:
+          "vaporwave",
 
-    inventoryMode:
-      "single-item",
+        usedInProduction:
+          true,
 
-    documentaryInfo: {
-      documentary:
-        "signalwave",
+        uniquePiece:
+          true,
+      },
 
-      usedInProduction:
+      status:
+        "available",
+
+      featured:
         true,
 
-      uniquePiece:
+      active:
         true,
+
+      order:
+        5,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 06
+    // GUIÓN PSICODELIA ESTÉTICA DE LOS 90
+    // ========================================================
 
-    featured:
-      false,
+    {
+      id:
+        "script-psychedelia-90s",
 
-    active:
-      true,
+      slug:
+        "guion-psicodelia-estetica-90s",
 
-    order:
-      7,
-  },
+      name:
+        "Guión oficial — Psicodelia estética de los 90's",
 
-  // ==========================================================
-  // 08
-  // VIDEOGRABADORA / CASETERA
-  //
-  // $850 MXN
-  // ==========================================================
+      subtitle:
+        "Original de producción",
 
-  {
-    id:
-      "documentary-camcorder",
+      collection:
+        "Archivo ATB",
 
-    slug:
-      "videograbadora-documental",
+      category:
+        "documentary-script",
 
-    name:
-      "Videograbadora del documental",
+      description:
+        "Guión oficial del documental dedicado a la psicodelia estética de los años noventa.",
 
-    subtitle:
-      "Equipo utilizado en producción",
+      story:
+        "Documento físico perteneciente al proceso de investigación y producción del documental de ATB dedicado a la psicodelia estética de los años noventa.",
 
-    collection:
-      "Archivo ATB",
+      thumbnail:
+        "/images/shop/script-psychedelia/cover.webp",
 
-    category:
-      "documentary-prop",
+      images: [
+        "/images/shop/script-psychedelia/cover.webp",
+        "/images/shop/script-psychedelia/pages.webp",
+        "/images/shop/script-psychedelia/detail.webp",
+      ],
 
-    description:
-      "Videograbadora utilizada durante la producción audiovisual del documental de ATB.",
+      variants: [
+        createUniqueVariant(
+          "ATB-SCRIPT-PSYCHEDELIA90",
+          SCRIPT_PRICE,
+        ),
+      ],
 
-    story:
-      "Una pieza de equipo vinculada directamente con la producción documental de ATB. Se trata del equipo físico utilizado dentro del proceso de producción.",
+      shipping: {
+        profile:
+          "document",
 
-    thumbnail:
-      "/images/shop/camcorder/cover.webp",
+        weightGrams:
+          0,
 
-    images: [
-      "/images/shop/camcorder/front.webp",
+        lengthCm:
+          0,
 
-      "/images/shop/camcorder/side.webp",
+        widthCm:
+          0,
 
-      "/images/shop/camcorder/detail.webp",
-    ],
+        heightCm:
+          0,
+      },
 
-    variants: [
-      createUniqueVariant(
-        "ATB-DOC-CAMCORDER-01",
+      inventoryMode:
+        "single-item",
 
-        CAMCORDER_PRICE,
-      ),
-    ],
+      documentaryInfo: {
+        documentary:
+          "psicodelia-90s",
 
-    inventoryMode:
-      "single-item",
+        usedInProduction:
+          true,
 
-    documentaryInfo: {
-      documentary:
-        "vaporwave",
+        uniquePiece:
+          true,
+      },
 
-      usedInProduction:
+      status:
+        "available",
+
+      featured:
+        false,
+
+      active:
         true,
 
-      uniquePiece:
-        true,
+      order:
+        6,
     },
 
-    status:
-      "available",
+    // ========================================================
+    // 07
+    // GUIÓN SIGNALWAVE
+    // ========================================================
 
-    featured:
-      true,
+    {
+      id:
+        "script-signalwave",
 
-    active:
-      true,
+      slug:
+        "guion-documental-signalwave",
 
-    order:
-      8,
-  },
-];
+      name:
+        "Guión oficial — Signalwave",
+
+      subtitle:
+        "Original de producción",
+
+      collection:
+        "Archivo ATB",
+
+      category:
+        "documentary-script",
+
+      description:
+        "Guión oficial utilizado durante la realización del documental dedicado al signalwave.",
+
+      story:
+        "Documento perteneciente a la producción del documental de ATB sobre signalwave, conservado como parte física del proceso creativo.",
+
+      thumbnail:
+        "/images/shop/script-signalwave/cover.webp",
+
+      images: [
+        "/images/shop/script-signalwave/cover.webp",
+        "/images/shop/script-signalwave/pages.webp",
+        "/images/shop/script-signalwave/detail.webp",
+      ],
+
+      variants: [
+        createUniqueVariant(
+          "ATB-SCRIPT-SIGNALWAVE",
+          SCRIPT_PRICE,
+        ),
+      ],
+
+      shipping: {
+        profile:
+          "document",
+
+        weightGrams:
+          0,
+
+        lengthCm:
+          0,
+
+        widthCm:
+          0,
+
+        heightCm:
+          0,
+      },
+
+      inventoryMode:
+        "single-item",
+
+      documentaryInfo: {
+        documentary:
+          "signalwave",
+
+        usedInProduction:
+          true,
+
+        uniquePiece:
+          true,
+      },
+
+      status:
+        "available",
+
+      featured:
+        false,
+
+      active:
+        true,
+
+      order:
+        7,
+    },
+
+    // ========================================================
+    // 08
+    // VIDEOGRABADORA / CASETERA
+    // ========================================================
+
+    {
+      id:
+        "documentary-camcorder",
+
+      slug:
+        "videograbadora-documental",
+
+      name:
+        "Videograbadora",
+
+      subtitle:
+        "Equipo Broksonic VHSA-6687TC",
+
+      collection:
+        "Archivo ATB",
+
+      category:
+        "documentary-prop",
+
+      description:
+        "Videograbadora utilizada durante la producción audiovisual del documental de ATB recuperada desde Monterrey, Nuevo León, México como utileria de adorno sin funcionar.",
+
+      story:
+        "Una pieza de equipo vinculada directamente con la producción documental de ATB. Se trata del equipo físico utilizado dentro del proceso de producción. Videograbadora utilizada durante la producción audiovisual del documental de ATB recuperada desde Monterrey, Nuevo León, México como utileria de adorno sin funcionar.",
+
+      thumbnail:
+        "/images/shop/camcorder/cover.webp",
+
+      images: [
+        "/images/shop/camcorder/front.webp",
+        "/images/shop/camcorder/side.webp",
+        "/images/shop/camcorder/detail.webp",
+      ],
+
+      variants: [
+        createUniqueVariant(
+          "ATB-DOC-CAMCORDER-01",
+          CAMCORDER_PRICE,
+        ),
+      ],
+
+      shipping: {
+        profile:
+          "large-parcel",
+
+        weightGrams:
+          0,
+
+        lengthCm:
+          0,
+
+        widthCm:
+          0,
+
+        heightCm:
+          0,
+      },
+
+      inventoryMode:
+        "single-item",
+
+      documentaryInfo: {
+        documentary:
+          "vaporwave",
+
+        usedInProduction:
+          true,
+
+        uniquePiece:
+          true,
+      },
+
+      status:
+        "available",
+
+      featured:
+        true,
+
+      active:
+        true,
+
+      order:
+        8,
+    },
+  ];
 
 // ============================================================
 // GET ACTIVE PRODUCTS
@@ -1071,7 +1215,9 @@ export function getVariantBySku(
           sku,
       );
 
-    if (variant) {
+    if (
+      variant
+    ) {
       return {
         product,
 
@@ -1113,7 +1259,8 @@ export function getProductStartingPrice(
       );
 
   if (
-    prices.length === 0
+    prices.length ===
+    0
   ) {
     return null;
   }
@@ -1143,6 +1290,7 @@ export function formatMXN(
         0,
     },
   ).format(
-    cents / 100,
+    cents /
+      100,
   );
 }

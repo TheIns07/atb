@@ -1,6 +1,12 @@
-import type { APIRoute } from "astro";
+import type {
+  APIRoute,
+} from "astro";
+
 import Stripe from "stripe";
-import { createClient } from "@supabase/supabase-js";
+
+import {
+  createClient,
+} from "@supabase/supabase-js";
 
 import {
   getVariantBySku,
@@ -9,42 +15,79 @@ import {
 } from "../../data/products";
 
 import {
-  resolveShopShipping,
+  resolveShopShippingQuote,
 } from "../../lib/server/shop/shipping";
 
-export const prerender = false;
+// ============================================================
+// SERVER ONLY
+// ============================================================
+
+export const prerender =
+  false;
 
 // ============================================================
 // CONFIG
 // ============================================================
 
-const RESERVATION_TTL_MINUTES = 35;
+const RESERVATION_TTL_MINUTES =
+  35;
 
-// Stripe exige al menos 30 minutos.
-// Dejamos 31 para que expire antes que nuestra reserva.
-const STRIPE_SESSION_TTL_MINUTES = 31;
+/*
+  Stripe expira antes de que expire
+  nuestra reserva de inventario.
+*/
+
+const STRIPE_SESSION_TTL_MINUTES =
+  30;
+
+// ============================================================
+// COUNTRIES
+// ============================================================
+
+type CheckoutCountry =
+  | "MX"
+  | "US"
+  | "CA"
+  | "ES";
+
+const CHECKOUT_COUNTRIES:
+  CheckoutCountry[] = [
+    "MX",
+    "US",
+    "CA",
+    "ES",
+  ];
 
 // ============================================================
 // ENVIRONMENT
 // ============================================================
 
 const stripeSecretKey =
-  import.meta.env.STRIPE_SECRET_KEY;
+  import.meta.env
+    .STRIPE_SECRET_KEY;
 
 const supabaseUrl =
-  import.meta.env.SUPABASE_URL;
+  import.meta.env
+    .SUPABASE_URL;
 
 const supabaseServiceRoleKey =
-  import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
+  import.meta.env
+    .SUPABASE_SERVICE_ROLE_KEY;
 
 // ============================================================
-// CLIENTS
+// STRIPE
 // ============================================================
 
 const stripe =
   stripeSecretKey
-    ? new Stripe(stripeSecretKey)
+    ? new Stripe(
+        stripeSecretKey,
+      )
     : null;
+
+// ============================================================
+// SUPABASE
+// ============================================================
 
 const supabase =
   supabaseUrl &&
@@ -54,9 +97,14 @@ const supabase =
         supabaseServiceRoleKey,
         {
           auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false,
+            persistSession:
+              false,
+
+            autoRefreshToken:
+              false,
+
+            detectSessionInUrl:
+              false,
           },
         },
       )
@@ -68,48 +116,74 @@ const supabase =
 
 type CheckoutRequestItem = {
   sku: string;
+
   quantity: number;
 };
 
 type CheckoutRequestBody = {
-  items: CheckoutRequestItem[];
+  items:
+    CheckoutRequestItem[];
+
+  /*
+   * Sigue siendo opcional por compatibilidad
+   * con el CartDrawer actual.
+   *
+   * Si no llega, utilizamos MX.
+   */
+  destinationCountry?: string;
 };
 
 type NormalizedCartItem = {
   sku: string;
+
   quantity: number;
 };
 
 type ResolvedCheckoutItem = {
   sku: string;
+
   quantity: number;
+
   product: Product;
-  variant: ProductVariant;
+
+  variant:
+    ProductVariant;
 };
 
 type ReserveInventoryResponse = {
   success?: boolean;
+
   reservation_id?: string;
+
   expires_at?: string;
 };
 
 type AttachReservationResponse = {
   success?: boolean;
+
   duplicate?: boolean;
+
   reservation_id?: string;
+
   stripe_session_id?: string;
 };
 
 // ============================================================
-// RESPONSE
+// JSON RESPONSE
 // ============================================================
 
 function jsonResponse(
-  body: Record<string, unknown>,
+  body: Record<
+    string,
+    unknown
+  >,
+
   status = 200,
 ): Response {
   return new Response(
-    JSON.stringify(body),
+    JSON.stringify(
+      body,
+    ),
     {
       status,
 
@@ -125,33 +199,90 @@ function jsonResponse(
 }
 
 // ============================================================
+// DESTINATION COUNTRY
+// ============================================================
+
+function normalizeDestinationCountry(
+  value:
+    unknown,
+):
+  | CheckoutCountry
+  | null {
+  /*
+   * Compatibilidad:
+   *
+   * Si el frontend actual no manda país,
+   * seguimos funcionando como tienda MX.
+   */
+  if (
+    value ===
+      undefined ||
+    value ===
+      null ||
+    value ===
+      ""
+  ) {
+    return "MX";
+  }
+
+  if (
+    typeof value !==
+    "string"
+  ) {
+    return null;
+  }
+
+  const normalized =
+    value
+      .trim()
+      .toUpperCase();
+
+  if (
+    !CHECKOUT_COUNTRIES.includes(
+      normalized as
+        CheckoutCountry,
+    )
+  ) {
+    return null;
+  }
+
+  return normalized as
+    CheckoutCountry;
+}
+
+// ============================================================
 // VARIANT DESCRIPTION
 // ============================================================
 
 function getVariantDescription(
   product: Product,
-  variant: ProductVariant,
+
+  variant:
+    ProductVariant,
 ): string | undefined {
   const color =
     product.colors?.find(
-      (candidate) =>
+      (
+        candidate,
+      ) =>
         candidate.id ===
         variant.colorId,
     );
 
-  const parts =
-    [
-      color?.name,
+  const parts = [
+    color?.name,
 
-      variant.size
-        ? `Talla ${variant.size}`
-        : undefined,
-    ].filter(
-      (
+    variant.size
+      ? `Talla ${variant.size}`
+      : undefined,
+  ].filter(
+    (
+      value,
+    ): value is string =>
+      Boolean(
         value,
-      ): value is string =>
-        Boolean(value),
-    );
+      ),
+  );
 
   if (
     parts.length ===
@@ -170,7 +301,8 @@ function getVariantDescription(
 // ============================================================
 
 function normalizeCartItems(
-  items: CheckoutRequestItem[],
+  items:
+    CheckoutRequestItem[],
 ):
   | NormalizedCartItem[]
   | null {
@@ -210,8 +342,10 @@ function normalizeCartItems(
       !Number.isInteger(
         item.quantity,
       ) ||
-      item.quantity <= 0 ||
-      item.quantity > 20
+      item.quantity <=
+        0 ||
+      item.quantity >
+        20
     ) {
       return null;
     }
@@ -226,7 +360,8 @@ function normalizeCartItems(
       item.quantity;
 
     if (
-      quantity > 20
+      quantity >
+      20
     ) {
       return null;
     }
@@ -262,11 +397,12 @@ function normalizeCartItems(
 }
 
 // ============================================================
-// SAFE RELEASE
+// SAFE RELEASE RESERVATION
 // ============================================================
 
 async function releaseReservationSafely(
-  reservationId: string,
+  reservationId:
+    string,
 
   status:
     | "released"
@@ -302,11 +438,15 @@ async function releaseReservationSafely(
         "[ATB Shop] No se pudo liberar reserva:",
         {
           reservationId,
+
           status,
+
           message:
             error.message,
+
           details:
             error.details,
+
           hint:
             error.hint,
         },
@@ -332,11 +472,12 @@ async function releaseReservationSafely(
 }
 
 // ============================================================
-// SAFE STRIPE EXPIRATION
+// SAFE EXPIRE STRIPE SESSION
 // ============================================================
 
 async function expireStripeSessionSafely(
-  sessionId: string,
+  sessionId:
+    string,
 ): Promise<boolean> {
   if (
     !stripe
@@ -346,8 +487,7 @@ async function expireStripeSessionSafely(
 
   try {
     await stripe.checkout
-      .sessions
-      .expire(
+      .sessions.expire(
         sessionId,
       );
 
@@ -368,7 +508,7 @@ async function expireStripeSessionSafely(
 }
 
 // ============================================================
-// RESERVATION ERROR
+// INVENTORY ERROR RESPONSE
 // ============================================================
 
 function getReservationErrorResponse(
@@ -434,7 +574,7 @@ function getReservationErrorResponse(
 }
 
 // ============================================================
-// POST — CREATE CHECKOUT
+// POST
 // ============================================================
 
 export const POST:
@@ -444,7 +584,7 @@ export const POST:
     url,
   }) => {
     // ========================================================
-    // CONFIG
+    // SERVER CONFIG
     // ========================================================
 
     if (
@@ -480,7 +620,7 @@ export const POST:
     }
 
     // ========================================================
-    // BODY
+    // REQUEST BODY
     // ========================================================
 
     let body:
@@ -499,6 +639,32 @@ export const POST:
         400,
       );
     }
+
+    // ========================================================
+    // DESTINATION
+    // ========================================================
+
+    const destinationCountry =
+      normalizeDestinationCountry(
+        body
+          ?.destinationCountry,
+      );
+
+    if (
+      !destinationCountry
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "El país de destino no es válido.",
+        },
+        400,
+      );
+    }
+
+    // ========================================================
+    // CART VALIDATION
+    // ========================================================
 
     if (
       !body ||
@@ -551,6 +717,15 @@ export const POST:
 
     // ========================================================
     // RESOLVE CATALOGUE
+    //
+    // products.ts:
+    // - nombre
+    // - precio
+    // - variante
+    // - datos físicos de envío
+    //
+    // Supabase:
+    // - inventario real
     // ========================================================
 
     const resolvedItems:
@@ -589,6 +764,10 @@ export const POST:
       } =
         resolved;
 
+      // ======================================================
+      // PRODUCT ACTIVE
+      // ======================================================
+
       if (
         !product.active
       ) {
@@ -600,6 +779,10 @@ export const POST:
           409,
         );
       }
+
+      // ======================================================
+      // PRODUCT STATUS
+      // ======================================================
 
       if (
         product.status !==
@@ -614,6 +797,10 @@ export const POST:
         );
       }
 
+      // ======================================================
+      // VARIANT ACTIVE
+      // ======================================================
+
       if (
         !variant.active
       ) {
@@ -626,13 +813,18 @@ export const POST:
         );
       }
 
+      // ======================================================
+      // TRUSTED PRICE
+      // ======================================================
+
       if (
         variant.price ===
           null ||
         !Number.isInteger(
           variant.price,
         ) ||
-        variant.price <= 0
+        variant.price <=
+          0
       ) {
         console.error(
           "[ATB Shop] Precio inválido:",
@@ -654,6 +846,33 @@ export const POST:
         );
       }
 
+      // ======================================================
+      // SHIPPING DATA
+      // ======================================================
+
+      if (
+        !product.shipping
+      ) {
+        console.error(
+          "[ATB Shop] Producto sin configuración de envío:",
+          {
+            productId:
+              product.id,
+
+            sku:
+              item.sku,
+          },
+        );
+
+        return jsonResponse(
+          {
+            error:
+              `${product.name} todavía no tiene una configuración de envío.`,
+          },
+          409,
+        );
+      }
+
       resolvedItems.push({
         sku:
           item.sku,
@@ -668,7 +887,7 @@ export const POST:
     }
 
     // ========================================================
-    // TRUSTED SUBTOTAL
+    // SUBTOTAL
     // ========================================================
 
     const subtotal =
@@ -678,59 +897,101 @@ export const POST:
           item,
         ) =>
           total +
-          (
-            item.variant
-              .price! *
-            item.quantity
-          ),
+          item.variant
+            .price! *
+            item.quantity,
         0,
       );
 
-    if (
-      !Number.isSafeInteger(
+    // ========================================================
+    // SHIPPING ITEMS
+    // ========================================================
+
+    const shippingItems =
+      resolvedItems.map(
+        (
+          item,
+        ) => ({
+          quantity:
+            item.quantity,
+
+          weightGrams:
+            Math.max(
+              0,
+              item.product
+                .shipping
+                .weightGrams,
+            ),
+
+          profile:
+            item.product
+              .shipping
+              .profile,
+        }),
+      );
+
+    // ========================================================
+    // RESOLVE SHIPPING
+    // ========================================================
+
+    const shippingQuote =
+      resolveShopShippingQuote({
         subtotal,
-      ) ||
-      subtotal <= 0
+
+        destinationCountry,
+
+        items:
+          shippingItems,
+      });
+
+    if (
+      !shippingQuote.available
     ) {
       return jsonResponse(
         {
           error:
-            "No fue posible calcular el total del pedido.",
+            shippingQuote.reason,
+
+          destinationCountry:
+            shippingQuote.countryCode,
         },
-        500,
+        400,
       );
     }
-
-    // ========================================================
-    // SHIPPING
-    // ========================================================
 
     const shipping =
-      resolveShopShipping(
+      shippingQuote.shipping;
+
+    console.log(
+      "[ATB Shop] Envío calculado:",
+      {
+        destinationCountry,
+
         subtotal,
-      );
 
-    const expectedTotal =
-      subtotal +
-      shipping.amount;
+        shippingAmount:
+          shipping.amount,
 
-    if (
-      !Number.isSafeInteger(
-        expectedTotal,
-      ) ||
-      expectedTotal <= 0
-    ) {
-      return jsonResponse(
-        {
-          error:
-            "No fue posible calcular el total del pedido.",
-        },
-        500,
-      );
-    }
+        totalWeightGrams:
+          shippingQuote
+            .totalWeightGrams,
+
+        minimumDeliveryDays:
+          shipping
+            .minimumDeliveryDays,
+
+        maximumDeliveryDays:
+          shipping
+            .maximumDeliveryDays,
+      },
+    );
 
     // ========================================================
     // RESERVE INVENTORY
+    //
+    // Hacemos esto DESPUÉS de calcular envío.
+    //
+    // Si el país no está soportado, nunca reservamos stock.
     // ========================================================
 
     const reservationItems =
@@ -763,6 +1024,10 @@ export const POST:
             RESERVATION_TTL_MINUTES,
         },
       );
+
+    // ========================================================
+    // RESERVATION FAILED
+    // ========================================================
 
     if (
       reservationError
@@ -815,8 +1080,21 @@ export const POST:
       );
     }
 
+    console.log(
+      "[ATB Shop] Inventario reservado:",
+      {
+        reservationId,
+
+        expiresAt:
+          reservation.expires_at,
+
+        items:
+          reservationItems,
+      },
+    );
+
     // ========================================================
-    // STRIPE LINE ITEMS
+    // STRIPE PRODUCT LINE ITEMS
     // ========================================================
 
     const lineItems:
@@ -854,6 +1132,11 @@ export const POST:
                     }
                   : {}),
 
+                /*
+                  El webhook puede recuperar
+                  el SKU desde metadata.
+                */
+
                 metadata: {
                   sku:
                     item.sku,
@@ -867,6 +1150,10 @@ export const POST:
           };
         },
       );
+
+    // ========================================================
+    // TOTAL ITEMS
+    // ========================================================
 
     const totalItems =
       resolvedItems.reduce(
@@ -892,7 +1179,7 @@ export const POST:
         60;
 
     // ========================================================
-    // CREATE CHECKOUT
+    // CREATE STRIPE CHECKOUT
     // ========================================================
 
     let session:
@@ -908,27 +1195,12 @@ export const POST:
             line_items:
               lineItems,
 
-            expires_at:
-              stripeExpiresAt,
-
-            success_url:
-              `${url.origin}/tienda/gracias?session_id={CHECKOUT_SESSION_ID}`,
-
-            cancel_url:
-              `${url.origin}/tienda/cancelado?reservation_id=${encodeURIComponent(
-                reservationId,
-              )}`,
-
-            phone_number_collection: {
-              enabled:
-                true,
-            },
-
-            shipping_address_collection: {
-              allowed_countries: [
-                "MX",
-              ],
-            },
+            // =================================================
+            // SHIPPING RATE
+            //
+            // Stripe cobrará exactamente el importe
+            // calculado por shipping.ts.
+            // =================================================
 
             shipping_options: [
               {
@@ -953,7 +1225,8 @@ export const POST:
                         "business_day",
 
                       value:
-                        shipping.minimumDeliveryDays,
+                        shipping
+                          .minimumDeliveryDays,
                     },
 
                     maximum: {
@@ -961,12 +1234,62 @@ export const POST:
                         "business_day",
 
                       value:
-                        shipping.maximumDeliveryDays,
+                        shipping
+                          .maximumDeliveryDays,
                     },
                   },
                 },
               },
             ],
+
+            // =================================================
+            // EXPIRATION
+            // =================================================
+
+            expires_at:
+              stripeExpiresAt,
+
+            // =================================================
+            // RETURN URLS
+            // =================================================
+
+            success_url:
+              `${url.origin}/tienda/gracias?session_id={CHECKOUT_SESSION_ID}`,
+
+              cancel_url:
+              `${url.origin}/tienda/cancelado?reservation_id=${encodeURIComponent(
+                reservationId,
+              )}`,
+
+            // =================================================
+            // CUSTOMER
+            // =================================================
+
+            phone_number_collection: {
+              enabled:
+                true,
+            },
+
+            /*
+              MUY IMPORTANTE:
+
+              El comprador sólo puede introducir
+              una dirección del país para el cual
+              calculamos esta sesión.
+
+              Así alguien no puede solicitar tarifa MX
+              y después escribir una dirección US.
+            */
+
+            shipping_address_collection: {
+              allowed_countries: [
+                destinationCountry,
+              ],
+            },
+
+            // =================================================
+            // SESSION METADATA
+            // =================================================
 
             metadata: {
               source:
@@ -980,24 +1303,32 @@ export const POST:
                   totalItems,
                 ),
 
-              expected_subtotal:
+              subtotal_cents:
                 String(
                   subtotal,
                 ),
 
-              expected_shipping:
+              shipping_country:
+                destinationCountry,
+
+              shipping_amount_cents:
                 String(
                   shipping.amount,
                 ),
 
-              expected_total:
-                String(
-                  expectedTotal,
-                ),
-
               shipping_method:
                 shipping.id,
+
+              shipping_weight_grams:
+                String(
+                  shippingQuote
+                    .totalWeightGrams,
+                ),
             },
+
+            // =================================================
+            // PAYMENT INTENT METADATA
+            // =================================================
 
             payment_intent_data: {
               metadata: {
@@ -1007,8 +1338,13 @@ export const POST:
                 reservation_id:
                   reservationId,
 
-                shipping_method:
-                  shipping.id,
+                shipping_country:
+                  destinationCountry,
+
+                shipping_amount_cents:
+                  String(
+                    shipping.amount,
+                  ),
               },
             },
           });
@@ -1019,6 +1355,12 @@ export const POST:
         "[ATB Shop] Stripe no pudo crear Checkout:",
         error,
       );
+
+      /*
+        Stripe nunca creó una sesión.
+
+        Podemos liberar inventario inmediatamente.
+      */
 
       await releaseReservationSafely(
         reservationId,
@@ -1035,7 +1377,7 @@ export const POST:
     }
 
     // ========================================================
-    // VALIDATE STRIPE RESPONSE
+    // VALIDATE SESSION
     // ========================================================
 
     if (
@@ -1049,6 +1391,12 @@ export const POST:
             session.id,
         },
       );
+
+      /*
+        Primero intentamos cerrar Stripe.
+
+        Sólo después liberamos inventario.
+      */
 
       if (
         session.id
@@ -1078,7 +1426,7 @@ export const POST:
     }
 
     // ========================================================
-    // ATTACH SESSION TO RESERVATION
+    // ATTACH STRIPE SESSION TO RESERVATION
     // ========================================================
 
     const {
@@ -1098,6 +1446,10 @@ export const POST:
             session.id,
         },
       );
+
+    // ========================================================
+    // ATTACH FAILED
+    // ========================================================
 
     if (
       attachError
@@ -1121,17 +1473,42 @@ export const POST:
         },
       );
 
-      const expired =
+      /*
+        Ya existe una sesión Stripe.
+
+        Antes de liberar inventario,
+        intentamos cerrarla.
+      */
+
+      const stripeExpired =
         await expireStripeSessionSafely(
           session.id,
         );
 
       if (
-        expired
+        stripeExpired
       ) {
         await releaseReservationSafely(
           reservationId,
           "failed",
+        );
+      } else {
+        /*
+          Si Stripe no pudo cerrarse dejamos
+          la reserva activa hasta su expiración.
+
+          Es más seguro que liberar stock mientras
+          existe una sesión de pago válida.
+        */
+
+        console.error(
+          "[ATB Shop] La sesión Stripe no pudo cerrarse. La reserva permanecerá activa hasta expirar.",
+          {
+            reservationId,
+
+            stripeSessionId:
+              session.id,
+          },
         );
       }
 
@@ -1159,13 +1536,13 @@ export const POST:
         attachData,
       );
 
-      const expired =
+      const stripeExpired =
         await expireStripeSessionSafely(
           session.id,
         );
 
       if (
-        expired
+        stripeExpired
       ) {
         await releaseReservationSafely(
           reservationId,
@@ -1194,13 +1571,16 @@ export const POST:
         stripeSessionId:
           session.id,
 
+        destinationCountry,
+
         subtotal,
 
-        shipping:
+        shippingAmount:
           shipping.amount,
 
-        total:
-          expectedTotal,
+        totalWeightGrams:
+          shippingQuote
+            .totalWeightGrams,
 
         items:
           reservationItems,
@@ -1211,47 +1591,54 @@ export const POST:
       {
         url:
           session.url,
-
+    
         sessionId:
           session.id,
+    
+        reservationId,
+    
+        shipping: {
+          country:
+            destinationCountry,
+
+          amount:
+            shipping.amount,
+
+          method:
+            shipping.id,
+
+          name:
+            shipping.name,
+
+          minimumDeliveryDays:
+            shipping
+              .minimumDeliveryDays,
+
+          maximumDeliveryDays:
+            shipping
+              .maximumDeliveryDays,
+
+          totalWeightGrams:
+            shippingQuote
+              .totalWeightGrams,
+        },
       },
       200,
     );
   };
 
 // ============================================================
-// OTHER METHODS
+// GET
 // ============================================================
 
 export const GET:
   APIRoute =
-  async () =>
-    jsonResponse(
+  async () => {
+    return jsonResponse(
       {
         error:
           "Method not allowed.",
       },
       405,
     );
-
-export const PUT:
-  APIRoute =
-  async () =>
-    jsonResponse(
-      {
-        error:
-          "Method not allowed.",
-      },
-      405,
-    );
-
-export const DELETE:
-  APIRoute =
-  async () =>
-    jsonResponse(
-      {
-        error:
-          "Method not allowed.",
-      },
-      405,
-    );
+  };
