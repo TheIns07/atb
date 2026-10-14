@@ -1,33 +1,50 @@
-import type {
-  APIRoute,
-} from "astro";
+import type { APIRoute } from "astro";
+import Stripe from "stripe";
+import { createClient } from "@supabase/supabase-js";
 
 import {
-  createClient,
-} from "@supabase/supabase-js";
+  getVariantBySku,
+  type Product,
+  type ProductVariant,
+} from "../../data/products";
+
+import {
+  resolveShopShipping,
+} from "../../lib/server/shop/shipping";
+
+export const prerender = false;
 
 // ============================================================
-// SERVER ONLY
+// CONFIG
 // ============================================================
 
-export const prerender =
-  false;
+const RESERVATION_TTL_MINUTES = 35;
+
+// Stripe exige al menos 30 minutos.
+// Dejamos 31 para que expire antes que nuestra reserva.
+const STRIPE_SESSION_TTL_MINUTES = 31;
 
 // ============================================================
 // ENVIRONMENT
 // ============================================================
 
+const stripeSecretKey =
+  import.meta.env.STRIPE_SECRET_KEY;
+
 const supabaseUrl =
-  import.meta.env
-    .SUPABASE_URL;
+  import.meta.env.SUPABASE_URL;
 
 const supabaseServiceRoleKey =
-  import.meta.env
-    .SUPABASE_SERVICE_ROLE_KEY;
+  import.meta.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // ============================================================
-// SUPABASE
+// CLIENTS
 // ============================================================
+
+const stripe =
+  stripeSecretKey
+    ? new Stripe(stripeSecretKey)
+    : null;
 
 const supabase =
   supabaseUrl &&
@@ -37,14 +54,9 @@ const supabase =
         supabaseServiceRoleKey,
         {
           auth: {
-            persistSession:
-              false,
-
-            autoRefreshToken:
-              false,
-
-            detectSessionInUrl:
-              false,
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
           },
         },
       )
@@ -54,62 +66,50 @@ const supabase =
 // TYPES
 // ============================================================
 
-type DatabaseOrderRow = {
-  id?: unknown;
-
-  stripe_session_id?: unknown;
-
-  customer_email?: unknown;
-
-  currency?: unknown;
-
-  amount_subtotal?: unknown;
-
-  amount_shipping?: unknown;
-
-  amount_total?: unknown;
-
-  status?: unknown;
-
-  shipping_method?: unknown;
-
-  shipping_status?: unknown;
-
-  created_at?: unknown;
+type CheckoutRequestItem = {
+  sku: string;
+  quantity: number;
 };
 
-type DatabaseItemRow = {
-  sku?: unknown;
+type CheckoutRequestBody = {
+  items: CheckoutRequestItem[];
+};
 
-  product_name?: unknown;
+type NormalizedCartItem = {
+  sku: string;
+  quantity: number;
+};
 
-  variant_description?: unknown;
+type ResolvedCheckoutItem = {
+  sku: string;
+  quantity: number;
+  product: Product;
+  variant: ProductVariant;
+};
 
-  quantity?: unknown;
+type ReserveInventoryResponse = {
+  success?: boolean;
+  reservation_id?: string;
+  expires_at?: string;
+};
 
-  unit_amount?: unknown;
-
-  line_total?: unknown;
-
-  currency?: unknown;
+type AttachReservationResponse = {
+  success?: boolean;
+  duplicate?: boolean;
+  reservation_id?: string;
+  stripe_session_id?: string;
 };
 
 // ============================================================
-// JSON RESPONSE
+// RESPONSE
 // ============================================================
 
 function jsonResponse(
-  body: Record<
-    string,
-    unknown
-  >,
-
+  body: Record<string, unknown>,
   status = 200,
 ): Response {
   return new Response(
-    JSON.stringify(
-      body,
-    ),
+    JSON.stringify(body),
     {
       status,
 
@@ -125,915 +125,1133 @@ function jsonResponse(
 }
 
 // ============================================================
-// HELPERS
+// VARIANT DESCRIPTION
 // ============================================================
 
-function getString(
-  value: unknown,
-): string | null {
-  if (
-    typeof value !==
-    "string"
-  ) {
-    return null;
-  }
+function getVariantDescription(
+  product: Product,
+  variant: ProductVariant,
+): string | undefined {
+  const color =
+    product.colors?.find(
+      (candidate) =>
+        candidate.id ===
+        variant.colorId,
+    );
 
-  const normalized =
-    value.trim();
+  const parts =
+    [
+      color?.name,
 
-  return normalized
-    ? normalized
-    : null;
-}
-
-function getNumber(
-  value: unknown,
-): number | null {
-  if (
-    typeof value ===
-      "number" &&
-    Number.isFinite(
-      value,
-    )
-  ) {
-    return value;
-  }
-
-  if (
-    typeof value ===
-    "string"
-  ) {
-    const parsed =
-      Number(
+      variant.size
+        ? `Talla ${variant.size}`
+        : undefined,
+    ].filter(
+      (
         value,
-      );
-
-    if (
-      Number.isFinite(
-        parsed,
-      )
-    ) {
-      return parsed;
-    }
-  }
-
-  return null;
-}
-
-function getInteger(
-  value: unknown,
-): number | null {
-  const number =
-    getNumber(
-      value,
+      ): value is string =>
+        Boolean(value),
     );
 
   if (
-    number ===
-      null ||
-    !Number.isSafeInteger(
-      number,
-    )
+    parts.length ===
+    0
   ) {
-    return null;
+    return undefined;
   }
 
-  return number;
-}
-
-// ============================================================
-// MASK EMAIL
-// ============================================================
-
-function maskEmail(
-  email:
-    | string
-    | null,
-): string | null {
-  if (!email) {
-    return null;
-  }
-
-  const separator =
-    email.indexOf(
-      "@",
-    );
-
-  if (
-    separator <= 0 ||
-    separator >=
-      email.length - 1
-  ) {
-    return null;
-  }
-
-  const local =
-    email.slice(
-      0,
-      separator,
-    );
-
-  const domain =
-    email.slice(
-      separator + 1,
-    );
-
-  const visibleCharacters =
-    Math.min(
-      2,
-      local.length,
-    );
-
-  const visible =
-    local.slice(
-      0,
-      visibleCharacters,
-    );
-
-  const hidden =
-    "*".repeat(
-      Math.max(
-        3,
-        local.length -
-          visibleCharacters,
-      ),
-    );
-
-  return `${visible}${hidden}@${domain}`;
-}
-
-// ============================================================
-// ORDER REFERENCE
-// ============================================================
-
-function getOrderReference(
-  orderId:
-    | string
-    | null,
-): string | null {
-  if (!orderId) {
-    return null;
-  }
-
-  const normalized =
-    orderId.replace(
-      /-/g,
-      "",
-    );
-
-  if (!normalized) {
-    return null;
-  }
-
-  return normalized
-    .slice(
-      0,
-      8,
-    )
-    .toUpperCase();
-}
-
-// ============================================================
-// STRIPE SESSION VALIDATION
-// ============================================================
-
-function isStripeSessionId(
-  value:
-    | string
-    | null,
-): value is string {
-  if (!value) {
-    return false;
-  }
-
-  if (
-    value.length <
-      10 ||
-    value.length >
-      255
-  ) {
-    return false;
-  }
-
-  /*
-    Test:
-    cs_test_...
-
-    Live:
-    cs_live_...
-  */
-
-  return /^cs_[A-Za-z0-9_]+$/.test(
-    value,
+  return parts.join(
+    " / ",
   );
 }
 
 // ============================================================
-// NORMALIZE SHIPPING METHOD
+// NORMALIZE CART
 // ============================================================
 
-function normalizeShippingMethod(
-  value: unknown,
-): string | null {
-  const method =
-    getString(
-      value,
+function normalizeCartItems(
+  items: CheckoutRequestItem[],
+):
+  | NormalizedCartItem[]
+  | null {
+  const combined =
+    new Map<
+      string,
+      number
+    >();
+
+  for (
+    const item
+    of items
+  ) {
+    if (
+      !item ||
+      typeof item.sku !==
+        "string"
+    ) {
+      return null;
+    }
+
+    const sku =
+      item.sku
+        .trim()
+        .toUpperCase();
+
+    if (
+      !sku ||
+      !/^[A-Z0-9-]+$/.test(
+        sku,
+      )
+    ) {
+      return null;
+    }
+
+    if (
+      !Number.isInteger(
+        item.quantity,
+      ) ||
+      item.quantity <= 0 ||
+      item.quantity > 20
+    ) {
+      return null;
+    }
+
+    const previous =
+      combined.get(
+        sku,
+      ) ?? 0;
+
+    const quantity =
+      previous +
+      item.quantity;
+
+    if (
+      quantity > 20
+    ) {
+      return null;
+    }
+
+    combined.set(
+      sku,
+      quantity,
+    );
+  }
+
+  const result =
+    Array.from(
+      combined,
+      (
+        [
+          sku,
+          quantity,
+        ],
+      ) => ({
+        sku,
+        quantity,
+      }),
     );
 
   if (
-    method ===
-      "standard" ||
-    method ===
-      "free"
+    result.length >
+    20
   ) {
-    return method;
+    return null;
   }
 
-  return method;
+  return result;
 }
 
 // ============================================================
-// SHIPPING DISPLAY NAME
+// SAFE RELEASE
 // ============================================================
 
-function getShippingMethodName(
-  method:
+async function releaseReservationSafely(
+  reservationId: string,
+
+  status:
+    | "released"
+    | "expired"
+    | "failed" =
+    "failed",
+): Promise<boolean> {
+  if (
+    !supabase
+  ) {
+    return false;
+  }
+
+  try {
+    const {
+      error,
+    } =
+      await supabase.rpc(
+        "release_shop_inventory_reservation",
+        {
+          p_reservation_id:
+            reservationId,
+
+          p_status:
+            status,
+        },
+      );
+
+    if (
+      error
+    ) {
+      console.error(
+        "[ATB Shop] No se pudo liberar reserva:",
+        {
+          reservationId,
+          status,
+          message:
+            error.message,
+          details:
+            error.details,
+          hint:
+            error.hint,
+        },
+      );
+
+      return false;
+    }
+
+    return true;
+  } catch (
+    error
+  ) {
+    console.error(
+      "[ATB Shop] Error inesperado liberando reserva:",
+      {
+        reservationId,
+        error,
+      },
+    );
+
+    return false;
+  }
+}
+
+// ============================================================
+// SAFE STRIPE EXPIRATION
+// ============================================================
+
+async function expireStripeSessionSafely(
+  sessionId: string,
+): Promise<boolean> {
+  if (
+    !stripe
+  ) {
+    return false;
+  }
+
+  try {
+    await stripe.checkout
+      .sessions
+      .expire(
+        sessionId,
+      );
+
+    return true;
+  } catch (
+    error
+  ) {
+    console.error(
+      "[ATB Shop] No se pudo expirar Stripe Checkout:",
+      {
+        sessionId,
+        error,
+      },
+    );
+
+    return false;
+  }
+}
+
+// ============================================================
+// RESERVATION ERROR
+// ============================================================
+
+function getReservationErrorResponse(
+  message:
     | string
-    | null,
+    | undefined,
+): Response {
+  const normalized =
+    (
+      message ??
+      ""
+    ).toLowerCase();
 
-  amountShipping:
-    | number
-    | null,
-): string | null {
   if (
-    method ===
-    "free" ||
-    amountShipping ===
-      0
+    normalized.includes(
+      "insufficient inventory",
+    )
   ) {
-    return "Envío estándar gratuito";
+    return jsonResponse(
+      {
+        error:
+          "Uno de los productos ya no tiene suficiente inventario disponible.",
+      },
+      409,
+    );
   }
 
   if (
-    method ===
-    "standard"
+    normalized.includes(
+      "inventory sku is inactive",
+    )
   ) {
-    return "Envío estándar";
+    return jsonResponse(
+      {
+        error:
+          "Uno de los productos ya no está disponible.",
+      },
+      409,
+    );
   }
 
-  return method;
+  if (
+    normalized.includes(
+      "inventory sku not found",
+    )
+  ) {
+    return jsonResponse(
+      {
+        error:
+          "No pudimos verificar el inventario de uno de los productos.",
+      },
+      409,
+    );
+  }
+
+  return jsonResponse(
+    {
+      error:
+        "No fue posible reservar el inventario.",
+    },
+    500,
+  );
 }
 
 // ============================================================
-// GET
+// POST — CREATE CHECKOUT
 // ============================================================
 
-export const GET:
+export const POST:
   APIRoute =
   async ({
+    request,
     url,
   }) => {
     // ========================================================
     // CONFIG
     // ========================================================
 
-    if (!supabase) {
+    if (
+      !stripe
+    ) {
       console.error(
-        "[ATB Shop] order-status: Supabase no está configurado.",
+        "[ATB Shop] Falta STRIPE_SECRET_KEY.",
       );
 
       return jsonResponse(
         {
           error:
-            "No fue posible verificar el pedido.",
+            "No fue posible iniciar el proceso de pago.",
         },
+        500,
+      );
+    }
 
+    if (
+      !supabase
+    ) {
+      console.error(
+        "[ATB Shop] Faltan SUPABASE_URL o SUPABASE_SERVICE_ROLE_KEY.",
+      );
+
+      return jsonResponse(
+        {
+          error:
+            "No fue posible consultar el inventario.",
+        },
         500,
       );
     }
 
     // ========================================================
-    // SESSION ID
+    // BODY
     // ========================================================
 
-    const sessionId =
-      url.searchParams
-        .get(
-          "session_id",
-        )
-        ?.trim() ??
-      null;
+    let body:
+      CheckoutRequestBody;
+
+    try {
+      body =
+        (await request.json()) as
+          CheckoutRequestBody;
+    } catch {
+      return jsonResponse(
+        {
+          error:
+            "Solicitud inválida.",
+        },
+        400,
+      );
+    }
 
     if (
-      !isStripeSessionId(
-        sessionId,
-      )
+      !body ||
+      !Array.isArray(
+        body.items,
+      ) ||
+      body.items.length ===
+        0
     ) {
       return jsonResponse(
         {
           error:
-            "La referencia de pago no es válida.",
+            "Tu bolsa está vacía.",
         },
+        400,
+      );
+    }
 
+    if (
+      body.items.length >
+      20
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "La bolsa contiene demasiados artículos.",
+        },
+        400,
+      );
+    }
+
+    const normalizedItems =
+      normalizeCartItems(
+        body.items,
+      );
+
+    if (
+      !normalizedItems ||
+      normalizedItems.length ===
+        0
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "La bolsa contiene artículos inválidos.",
+        },
         400,
       );
     }
 
     // ========================================================
-    // ORDER
-    //
-    // Sólo seleccionamos las columnas que esta API necesita.
-    //
-    // No exponemos:
-    //
-    // - dirección completa
-    // - teléfono
-    // - payment_intent
-    // - datos internos adicionales
+    // RESOLVE CATALOGUE
     // ========================================================
 
-    const {
-      data:
-        rawOrderData,
+    const resolvedItems:
+      ResolvedCheckoutItem[] =
+      [];
 
-      error:
-        orderError,
-    } =
-      await supabase
-        .from(
-          "shop_orders",
-        )
-        .select(
-          `
-            id,
-            stripe_session_id,
-            customer_email,
-            currency,
-            amount_subtotal,
-            amount_shipping,
-            amount_total,
-            status,
-            shipping_method,
-            shipping_status,
-            created_at
-          `,
-        )
-        .eq(
-          "stripe_session_id",
-          sessionId,
-        )
-        .maybeSingle();
-
-    // ========================================================
-    // DATABASE ERROR
-    // ========================================================
-
-    if (
-      orderError
+    for (
+      const item
+      of normalizedItems
     ) {
-      console.error(
-        "[ATB Shop] order-status: error consultando pedido:",
-        {
-          sessionId,
+      const resolved =
+        getVariantBySku(
+          item.sku,
+        );
 
-          message:
-            orderError.message,
+      if (
+        !resolved
+      ) {
+        console.warn(
+          "[ATB Shop] SKU desconocido:",
+          item.sku,
+        );
 
-          details:
-            orderError.details,
-
-          hint:
-            orderError.hint,
-        },
-      );
-
-      return jsonResponse(
-        {
-          error:
-            "No fue posible verificar el pedido.",
-        },
-
-        500,
-      );
-    }
-
-    // ========================================================
-    // WEBHOOK MAY STILL BE PROCESSING
-    //
-    // Stripe puede redirigir al comprador unos instantes antes
-    // de que nuestro webhook haya terminado de registrar el
-    // pedido.
-    //
-    // La página /gracias puede reintentar al recibir 202.
-    // ========================================================
-
-    if (!rawOrderData) {
-      return jsonResponse(
-        {
-          confirmed:
-            false,
-
-          processing:
-            true,
-        },
-
-        202,
-      );
-    }
-
-    const order =
-      rawOrderData as
-        DatabaseOrderRow;
-
-    // ========================================================
-    // ORDER ID
-    // ========================================================
-
-    const orderId =
-      getString(
-        order.id,
-      );
-
-    if (!orderId) {
-      console.error(
-        "[ATB Shop] order-status: pedido sin ID válido.",
-        {
-          sessionId,
-        },
-      );
-
-      return jsonResponse(
-        {
-          error:
-            "El pedido registrado no es válido.",
-        },
-
-        500,
-      );
-    }
-
-    // ========================================================
-    // ORDER ITEMS
-    // ========================================================
-
-    const {
-      data:
-        rawItemsData,
-
-      error:
-        itemsError,
-    } =
-      await supabase
-        .from(
-          "shop_order_items",
-        )
-        .select(
-          `
-            sku,
-            product_name,
-            variant_description,
-            quantity,
-            unit_amount,
-            line_total,
-            currency
-          `,
-        )
-        .eq(
-          "order_id",
-          orderId,
-        )
-        .order(
-          "id",
+        return jsonResponse(
           {
-            ascending:
-              true,
+            error:
+              "Uno de los productos ya no está disponible.",
+          },
+          400,
+        );
+      }
+
+      const {
+        product,
+        variant,
+      } =
+        resolved;
+
+      if (
+        !product.active
+      ) {
+        return jsonResponse(
+          {
+            error:
+              `${product.name} ya no está disponible.`,
+          },
+          409,
+        );
+      }
+
+      if (
+        product.status !==
+        "available"
+      ) {
+        return jsonResponse(
+          {
+            error:
+              `${product.name} no está disponible para compra.`,
+          },
+          409,
+        );
+      }
+
+      if (
+        !variant.active
+      ) {
+        return jsonResponse(
+          {
+            error:
+              `La variante seleccionada de ${product.name} ya no está disponible.`,
+          },
+          409,
+        );
+      }
+
+      if (
+        variant.price ===
+          null ||
+        !Number.isInteger(
+          variant.price,
+        ) ||
+        variant.price <= 0
+      ) {
+        console.error(
+          "[ATB Shop] Precio inválido:",
+          {
+            sku:
+              item.sku,
+
+            price:
+              variant.price,
           },
         );
 
+        return jsonResponse(
+          {
+            error:
+              `${product.name} todavía no tiene un precio válido.`,
+          },
+          409,
+        );
+      }
+
+      resolvedItems.push({
+        sku:
+          item.sku,
+
+        quantity:
+          item.quantity,
+
+        product,
+
+        variant,
+      });
+    }
+
     // ========================================================
-    // ITEMS ERROR
+    // TRUSTED SUBTOTAL
     // ========================================================
 
-    if (
-      itemsError
-    ) {
-      console.error(
-        "[ATB Shop] order-status: error consultando artículos:",
-        {
-          orderId,
-
-          sessionId,
-
-          message:
-            itemsError.message,
-
-          details:
-            itemsError.details,
-
-          hint:
-            itemsError.hint,
-        },
+    const subtotal =
+      resolvedItems.reduce(
+        (
+          total,
+          item,
+        ) =>
+          total +
+          (
+            item.variant
+              .price! *
+            item.quantity
+          ),
+        0,
       );
 
+    if (
+      !Number.isSafeInteger(
+        subtotal,
+      ) ||
+      subtotal <= 0
+    ) {
       return jsonResponse(
         {
           error:
-            "No fue posible consultar los artículos del pedido.",
+            "No fue posible calcular el total del pedido.",
         },
-
         500,
       );
     }
 
     // ========================================================
-    // NORMALIZE ITEMS
+    // SHIPPING
     // ========================================================
 
-    const items =
-      (
-        rawItemsData ??
-        []
-      ).map(
+    const shipping =
+      resolveShopShipping(
+        subtotal,
+      );
+
+    const expectedTotal =
+      subtotal +
+      shipping.amount;
+
+    if (
+      !Number.isSafeInteger(
+        expectedTotal,
+      ) ||
+      expectedTotal <= 0
+    ) {
+      return jsonResponse(
+        {
+          error:
+            "No fue posible calcular el total del pedido.",
+        },
+        500,
+      );
+    }
+
+    // ========================================================
+    // RESERVE INVENTORY
+    // ========================================================
+
+    const reservationItems =
+      resolvedItems.map(
         (
-          rawItem,
+          item,
+        ) => ({
+          sku:
+            item.sku,
+
+          quantity:
+            item.quantity,
+        }),
+      );
+
+    const {
+      data:
+        reservationData,
+
+      error:
+        reservationError,
+    } =
+      await supabase.rpc(
+        "reserve_shop_inventory",
+        {
+          p_items:
+            reservationItems,
+
+          p_ttl_minutes:
+            RESERVATION_TTL_MINUTES,
+        },
+      );
+
+    if (
+      reservationError
+    ) {
+      console.warn(
+        "[ATB Shop] No se pudo reservar inventario:",
+        {
+          message:
+            reservationError.message,
+
+          details:
+            reservationError.details,
+
+          hint:
+            reservationError.hint,
+        },
+      );
+
+      return getReservationErrorResponse(
+        reservationError.message,
+      );
+    }
+
+    const reservation =
+      reservationData as
+        | ReserveInventoryResponse
+        | null;
+
+    const reservationId =
+      reservation
+        ?.reservation_id;
+
+    if (
+      !reservation ||
+      reservation.success !==
+        true ||
+      !reservationId
+    ) {
+      console.error(
+        "[ATB Shop] Supabase no devolvió una reserva válida:",
+        reservationData,
+      );
+
+      return jsonResponse(
+        {
+          error:
+            "No fue posible reservar el inventario.",
+        },
+        500,
+      );
+    }
+
+    // ========================================================
+    // STRIPE LINE ITEMS
+    // ========================================================
+
+    const lineItems:
+      Stripe.Checkout.SessionCreateParams.LineItem[] =
+      resolvedItems.map(
+        (
+          item,
         ) => {
-          const item =
-            rawItem as
-              DatabaseItemRow;
-
-          const quantity =
-            getInteger(
-              item.quantity,
-            ) ??
-            0;
-
-          const unitAmount =
-            getInteger(
-              item.unit_amount,
+          const description =
+            getVariantDescription(
+              item.product,
+              item.variant,
             );
-
-          const storedLineTotal =
-            getInteger(
-              item.line_total,
-            );
-
-          const calculatedLineTotal =
-            unitAmount !==
-              null &&
-            quantity >
-              0
-              ? unitAmount *
-                quantity
-              : null;
 
           return {
-            sku:
-              getString(
-                item.sku,
-              ),
+            quantity:
+              item.quantity,
 
-            productName:
-              getString(
-                item.product_name,
-              ) ??
-              "Producto ATB",
+            price_data: {
+              currency:
+                "mxn",
 
-            variantDescription:
-              getString(
-                item.variant_description,
-              ),
+              unit_amount:
+                item.variant
+                  .price!,
 
-            quantity,
+              product_data: {
+                name:
+                  item.product
+                    .name,
 
-            unitAmount,
+                ...(description
+                  ? {
+                      description,
+                    }
+                  : {}),
 
-            lineTotal:
-              storedLineTotal ??
-              calculatedLineTotal,
+                metadata: {
+                  sku:
+                    item.sku,
 
-            currency:
-              (
-                getString(
-                  item.currency,
-                ) ??
-                getString(
-                  order.currency,
-                ) ??
-                "mxn"
-              ).toUpperCase(),
+                  product_id:
+                    item.product
+                      .id,
+                },
+              },
+            },
           };
         },
       );
 
-    // ========================================================
-    // ORDER AMOUNTS
-    // ========================================================
-
-    const amountSubtotal =
-      getInteger(
-        order.amount_subtotal,
-      );
-
-    const amountShipping =
-      getInteger(
-        order.amount_shipping,
-      );
-
-    const amountTotal =
-      getInteger(
-        order.amount_total,
+    const totalItems =
+      resolvedItems.reduce(
+        (
+          total,
+          item,
+        ) =>
+          total +
+          item.quantity,
+        0,
       );
 
     // ========================================================
-    // FALLBACK FOR LEGACY ORDERS
-    //
-    // Pedidos anteriores a la migración de envío pueden no
-    // tener una separación histórica entre subtotal y envío.
+    // STRIPE EXPIRATION
     // ========================================================
 
-    const normalizedShipping =
-      amountShipping ??
-      0;
-
-    const normalizedSubtotal =
-      amountSubtotal ??
-      (
-        amountTotal !==
-          null
-          ? Math.max(
-              0,
-              amountTotal -
-                normalizedShipping,
-            )
-          : null
-      );
+    const stripeExpiresAt =
+      Math.floor(
+        Date.now() /
+          1000,
+      ) +
+      STRIPE_SESSION_TTL_MINUTES *
+        60;
 
     // ========================================================
-    // VERIFY AMOUNTS
+    // CREATE CHECKOUT
     // ========================================================
 
-    if (
-      normalizedSubtotal !==
-        null &&
-      normalizedSubtotal < 0
+    let session:
+      Stripe.Checkout.Session;
+
+    try {
+      session =
+        await stripe.checkout
+          .sessions.create({
+            mode:
+              "payment",
+
+            line_items:
+              lineItems,
+
+            expires_at:
+              stripeExpiresAt,
+
+            success_url:
+              `${url.origin}/tienda/gracias?session_id={CHECKOUT_SESSION_ID}`,
+
+            cancel_url:
+              `${url.origin}/tienda/cancelado?reservation_id=${encodeURIComponent(
+                reservationId,
+              )}`,
+
+            phone_number_collection: {
+              enabled:
+                true,
+            },
+
+            shipping_address_collection: {
+              allowed_countries: [
+                "MX",
+              ],
+            },
+
+            shipping_options: [
+              {
+                shipping_rate_data: {
+                  type:
+                    "fixed_amount",
+
+                  fixed_amount: {
+                    amount:
+                      shipping.amount,
+
+                    currency:
+                      "mxn",
+                  },
+
+                  display_name:
+                    shipping.name,
+
+                  delivery_estimate: {
+                    minimum: {
+                      unit:
+                        "business_day",
+
+                      value:
+                        shipping.minimumDeliveryDays,
+                    },
+
+                    maximum: {
+                      unit:
+                        "business_day",
+
+                      value:
+                        shipping.maximumDeliveryDays,
+                    },
+                  },
+                },
+              },
+            ],
+
+            metadata: {
+              source:
+                "atb-shop",
+
+              reservation_id:
+                reservationId,
+
+              total_items:
+                String(
+                  totalItems,
+                ),
+
+              expected_subtotal:
+                String(
+                  subtotal,
+                ),
+
+              expected_shipping:
+                String(
+                  shipping.amount,
+                ),
+
+              expected_total:
+                String(
+                  expectedTotal,
+                ),
+
+              shipping_method:
+                shipping.id,
+            },
+
+            payment_intent_data: {
+              metadata: {
+                source:
+                  "atb-shop",
+
+                reservation_id:
+                  reservationId,
+
+                shipping_method:
+                  shipping.id,
+              },
+            },
+          });
+    } catch (
+      error
     ) {
       console.error(
-        "[ATB Shop] order-status: subtotal inválido.",
-        {
-          orderId,
+        "[ATB Shop] Stripe no pudo crear Checkout:",
+        error,
+      );
 
-          normalizedSubtotal,
-        },
+      await releaseReservationSafely(
+        reservationId,
+        "failed",
       );
 
       return jsonResponse(
         {
           error:
-            "El pedido contiene importes inválidos.",
+            "No fue posible iniciar el proceso de pago.",
         },
-
         500,
       );
     }
 
+    // ========================================================
+    // VALIDATE STRIPE RESPONSE
+    // ========================================================
+
     if (
-      normalizedShipping < 0
+      !session.id ||
+      !session.url
     ) {
       console.error(
-        "[ATB Shop] order-status: envío inválido.",
+        "[ATB Shop] Stripe creó una sesión incompleta:",
         {
-          orderId,
-
-          normalizedShipping,
+          sessionId:
+            session.id,
         },
       );
+
+      if (
+        session.id
+      ) {
+        const expired =
+          await expireStripeSessionSafely(
+            session.id,
+          );
+
+        if (
+          expired
+        ) {
+          await releaseReservationSafely(
+            reservationId,
+            "failed",
+          );
+        }
+      }
 
       return jsonResponse(
         {
           error:
-            "El pedido contiene importes inválidos.",
+            "No fue posible abrir la página de pago.",
         },
-
         500,
       );
     }
 
-    if (
-      amountTotal !==
-        null &&
-      amountTotal < 0
-    ) {
-      console.error(
-        "[ATB Shop] order-status: total inválido.",
-        {
-          orderId,
+    // ========================================================
+    // ATTACH SESSION TO RESERVATION
+    // ========================================================
 
-          amountTotal,
+    const {
+      data:
+        attachData,
+
+      error:
+        attachError,
+    } =
+      await supabase.rpc(
+        "attach_stripe_session_to_shop_reservation",
+        {
+          p_reservation_id:
+            reservationId,
+
+          p_stripe_session_id:
+            session.id,
         },
       );
+
+    if (
+      attachError
+    ) {
+      console.error(
+        "[ATB Shop] No se pudo vincular Stripe con la reserva:",
+        {
+          reservationId,
+
+          stripeSessionId:
+            session.id,
+
+          message:
+            attachError.message,
+
+          details:
+            attachError.details,
+
+          hint:
+            attachError.hint,
+        },
+      );
+
+      const expired =
+        await expireStripeSessionSafely(
+          session.id,
+        );
+
+      if (
+        expired
+      ) {
+        await releaseReservationSafely(
+          reservationId,
+          "failed",
+        );
+      }
 
       return jsonResponse(
         {
           error:
-            "El pedido contiene importes inválidos.",
+            "No fue posible preparar la sesión de pago.",
         },
-
         500,
       );
     }
 
-    // ========================================================
-    // CURRENCY
-    // ========================================================
+    const attachResult =
+      attachData as
+        | AttachReservationResponse
+        | null;
 
-    const currency =
-      (
-        getString(
-          order.currency,
-        ) ??
-        "mxn"
-      ).toUpperCase();
-
-    // ========================================================
-    // CUSTOMER
-    // ========================================================
-
-    const customerEmail =
-      getString(
-        order.customer_email,
+    if (
+      !attachResult ||
+      attachResult.success !==
+        true
+    ) {
+      console.error(
+        "[ATB Shop] Respuesta inválida vinculando reserva:",
+        attachData,
       );
 
-    // ========================================================
-    // STATUS
-    // ========================================================
+      const expired =
+        await expireStripeSessionSafely(
+          session.id,
+        );
 
-    const status =
-      getString(
-        order.status,
-      ) ??
-      "paid";
+      if (
+        expired
+      ) {
+        await releaseReservationSafely(
+          reservationId,
+          "failed",
+        );
+      }
 
-    const shippingStatus =
-      getString(
-        order.shipping_status,
-      ) ??
-      "pending";
-
-    // ========================================================
-    // SHIPPING METHOD
-    // ========================================================
-
-    const shippingMethod =
-      normalizeShippingMethod(
-        order.shipping_method,
+      return jsonResponse(
+        {
+          error:
+            "No fue posible preparar la sesión de pago.",
+        },
+        500,
       );
-
-    const shippingMethodName =
-      getShippingMethodName(
-        shippingMethod,
-        normalizedShipping,
-      );
-
-    // ========================================================
-    // CREATED AT
-    // ========================================================
-
-    const createdAt =
-      getString(
-        order.created_at,
-      );
+    }
 
     // ========================================================
     // SUCCESS
     // ========================================================
 
+    console.log(
+      "[ATB Shop] Checkout preparado:",
+      {
+        reservationId,
+
+        stripeSessionId:
+          session.id,
+
+        subtotal,
+
+        shipping:
+          shipping.amount,
+
+        total:
+          expectedTotal,
+
+        items:
+          reservationItems,
+      },
+    );
+
     return jsonResponse(
       {
-        confirmed:
-          true,
+        url:
+          session.url,
 
-        processing:
-          false,
-
-        order: {
-          // ==================================================
-          // IDENTIFICATION
-          // ==================================================
-
-          id:
-            orderId,
-
-          reference:
-            getOrderReference(
-              orderId,
-            ),
-
-          // ==================================================
-          // PAYMENT STATUS
-          // ==================================================
-
-          status,
-
-          currency,
-
-          // ==================================================
-          // AMOUNTS
-          // ==================================================
-
-          amountSubtotal:
-            normalizedSubtotal,
-
-          amountShipping:
-            normalizedShipping,
-
-          amountTotal,
-
-          // ==================================================
-          // CUSTOMER
-          //
-          // Nunca devolvemos el correo completo desde esta API.
-          // ==================================================
-
-          customerEmail:
-            maskEmail(
-              customerEmail,
-            ),
-
-          // ==================================================
-          // SHIPPING
-          // ==================================================
-
-          shippingMethod,
-
-          shippingMethodName,
-
-          shippingStatus,
-
-          // ==================================================
-          // DATE
-          // ==================================================
-
-          createdAt,
-
-          // ==================================================
-          // ITEMS
-          // ==================================================
-
-          items,
-        },
+        sessionId:
+          session.id,
       },
-
       200,
     );
   };
 
 // ============================================================
-// POST
+// OTHER METHODS
 // ============================================================
 
-export const POST:
+export const GET:
   APIRoute =
-  async () => {
-    return jsonResponse(
+  async () =>
+    jsonResponse(
       {
         error:
           "Method not allowed.",
       },
-
       405,
     );
-  };
-
-// ============================================================
-// PUT
-// ============================================================
 
 export const PUT:
   APIRoute =
-  async () => {
-    return jsonResponse(
+  async () =>
+    jsonResponse(
       {
         error:
           "Method not allowed.",
       },
-
       405,
     );
-  };
-
-// ============================================================
-// DELETE
-// ============================================================
 
 export const DELETE:
   APIRoute =
-  async () => {
-    return jsonResponse(
+  async () =>
+    jsonResponse(
       {
         error:
           "Method not allowed.",
       },
-
       405,
     );
-  };
