@@ -22,3 +22,12 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+.netlify/
+# Netlify local build artifacts
+.netlify/
+
+# Environment secrets
+.env
+.env.*
+!.env.example
