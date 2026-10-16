@@ -92,12 +92,8 @@ function getInitialStatus(
 
       <header class="shop-header">
         <h1>
-          Tienda.
+          Tienda
         </h1>
-
-        <span class="shop-count">
-          {String(products.length).padStart(2, "0")}
-        </span>
       </header>
 
       <!-- =========================================
@@ -151,27 +147,31 @@ function getInitialStatus(
                 1;
 
               return (
-                <article
-                  class:list={[
-                    "product-piece",
-                    `product-piece--${composition}`,
-                    {
-                      "is-sold-out":
-                        product.status ===
-                        "sold-out",
-                    },
-                  ]}
-                  data-shop-product-card
-                  data-product-status={
-                    product.status
-                  }
-                  data-product-skus={
-                    skus
-                  }
-                  data-product-name={
-                    product.name
-                  }
-                >
+              <article
+                class:list={[
+                  "product-piece",
+                  `product-piece--${composition}`,
+                  {
+                    "is-sold-out":
+                      product.status ===
+                      "sold-out",
+
+                    "product-piece--camcorder":
+                      product.id ===
+                      "documentary-camcorder",
+                  },
+                ]}
+                data-shop-product-card
+                data-product-status={
+                  product.status
+                }
+                data-product-skus={
+                  skus
+                }
+                data-product-name={
+                  product.name
+                }
+              >
                   <a
                     href={`/tienda/${product.slug}`}
                     class="product-link"
@@ -235,10 +235,6 @@ function getInitialStatus(
                           <h2>
                             {product.name}
                           </h2>
-
-                          <span class="hover-arrow">
-                            ↗
-                          </span>
                         </div>
 
                         {
@@ -969,6 +965,16 @@ function getInitialStatus(
       4 / 5;
   }
 
+  /* ============================================================
+   VIDEOGRABADORA
+============================================================ */
+
+.product-piece--camcorder
+  .image-shell {
+  aspect-ratio:
+    16 / 9;
+}
+
   .image-placeholder {
     position:
       absolute;
@@ -1459,6 +1465,12 @@ function getInitialStatus(
 
       margin-top:
         0;
+    }
+
+    .product-piece--camcorder
+      .image-shell {
+      aspect-ratio: 
+        16 / 9;
     }
 
     .product-piece:nth-child(

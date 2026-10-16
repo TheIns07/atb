@@ -53,6 +53,10 @@ const isProp =
   product.category ===
   "documentary-prop";
 
+const isCamcorder =
+  product.slug ===
+  "videograbadora-documental";
+
 const isUnique =
   product.inventoryMode ===
     "single-item" ||
@@ -145,7 +149,13 @@ const initialSize =
 
 <Layout>
   <main
-    class="product-page"
+    class:list={[
+      "product-page",
+      {
+        "product-page--camcorder":
+          isCamcorder,
+      },
+    ]}
     data-product-page
     data-product-status={product.status}
     data-product-name={product.name}
@@ -2096,6 +2106,43 @@ const initialSize =
     height: 100%;
 
     object-fit: cover;
+  }
+
+  /* ============================================================
+     VIDEOGRABADORA
+  ============================================================ */
+
+  .product-page--camcorder
+    .main-image-wrapper {
+    aspect-ratio:
+      16 / 9;
+  }
+
+  .product-page--camcorder
+    .main-image {
+    object-fit:
+      contain;
+
+    object-position:
+      center;
+
+    background:
+      #f3f3f3;
+  }
+
+  .product-page--camcorder
+    .thumbnail-button {
+    aspect-ratio:
+      16 / 9;
+  }
+
+  .product-page--camcorder
+    .thumbnail-button img {
+    object-fit:
+      contain;
+
+    object-position:
+      center;
   }
 
   /* ============================================================
