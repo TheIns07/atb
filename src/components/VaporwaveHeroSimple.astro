@@ -3,38 +3,13 @@
 // CONFIGURACIÓN
 // ======================================================
 
-// Aquí moveríamos la experiencia 3D actual si decidimos conservarla.
 const experienceUrl = "/vaporwave/experiencia";
 
 // Cambiar posteriormente por la URL real del documental.
 const documentaryUrl = "https://www.youtube.com/";
-
-// Preview usado únicamente como fondo al hacer hover
-// sobre "VER DOCUMENTAL".
-const documentaryPreview =
-  "/videos/vaporwave/documentary-preview.mp4";
 ---
 
 <section id="vaporwave-hero" class="vaporwave-root">
-  <!-- =====================================================
-       VIDEO PREVIEW DEL DOCUMENTAL
-  ====================================================== -->
-
-  <video
-    id="documentary-preview"
-    class="documentary-preview"
-    muted
-    loop
-    playsinline
-    preload="metadata"
-    aria-hidden="true"
-  >
-    <source src={documentaryPreview} type="video/mp4" />
-  </video>
-
-  <!-- Oscurece ligeramente el video para mantener legibilidad -->
-  <div class="documentary-overlay" aria-hidden="true"></div>
-
   <!-- =====================================================
        TEXTURA VISUAL
   ====================================================== -->
@@ -65,10 +40,8 @@ const documentaryPreview =
         >
           Entrar a la experiencia
         </a>
-      </div>
 
         <a
-          id="documentary-trigger"
           href={documentaryUrl}
           class="landing-button"
           target="_blank"
@@ -80,136 +53,6 @@ const documentaryPreview =
     </div>
   </div>
 </section>
-
-<script>
-  function initializeVaporwaveHero(): void {
-    const root = document.getElementById("vaporwave-hero");
-    const video = document.getElementById("documentary-preview");
-    const documentaryTrigger =
-      document.getElementById("documentary-trigger");
-
-    if (
-      !(root instanceof HTMLElement) ||
-      !(video instanceof HTMLVideoElement) ||
-      !(documentaryTrigger instanceof HTMLAnchorElement)
-    ) {
-      return;
-    }
-
-    if (root.dataset.simpleHeroInitialized === "true") {
-      return;
-    }
-
-    root.dataset.simpleHeroInitialized = "true";
-
-    let pauseTimer: number | null = null;
-
-    function clearPauseTimer(): void {
-      if (pauseTimer !== null) {
-        window.clearTimeout(pauseTimer);
-        pauseTimer = null;
-      }
-    }
-
-    async function showDocumentaryPreview(): Promise<void> {
-      clearPauseTimer();
-
-      root?.classList.add("documentary-active");
-
-      if (!(video instanceof HTMLVideoElement)) {
-        return;
-      }
-
-      try {
-        await video.play();
-      } catch {
-        // El navegador puede impedir autoplay en ciertos escenarios.
-        // Al estar muted normalmente no habrá problema.
-      }
-    }
-
-    function hideDocumentaryPreview(): void {
-      clearPauseTimer();
-
-      root?.classList.remove("documentary-active");
-
-      pauseTimer = window.setTimeout(() => {
-        if (!(video instanceof HTMLVideoElement)) {
-          return;
-        }
-
-        video.pause();
-
-        pauseTimer = null;
-      }, 700);
-    }
-
-    documentaryTrigger.addEventListener(
-      "pointerenter",
-      showDocumentaryPreview,
-    );
-
-    documentaryTrigger.addEventListener(
-      "pointerleave",
-      hideDocumentaryPreview,
-    );
-
-    documentaryTrigger.addEventListener(
-      "focus",
-      showDocumentaryPreview,
-    );
-
-    documentaryTrigger.addEventListener(
-      "blur",
-      hideDocumentaryPreview,
-    );
-
-    function cleanup(): void {
-      clearPauseTimer();
-
-      if (video instanceof HTMLVideoElement) {
-        video.pause();
-      }
-
-      documentaryTrigger?.removeEventListener(
-        "pointerenter",
-        showDocumentaryPreview,
-      );
-
-      documentaryTrigger?.removeEventListener(
-        "pointerleave",
-        hideDocumentaryPreview,
-      );
-
-      documentaryTrigger?.removeEventListener(
-        "focus",
-        showDocumentaryPreview,
-      );
-
-      documentaryTrigger?.removeEventListener(
-        "blur",
-        hideDocumentaryPreview,
-      );
-
-      root?.removeAttribute("data-simple-hero-initialized");
-    }
-
-    document.addEventListener(
-      "astro:before-swap",
-      cleanup,
-      {
-        once: true,
-      },
-    );
-  }
-
-  initializeVaporwaveHero();
-
-  document.addEventListener(
-    "astro:page-load",
-    initializeVaporwaveHero,
-  );
-</script>
 
 <style>
   @import url(
@@ -238,81 +81,6 @@ const documentaryPreview =
     background: #000;
 
     color: #eee9df;
-  }
-
-  /* ============================================================
-     DOCUMENTARY VIDEO
-  ============================================================ */
-
-  .documentary-preview {
-    position: absolute;
-
-    z-index: 0;
-
-    inset: 0;
-
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
-    object-position: center;
-
-    opacity: 0;
-
-    transform: scale(1.025);
-
-    filter:
-      saturate(0.82)
-      contrast(1.05)
-      brightness(0.74);
-
-    pointer-events: none;
-
-    transition:
-      opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
-      transform 2.4s cubic-bezier(0.22, 1, 0.36, 1),
-      filter 900ms ease;
-  }
-
-  .documentary-active .documentary-preview {
-    opacity: 1;
-
-    transform: scale(1);
-
-    filter:
-      saturate(0.92)
-      contrast(1.04)
-      brightness(0.76);
-  }
-
-  /* ============================================================
-     VIDEO OVERLAY
-  ============================================================ */
-
-  .documentary-overlay {
-    position: absolute;
-
-    z-index: 1;
-
-    inset: 0;
-
-    background:
-      linear-gradient(
-        180deg,
-        rgba(0, 0, 0, 0.16) 0%,
-        rgba(0, 0, 0, 0.18) 45%,
-        rgba(0, 0, 0, 0.32) 100%
-      );
-
-    opacity: 0;
-
-    pointer-events: none;
-
-    transition: opacity 700ms ease;
-  }
-
-  .documentary-active .documentary-overlay {
-    opacity: 1;
   }
 
   /* ============================================================
@@ -369,28 +137,52 @@ const documentaryPreview =
         transparent 4px
       );
 
-    animation: noiseShift 350ms steps(2) infinite;
+    animation:
+      noiseShift
+      350ms
+      steps(2)
+      infinite;
   }
 
   @keyframes noiseShift {
     0% {
-      transform: translate(0, 0);
+      transform:
+        translate(
+          0,
+          0
+        );
     }
 
     25% {
-      transform: translate(-1px, 1px);
+      transform:
+        translate(
+          -1px,
+          1px
+        );
     }
 
     50% {
-      transform: translate(1px, -1px);
+      transform:
+        translate(
+          1px,
+          -1px
+        );
     }
 
     75% {
-      transform: translate(1px, 1px);
+      transform:
+        translate(
+          1px,
+          1px
+        );
     }
 
     100% {
-      transform: translate(0, 0);
+      transform:
+        translate(
+          0,
+          0
+        );
     }
   }
 
@@ -413,10 +205,14 @@ const documentaryPreview =
   }
 
   .landing-inner {
-    width: min(
-      1120px,
-      calc(100% - 3rem)
-    );
+    width:
+      min(
+        1120px,
+        calc(
+          100% -
+          3rem
+        )
+      );
 
     text-align: center;
 
@@ -443,23 +239,27 @@ const documentaryPreview =
 
     line-height: 0.82;
 
-    letter-spacing: -0.035em;
+    letter-spacing:
+      -0.035em;
 
     text-shadow:
-      0 2px 30px
-      rgba(0, 0, 0, 0.14);
+      0
+      2px
+      30px
+      rgba(
+        0,
+        0,
+        0,
+        0.14
+      );
 
     transition:
-      color 700ms ease,
-      text-shadow 700ms ease;
-  }
-
-  .documentary-active .landing-title {
-    color: #fffaf0;
-
-    text-shadow:
-      0 2px 34px
-      rgba(0, 0, 0, 0.55);
+      color
+      700ms
+      ease,
+      text-shadow
+      700ms
+      ease;
   }
 
   .landing-subtitle {
@@ -489,11 +289,19 @@ const documentaryPreview =
 
     font-weight: 400;
 
-    letter-spacing: 0.055em;
+    letter-spacing:
+      0.055em;
 
     text-shadow:
-      0 2px 20px
-      rgba(0, 0, 0, 0.35);
+      0
+      2px
+      20px
+      rgba(
+        0,
+        0,
+        0,
+        0.35
+      );
   }
 
   /* ============================================================
@@ -536,85 +344,96 @@ const documentaryPreview =
       "IBM Plex Mono",
       monospace;
 
-    font-size: 0.68rem;
+    font-size:
+      0.68rem;
 
     font-weight: 400;
 
-    letter-spacing: 0.16em;
+    letter-spacing:
+      0.16em;
 
-    line-height: 1.4;
+    line-height:
+      1.4;
 
-    text-decoration: none;
+    text-decoration:
+      none;
 
-    cursor: pointer;
+    cursor:
+      pointer;
 
     transition:
-      color 200ms ease,
-      opacity 300ms ease,
-      transform 300ms ease;
+      color
+      200ms
+      ease,
+      opacity
+      300ms
+      ease,
+      transform
+      300ms
+      ease;
   }
 
   .landing-button:hover,
   .landing-button:focus-visible {
-    color: #fff;
+    color:
+      #fff;
 
-    outline: none;
+    outline:
+      none;
   }
 
   .landing-button::after {
-    content: "";
+    content:
+      "";
 
-    position: absolute;
+    position:
+      absolute;
 
-    left: 50%;
-    bottom: 0;
+    left:
+      50%;
 
-    width: 0;
-    height: 1px;
+    bottom:
+      0;
 
-    background: currentColor;
+    width:
+      0;
+
+    height:
+      1px;
+
+    background:
+      currentColor;
 
     transform:
-      translateX(-50%);
+      translateX(
+        -50%
+      );
 
     transition:
-      width 250ms ease;
+      width
+      250ms
+      ease;
   }
 
   .landing-button:hover::after,
   .landing-button:focus-visible::after {
-    width: 100%;
-  }
-
-  /*
-    Cuando estamos viendo el preview,
-    el botón documental toma protagonismo.
-  */
-
-  .documentary-active
-    .landing-button:not(#documentary-trigger) {
-    opacity: 0.45;
-  }
-
-  .documentary-active
-    #documentary-trigger {
-    color: #fff;
-  }
-
-  .documentary-active
-    #documentary-trigger::after {
-    width: 100%;
+    width:
+      100%;
   }
 
   /* ============================================================
      MOBILE
   ============================================================ */
 
-  @media (max-width: 800px) {
+  @media (
+    max-width:
+      800px
+  ) {
     .landing-inner {
       width:
         calc(
-          100% - 1.5rem
+          100% -
+          1.5rem
         );
 
       padding:
@@ -630,16 +449,19 @@ const documentaryPreview =
           5rem
         );
 
-      line-height: 0.93;
+      line-height:
+        0.93;
 
       letter-spacing:
         -0.045em;
 
-      white-space: nowrap;
+      white-space:
+        nowrap;
     }
 
     .landing-subtitle {
-      margin-top: 1.3rem;
+      margin-top:
+        1.3rem;
 
       font-size:
         clamp(
@@ -653,16 +475,14 @@ const documentaryPreview =
     }
 
     .landing-actions {
-      margin-top: 2.8rem;
+      margin-top:
+        2.8rem;
 
-      flex-direction: column;
+      flex-direction:
+        column;
 
-      gap: 0.65rem;
-    }
-
-    .documentary-preview {
-      transform:
-        scale(1.015);
+      gap:
+        0.65rem;
     }
   }
 
@@ -670,7 +490,10 @@ const documentaryPreview =
      VERY SMALL MOBILE
   ============================================================ */
 
-  @media (max-width: 430px) {
+  @media (
+    max-width:
+      430px
+  ) {
     .landing-title {
       font-size:
         min(
@@ -686,18 +509,18 @@ const documentaryPreview =
 
   @media (
     prefers-reduced-motion:
-    reduce
+      reduce
   ) {
-    .documentary-preview,
-    .documentary-overlay,
     .landing-button,
     .landing-title {
       transition-duration:
-        0.01ms !important;
+        0.01ms
+        !important;
     }
 
     .screen-noise {
-      animation: none;
+      animation:
+        none;
     }
   }
 </style>
