@@ -1,3 +1,4 @@
+
 ---
 // ======================================================
 // CONFIGURACIÓN
@@ -5,11 +6,12 @@
 
 const experienceUrl = "/vaporwave/experiencia";
 
-// Cambiar posteriormente por la URL real del documental.
-const documentaryUrl = "https://www.youtube.com/";
+const documentaryUrl =
+  "https://www.youtube.com/watch?v=yDJKkZq_OTM";
 ---
 
 <section id="vaporwave-hero" class="vaporwave-root">
+
   <!-- =====================================================
        TEXTURA VISUAL
   ====================================================== -->
@@ -24,6 +26,7 @@ const documentaryUrl = "https://www.youtube.com/";
 
   <div class="vaporwave-landing">
     <div class="landing-inner">
+
       <h1 class="landing-title">
         VAPORWAVE
       </h1>
@@ -32,26 +35,34 @@ const documentaryUrl = "https://www.youtube.com/";
         LA HISTORIA NO CONTADA
       </p>
 
+      <!-- BOTONES -->
+
       <div class="landing-actions">
+
         <a
           href={experienceUrl}
           data-astro-prefetch="false"
-          class="landing-button"
+          class="landing-button landing-button--primary"
         >
-          Entrar a la experiencia
+          <span>Entrar a la experiencia</span>
+          <span class="button-arrow" aria-hidden="true">↗</span>
         </a>
 
         <a
           href={documentaryUrl}
-          class="landing-button"
+          class="landing-button landing-button--secondary"
           target="_blank"
           rel="noopener noreferrer"
         >
-          Ver documental
+          <span>Ver documental</span>
+          <span class="button-arrow" aria-hidden="true">↗</span>
         </a>
+
       </div>
+
     </div>
   </div>
+
 </section>
 
 <style>
@@ -75,11 +86,9 @@ const documentaryUrl = "https://www.youtube.com/";
     min-height: 100dvh;
 
     overflow: clip;
-
     isolation: isolate;
 
     background: #000;
-
     color: #eee9df;
   }
 
@@ -91,11 +100,8 @@ const documentaryUrl = "https://www.youtube.com/";
   .screen-lines,
   .screen-noise {
     position: absolute;
-
     z-index: 4;
-
     inset: 0;
-
     pointer-events: none;
   }
 
@@ -110,7 +116,6 @@ const documentaryUrl = "https://www.youtube.com/";
 
   .screen-lines {
     opacity: 0.09;
-
     mix-blend-mode: multiply;
 
     background:
@@ -125,7 +130,6 @@ const documentaryUrl = "https://www.youtube.com/";
 
   .screen-noise {
     opacity: 0.026;
-
     mix-blend-mode: screen;
 
     background-image:
@@ -138,51 +142,28 @@ const documentaryUrl = "https://www.youtube.com/";
       );
 
     animation:
-      noiseShift
-      350ms
-      steps(2)
-      infinite;
+      noiseShift 350ms steps(2) infinite;
   }
 
   @keyframes noiseShift {
     0% {
-      transform:
-        translate(
-          0,
-          0
-        );
+      transform: translate(0, 0);
     }
 
     25% {
-      transform:
-        translate(
-          -1px,
-          1px
-        );
+      transform: translate(-1px, 1px);
     }
 
     50% {
-      transform:
-        translate(
-          1px,
-          -1px
-        );
+      transform: translate(1px, -1px);
     }
 
     75% {
-      transform:
-        translate(
-          1px,
-          1px
-        );
+      transform: translate(1px, 1px);
     }
 
     100% {
-      transform:
-        translate(
-          0,
-          0
-        );
+      transform: translate(0, 0);
     }
   }
 
@@ -194,30 +175,27 @@ const documentaryUrl = "https://www.youtube.com/";
     position: absolute;
 
     z-index: 20;
-
     inset: 0;
 
     display: grid;
-
     place-items: center;
 
     pointer-events: none;
   }
 
   .landing-inner {
-    width:
-      min(
-        1120px,
-        calc(
-          100% -
-          3rem
-        )
-      );
+    width: min(
+      1120px,
+      calc(100% - 3rem)
+    );
 
     text-align: center;
-
     pointer-events: auto;
   }
+
+  /* ============================================================
+     TITLE
+  ============================================================ */
 
   .landing-title {
     margin: 0;
@@ -236,45 +214,26 @@ const documentaryUrl = "https://www.youtube.com/";
       );
 
     font-weight: 400;
-
     line-height: 0.82;
-
-    letter-spacing:
-      -0.035em;
+    letter-spacing: -0.035em;
 
     text-shadow:
-      0
-      2px
-      30px
-      rgba(
-        0,
-        0,
-        0,
-        0.14
-      );
+      0 2px 30px rgba(0, 0, 0, 0.14);
 
     transition:
-      color
-      700ms
-      ease,
-      text-shadow
-      700ms
-      ease;
+      color 700ms ease,
+      text-shadow 700ms ease;
   }
 
+  /* ============================================================
+     SUBTITLE
+  ============================================================ */
+
   .landing-subtitle {
-    margin:
-      1.6rem
-      0
-      0;
+    margin: 1.6rem 0 0;
 
     color:
-      rgba(
-        240,
-        236,
-        227,
-        0.88
-      );
+      rgba(240, 236, 227, 0.88);
 
     font-family:
       "Gideon Roman",
@@ -288,20 +247,10 @@ const documentaryUrl = "https://www.youtube.com/";
       );
 
     font-weight: 400;
-
-    letter-spacing:
-      0.055em;
+    letter-spacing: 0.055em;
 
     text-shadow:
-      0
-      2px
-      20px
-      rgba(
-        0,
-        0,
-        0,
-        0.35
-      );
+      0 2px 20px rgba(0, 0, 0, 0.35);
   }
 
   /* ============================================================
@@ -314,131 +263,155 @@ const documentaryUrl = "https://www.youtube.com/";
     justify-content: center;
     align-items: center;
 
-    gap: 2rem;
+    flex-direction: row;
+    flex-wrap: wrap;
 
-    margin-top: 3.2rem;
+    gap: 0.85rem;
+
+    margin-top: 3.5rem;
   }
+
+  /* ============================================================
+     BUTTON BASE
+  ============================================================ */
 
   .landing-button {
     position: relative;
 
-    display: inline-block;
+    display: inline-flex;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 1.1rem;
+
+    min-height: 52px;
 
     padding:
-      0.65rem
-      0;
+      0.95rem
+      1.65rem;
 
-    border: 0;
+    border:
+      1px solid transparent;
 
-    background: transparent;
-
-    color:
-      rgba(
-        240,
-        236,
-        227,
-        0.55
-      );
+    border-radius: 0;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
-    font-size:
-      0.68rem;
+    font-size: 0.72rem;
+    font-weight: 500;
 
-    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.085em;
 
-    letter-spacing:
-      0.16em;
+    text-decoration: none;
+    white-space: nowrap;
 
-    line-height:
-      1.4;
-
-    text-decoration:
-      none;
-
-    cursor:
-      pointer;
+    cursor: pointer;
 
     transition:
-      color
-      200ms
-      ease,
-      opacity
-      300ms
-      ease,
-      transform
-      300ms
-      ease;
+      background-color 250ms ease,
+      border-color 250ms ease,
+      color 250ms ease,
+      transform 250ms ease,
+      box-shadow 250ms ease;
   }
 
-  .landing-button:hover,
-  .landing-button:focus-visible {
+  /* ============================================================
+     PRIMARY BUTTON
+  ============================================================ */
+
+  .landing-button--primary {
+    background: #eee9df;
+
+    color: #111111;
+
+    border-color: #eee9df;
+  }
+
+  .landing-button--primary:hover {
+    background: #ffffff;
+
+    border-color: #ffffff;
+    color: #000000;
+
+    transform: translateY(-2px);
+
+    box-shadow:
+      0 6px 28px
+      rgba(238, 233, 223, 0.12);
+  }
+
+  /* ============================================================
+     SECONDARY BUTTON
+  ============================================================ */
+
+  .landing-button--secondary {
+    background: transparent;
+
     color:
-      #fff;
+      rgba(238, 233, 223, 0.82);
 
-    outline:
-      none;
+    border-color:
+      rgba(238, 233, 223, 0.38);
   }
 
-  .landing-button::after {
-    content:
-      "";
-
-    position:
-      absolute;
-
-    left:
-      50%;
-
-    bottom:
-      0;
-
-    width:
-      0;
-
-    height:
-      1px;
-
+  .landing-button--secondary:hover {
     background:
-      currentColor;
+      rgba(238, 233, 223, 0.07);
 
-    transform:
-      translateX(
-        -50%
-      );
+    color: #ffffff;
+
+    border-color:
+      rgba(238, 233, 223, 0.85);
+
+    transform: translateY(-2px);
+  }
+
+  /* ============================================================
+     BUTTON ARROWS
+  ============================================================ */
+
+  .button-arrow {
+    display: inline-block;
+
+    font-size: 0.95rem;
+    line-height: 1;
 
     transition:
-      width
-      250ms
-      ease;
+      transform 250ms ease;
   }
 
-  .landing-button:hover::after,
-  .landing-button:focus-visible::after {
-    width:
-      100%;
+  .landing-button:hover .button-arrow {
+    transform:
+      translate(2px, -2px);
+  }
+
+  /* ============================================================
+     FOCUS
+  ============================================================ */
+
+  .landing-button:focus-visible {
+    outline:
+      2px solid #ffffff;
+
+    outline-offset: 4px;
   }
 
   /* ============================================================
      MOBILE
   ============================================================ */
 
-  @media (
-    max-width:
-      800px
-  ) {
+  @media (max-width: 800px) {
+
     .landing-inner {
       width:
-        calc(
-          100% -
-          1.5rem
-        );
+        calc(100% - 1.5rem);
 
       padding:
-        0
-        0.35rem;
+        0 0.35rem;
     }
 
     .landing-title {
@@ -449,19 +422,14 @@ const documentaryUrl = "https://www.youtube.com/";
           5rem
         );
 
-      line-height:
-        0.93;
+      line-height: 0.93;
+      letter-spacing: -0.045em;
 
-      letter-spacing:
-        -0.045em;
-
-      white-space:
-        nowrap;
+      white-space: nowrap;
     }
 
     .landing-subtitle {
-      margin-top:
-        1.3rem;
+      margin-top: 1.3rem;
 
       font-size:
         clamp(
@@ -470,30 +438,38 @@ const documentaryUrl = "https://www.youtube.com/";
           1.55rem
         );
 
-      letter-spacing:
-        0.035em;
+      letter-spacing: 0.035em;
     }
 
     .landing-actions {
-      margin-top:
-        2.8rem;
+      margin-top: 2.8rem;
 
-      flex-direction:
-        column;
+      flex-direction: column;
+      flex-wrap: nowrap;
 
-      gap:
-        0.65rem;
+      gap: 0.8rem;
     }
+
+    .landing-button {
+      width: min(100%, 290px);
+
+      min-height: 50px;
+
+      padding:
+        0.9rem
+        1.25rem;
+
+      font-size: 0.7rem;
+    }
+
   }
 
   /* ============================================================
      VERY SMALL MOBILE
   ============================================================ */
 
-  @media (
-    max-width:
-      430px
-  ) {
+  @media (max-width: 430px) {
+
     .landing-title {
       font-size:
         min(
@@ -501,26 +477,30 @@ const documentaryUrl = "https://www.youtube.com/";
           4rem
         );
     }
+
   }
 
   /* ============================================================
      REDUCED MOTION
   ============================================================ */
 
-  @media (
-    prefers-reduced-motion:
-      reduce
-  ) {
+  @media (prefers-reduced-motion: reduce) {
+
     .landing-button,
-    .landing-title {
+    .landing-title,
+    .button-arrow {
       transition-duration:
-        0.01ms
-        !important;
+        0.01ms !important;
+    }
+
+    .landing-button:hover {
+      transform: none;
     }
 
     .screen-noise {
-      animation:
-        none;
+      animation: none;
     }
+
   }
+
 </style>
