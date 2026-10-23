@@ -35,18 +35,21 @@ const documentaryUrl =
         LA HISTORIA NO CONTADA
       </p>
 
-      <!-- BOTONES -->
+      <!-- NAVEGACIÓN EDITORIAL -->
 
-      <div class="landing-actions">
+      <nav class="landing-actions" aria-label="Explorar Vaporwave">
 
         <a
           href={experienceUrl}
           data-astro-prefetch="false"
           class="landing-button landing-button--primary"
         >
-          <span>Entrar a la experiencia</span>
-          <span class="button-arrow" aria-hidden="true">↗</span>
+          <span class="action-index" aria-hidden="true">01</span>
+          <span class="action-label">Entrar a la experiencia</span>
+          <span class="action-arrow" aria-hidden="true">→</span>
         </a>
+
+        <span class="action-divider" aria-hidden="true"></span>
 
         <a
           href={documentaryUrl}
@@ -54,11 +57,12 @@ const documentaryUrl =
           target="_blank"
           rel="noopener noreferrer"
         >
-          <span>Ver documental</span>
-          <span class="button-arrow" aria-hidden="true">↗</span>
+          <span class="action-index" aria-hidden="true">02</span>
+          <span class="action-label">Ver documental</span>
+          <span class="action-arrow" aria-hidden="true">↗</span>
         </a>
 
-      </div>
+      </nav>
 
     </div>
   </div>
@@ -173,7 +177,6 @@ const documentaryUrl =
 
   .vaporwave-landing {
     position: absolute;
-
     z-index: 20;
     inset: 0;
 
@@ -254,7 +257,7 @@ const documentaryUrl =
   }
 
   /* ============================================================
-     ACTIONS
+     EDITORIAL NAVIGATION
   ============================================================ */
 
   .landing-actions {
@@ -263,141 +266,185 @@ const documentaryUrl =
     justify-content: center;
     align-items: center;
 
-    flex-direction: row;
-    flex-wrap: wrap;
-
-    gap: 0.85rem;
+    gap: 1.8rem;
 
     margin-top: 3.5rem;
   }
 
   /* ============================================================
-     BUTTON BASE
+     NAVIGATION LINKS
   ============================================================ */
 
   .landing-button {
     position: relative;
 
     display: inline-flex;
-
     align-items: center;
     justify-content: center;
 
-    gap: 1.1rem;
+    gap: 0.8rem;
 
-    min-height: 52px;
+    min-height: 44px;
+    padding: 0.65rem 0;
 
-    padding:
-      0.95rem
-      1.65rem;
-
-    border:
-      1px solid transparent;
-
-    border-radius: 0;
+    border: none;
+    background: transparent;
 
     font-family:
       "IBM Plex Mono",
       monospace;
 
     font-size: 0.72rem;
-    font-weight: 500;
+    font-weight: 400;
 
-    line-height: 1.4;
+    line-height: 1.5;
     letter-spacing: 0.085em;
 
+    text-transform: uppercase;
     text-decoration: none;
     white-space: nowrap;
 
     cursor: pointer;
 
     transition:
-      background-color 250ms ease,
-      border-color 250ms ease,
-      color 250ms ease,
-      transform 250ms ease,
-      box-shadow 250ms ease;
+      color 300ms ease;
   }
 
   /* ============================================================
-     PRIMARY BUTTON
+     PRIMARY LINK
   ============================================================ */
 
   .landing-button--primary {
-    background: #eee9df;
-
-    color: #111111;
-
-    border-color: #eee9df;
-  }
-
-  .landing-button--primary:hover {
-    background: #ffffff;
-
-    border-color: #ffffff;
-    color: #000000;
-
-    transform: translateY(-2px);
-
-    box-shadow:
-      0 6px 28px
-      rgba(238, 233, 223, 0.12);
+    color: rgba(240, 236, 227, 0.9);
   }
 
   /* ============================================================
-     SECONDARY BUTTON
+     SECONDARY LINK
   ============================================================ */
 
   .landing-button--secondary {
-    background: transparent;
-
-    color:
-      rgba(238, 233, 223, 0.82);
-
-    border-color:
-      rgba(238, 233, 223, 0.38);
-  }
-
-  .landing-button--secondary:hover {
-    background:
-      rgba(238, 233, 223, 0.07);
-
-    color: #ffffff;
-
-    border-color:
-      rgba(238, 233, 223, 0.85);
-
-    transform: translateY(-2px);
+    color: rgba(240, 236, 227, 0.55);
   }
 
   /* ============================================================
-     BUTTON ARROWS
+     INDEX NUMBERS
   ============================================================ */
 
-  .button-arrow {
-    display: inline-block;
+  .action-index {
+    font-size: 0.63rem;
+    font-weight: 400;
 
-    font-size: 0.95rem;
-    line-height: 1;
+    letter-spacing: 0.04em;
+
+    opacity: 0.45;
 
     transition:
-      transform 250ms ease;
-  }
-
-  .landing-button:hover .button-arrow {
-    transform:
-      translate(2px, -2px);
+      opacity 300ms ease;
   }
 
   /* ============================================================
-     FOCUS
+     LABELS
+  ============================================================ */
+
+  .action-label {
+    display: inline-block;
+    position: relative;
+  }
+
+  .action-label::after {
+    content: "";
+
+    position: absolute;
+
+    left: 0;
+    bottom: -5px;
+
+    width: 100%;
+    height: 1px;
+
+    background: currentColor;
+
+    opacity: 0.8;
+
+    transform: scaleX(0);
+    transform-origin: left center;
+
+    transition:
+      transform 350ms ease;
+  }
+
+  /* ============================================================
+     ARROWS
+  ============================================================ */
+
+  .action-arrow {
+    display: inline-block;
+
+    font-size: 0.9rem;
+    line-height: 1;
+
+    opacity: 0.65;
+
+    transition:
+      transform 300ms ease,
+      opacity 300ms ease;
+  }
+
+  /* ============================================================
+     DIVIDER
+  ============================================================ */
+
+  .action-divider {
+    display: block;
+
+    width: 1px;
+    height: 18px;
+
+    flex-shrink: 0;
+
+    background:
+      rgba(240, 236, 227, 0.22);
+  }
+
+  /* ============================================================
+     HOVER
+  ============================================================ */
+
+  .landing-button:hover {
+    color: #ffffff;
+  }
+
+  .landing-button:hover .action-index {
+    opacity: 0.75;
+  }
+
+  .landing-button:hover .action-label::after {
+    transform: scaleX(1);
+  }
+
+  .landing-button:hover .action-arrow {
+    opacity: 1;
+
+    transform: translateX(3px);
+  }
+
+  .landing-button--secondary:hover .action-arrow {
+    transform: translate(2px, -2px);
+  }
+
+  /* ============================================================
+     KEYBOARD FOCUS
   ============================================================ */
 
   .landing-button:focus-visible {
-    outline:
-      2px solid #ffffff;
+    color: #ffffff;
 
-    outline-offset: 4px;
+    outline: 1px solid rgba(240, 236, 227, 0.7);
+    outline-offset: 6px;
+  }
+
+  .landing-button:focus-visible .action-label::after {
+    transform: scaleX(1);
   }
 
   /* ============================================================
@@ -442,24 +489,23 @@ const documentaryUrl =
     }
 
     .landing-actions {
-      margin-top: 2.8rem;
+      margin-top: 3rem;
 
       flex-direction: column;
-      flex-wrap: nowrap;
 
-      gap: 0.8rem;
+      gap: 0.3rem;
     }
 
     .landing-button {
-      width: min(100%, 290px);
+      min-height: 48px;
 
-      min-height: 50px;
+      font-size: 0.68rem;
 
-      padding:
-        0.9rem
-        1.25rem;
+      gap: 0.75rem;
+    }
 
-      font-size: 0.7rem;
+    .action-divider {
+      display: none;
     }
 
   }
@@ -478,6 +524,10 @@ const documentaryUrl =
         );
     }
 
+    .landing-actions {
+      margin-top: 2.6rem;
+    }
+
   }
 
   /* ============================================================
@@ -488,13 +538,10 @@ const documentaryUrl =
 
     .landing-button,
     .landing-title,
-    .button-arrow {
-      transition-duration:
-        0.01ms !important;
-    }
-
-    .landing-button:hover {
-      transform: none;
+    .action-index,
+    .action-label::after,
+    .action-arrow {
+      transition: none !important;
     }
 
     .screen-noise {
