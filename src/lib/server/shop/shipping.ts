@@ -344,7 +344,7 @@ export function getShopShippingConfig():
         import.meta.env
           .SHOP_SHIPPING_STANDARD_CENTS,
 
-        14900,
+        0,
       ),
     );
 
