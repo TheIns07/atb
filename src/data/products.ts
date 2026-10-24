@@ -216,7 +216,7 @@ const TEST_PRICE =
   1000;
 
 const CASSETTE_PRICE =
-  100;
+  1000;
 
 const SCRIPT_PRICE =
   45000;
