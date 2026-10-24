@@ -181,14 +181,40 @@ function getOptionalIntegerEnv(
 }
 
 function getBooleanEnv(
-  value:
-    | string
-    | undefined,
-
-  fallback:
-    boolean,
+  value: unknown,
+  fallback: boolean,
 ): boolean {
-  if (!value) {
+  if (
+    value === undefined ||
+    value === null ||
+    value === ""
+  ) {
+    return fallback;
+  }
+
+  if (
+    typeof value === "boolean"
+  ) {
+    return value;
+  }
+
+  if (
+    typeof value === "number"
+  ) {
+    if (value === 1) {
+      return true;
+    }
+
+    if (value === 0) {
+      return false;
+    }
+
+    return fallback;
+  }
+
+  if (
+    typeof value !== "string"
+  ) {
     return fallback;
   }
 
@@ -198,23 +224,23 @@ function getBooleanEnv(
       .toLowerCase();
 
   if (
-    normalized ===
-      "true" ||
-    normalized ===
-      "1" ||
-    normalized ===
-      "yes"
+    [
+      "true",
+      "1",
+      "yes",
+      "on",
+    ].includes(normalized)
   ) {
     return true;
   }
 
   if (
-    normalized ===
-      "false" ||
-    normalized ===
-      "0" ||
-    normalized ===
-      "no"
+    [
+      "false",
+      "0",
+      "no",
+      "off",
+    ].includes(normalized)
   ) {
     return false;
   }
