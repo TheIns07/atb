@@ -8,9 +8,8 @@ import {
   createClient,
 } from "@supabase/supabase-js";
 
-import {
-  sendNewOrderNotificationEmail,
-  type OrderNotificationAddress,
+import type {
+  OrderNotificationAddress,
 } from "../../../lib/server/shop/email";
 
 // ============================================================
@@ -1355,6 +1354,19 @@ async function sendOwnerNotificationSafely(
     // ========================================================
     // SEND
     // ========================================================
+
+    /*
+     * Cargamos el módulo de correo de forma diferida.
+     *
+     * Así, cualquier problema de inicialización/configuración
+     * relacionado con Resend o email.ts NO impide que el
+     * endpoint de Stripe pueda cargar y procesar el pago.
+     */
+    const {
+      sendNewOrderNotificationEmail,
+    } = await import(
+      "../../../lib/server/shop/email"
+    );
 
     const result =
       await sendNewOrderNotificationEmail({
